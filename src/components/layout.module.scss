@@ -1,0 +1,20 @@
+.container {
+  // Centering
+  margin: 0 auto;
+  max-width: 750px;
+  padding: 1rem;
+
+  
+  display: flex;
+
+  // Components flow down vertically
+  flex-direction: column;
+
+  // Set container height to screen height
+  min-height: 100vh;
+}
+
+.content {
+  // Expands div to fill page
+  flex-grow: 1;
+}
