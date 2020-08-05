@@ -1,0 +1,52 @@
+.headers {
+  display: flex;
+  // Components flow down vertically
+  flex-direction: column;
+
+  text-align: left;
+  // margin-top: auto;
+  margin: 1rem;
+  // margin-right: 5vw;
+
+  h1 {
+    font-family: "Radio Grotesk";
+    // font-size: 8rem;
+    // margin-top: -4rem;
+    font-size: 8vw;
+    font-weight: 400;
+    margin-bottom: -3%;
+  }
+}
+
+
+@media (max-width: 800px) {
+  .headers {
+    text-align: center;
+    
+    h1 {
+      font-size: 12vw;
+    }
+
+  }
+}
+
+
+.name1 {
+  color: #FFFFFF
+}
+
+.name2 {
+  color: #FFD2CE
+}
+
+.name3 {
+  color: #FF9C9C
+}
+
+.name4 {
+  color: #E94134
+}
+
+.job-title {
+  color: #6DB1D8;
+}
