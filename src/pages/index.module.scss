@@ -14,7 +14,8 @@
     // margin-top: -4rem;
     font-size: 8vw;
     font-weight: 400;
-    margin-bottom: -3%;
+    // margin-bottom: -3%;
+    margin-bottom: -0.25em;
   }
 }
 
@@ -26,7 +27,6 @@
     h1 {
       font-size: 12vw;
     }
-
   }
 }
 
@@ -49,4 +49,37 @@
 
 .job-title {
   color: #6DB1D8;
+}
+
+.icon-bar {
+  display: flex;
+  flex-direction: row;
+
+  margin-top: 4em;
+  margin-left: 0;
+  list-style: none;
+}
+
+.icon-bar-item {
+  text-decoration: none;
+}
+
+@media (max-width: 800px) {
+  .icon-bar {
+    text-align: center;
+    place-content: center;
+
+  }
+}
+
+
+.icon-bar-item {
+  padding-right: 2rem;
+}
+
+@media (max-width: 800px) {
+  .icon-bar-item {
+    padding-right: 1rem;
+    padding-left: 1rem;
+  }
 }
