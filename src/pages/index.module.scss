@@ -5,8 +5,7 @@
 
   text-align: left;
   // margin-top: auto;
-  margin: 1rem;
-  // margin-right: 5vw;
+  margin-left: 1rem;
 
   h1 {
     font-family: "Radio Grotesk";
@@ -49,37 +48,4 @@
 
 .job-title {
   color: #6DB1D8;
-}
-
-.icon-bar {
-  display: flex;
-  flex-direction: row;
-
-  margin-top: 4em;
-  margin-left: 0;
-  list-style: none;
-}
-
-.icon-bar-item {
-  text-decoration: none;
-}
-
-@media (max-width: 800px) {
-  .icon-bar {
-    text-align: center;
-    place-content: center;
-
-  }
-}
-
-
-.icon-bar-item {
-  padding-right: 2rem;
-}
-
-@media (max-width: 800px) {
-  .icon-bar-item {
-    padding-right: 1rem;
-    padding-left: 1rem;
-  }
 }

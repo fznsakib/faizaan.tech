@@ -23,6 +23,9 @@ export default function Header(props) {
           <li>
             <Link className={navbarStyles.navItem} activeClassName={navbarStyles.activeNavItem} to="/blog/"> blog </Link>
           </li>
+          <li>
+            <div className={navbarStyles.underConstructionNotice}>*website under construction</div>
+          </li>
         </ul>
       </nav>
   )

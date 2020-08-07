@@ -1,0 +1,59 @@
+
+.icon-bar {
+    display: flex;
+    flex-direction: row;
+  
+    margin-top: 3em;
+    margin-left: 0;
+    list-style: none;
+
+    a {
+        color: #999999;
+        text-decoration: none;
+        padding-right: 2rem;
+        transition: 0.3s;
+    }
+
+  }
+
+
+@media (max-width: 800px) {
+    .icon-bar {
+        text-align: center;
+        place-content: center;
+
+    }
+}
+
+// .icon-bar-item {
+//     color: #999999;
+//     text-decoration: none;
+//     padding-right: 2rem;
+// }
+
+@media (max-width: 800px) {
+    .icon-bar-item {
+        padding-right: 1rem;
+        padding-left: 1rem;
+    }
+}
+
+.resume-icon:hover{
+    color: #6DB1D8;
+}
+
+.email-icon:hover{
+    color: #E94234;
+}
+
+.linkedin-icon:hover{
+    color: #0076B4; 
+}
+
+.github-icon:hover{
+    color: black; 
+}
+
+.soundcloud-icon:hover{
+    color: #FC6800; 
+}
