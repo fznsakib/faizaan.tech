@@ -1,7 +1,6 @@
-import React from 'react'
-import { Helmet } from 'react-helmet'
-import { useStaticQuery, graphql } from 'gatsby'
-
+import React from "react";
+import { Helmet } from "react-helmet";
+import { useStaticQuery, graphql } from "gatsby";
 
 export default function Head({ title }) {
   const data = useStaticQuery(graphql`
@@ -12,9 +11,7 @@ export default function Head({ title }) {
         }
       }
     }
-  `)
+  `);
 
-  return (
-    <Helmet title={`${title} | ${data.site.siteMetadata.title}`}/>
-  )
+  return <Helmet title={`${title} | ${data.site.siteMetadata.title}`} />;
 }

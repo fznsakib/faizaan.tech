@@ -1,16 +1,16 @@
-import React from "react"
-import Layout from "../components/layout"
-import Head from "../components/head"
-import ColourBlock from "../components/colourblock"
-import IconBar from "../components/iconbar"
+import React from "react";
+import Layout from "../components/layout";
+import Head from "../components/head";
+import ColourBlock from "../components/colourblock";
+import IconBar from "../components/iconbar";
 
-import indexStyles from "./index.module.scss"
+import indexStyles from "./index.module.scss";
 
 export default function Home() {
   return (
     <div>
       <Layout>
-        <Head title="Home"/>
+        <Head title="Home" />
         <div className={indexStyles.headers}>
           <h1 className={indexStyles.name1}>faizaan sakib</h1>
           <h1 className={indexStyles.name2}>faizaan sakib</h1>
@@ -22,5 +22,5 @@ export default function Home() {
         </div>
       </Layout>
     </div>
-  )
+  );
 }

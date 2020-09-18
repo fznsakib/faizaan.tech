@@ -1,26 +1,18 @@
-import React from "react"
-import Layout from "../components/layout"
-import Head from "../components/head"
-import { Link, graphql, useStaticQuery } from "gatsby"
-import blogStyles from './blog.module.scss'
-
+import React from "react";
+import Layout from "../components/layout";
+import Head from "../components/head";
+import { Link, graphql, useStaticQuery } from "gatsby";
+import blogStyles from "./blog.module.scss";
 
 export default function Blog() {
-
   const data = useStaticQuery(graphql`
     query {
-      allContentfulBlogPost (
-        sort: {
-          fields: publishedDate,
-          order: DESC
-        }
-      )
-      {
+      allContentfulBlogPost(sort: { fields: publishedDate, order: DESC }) {
         edges {
           node {
             title
             slug
-            publishedDate (
+            publishedDate(
               formatString: "Do MMMM YYYY"
               # fromNow:true
             )
@@ -28,13 +20,12 @@ export default function Blog() {
         }
       }
     }
-  `)
-
+  `);
 
   return (
     <div>
-      <Layout> 
-        <Head title="Blog"/>
+      <Layout>
+        <Head title="Blog" />
         <h1>Blog</h1>
 
         <ol className={blogStyles.posts}>
@@ -46,11 +37,10 @@ export default function Blog() {
                   <p>{edge.node.publishedDate}</p>
                 </Link>
               </li>
-            )
+            );
           })}
         </ol>
-        
       </Layout>
     </div>
-  )
+  );
 }

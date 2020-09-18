@@ -11,7 +11,8 @@
     "start": "npm run develop",
     "serve": "gatsby serve",
     "clean": "gatsby clean",
-    "test": "echo \"Write tests! -> https://gatsby.dev/unit-testing\" && exit 1"
+    "test": "echo \"Write tests! -> https://gatsby.dev/unit-testing\" && exit 1",
+    "pretty": "prettier --write \"./**/*.{js,jsx,json}\""
   },
   "dependencies": {
     "@contentful/rich-text-react-renderer": "^14.1.1",
@@ -35,7 +36,7 @@
   },
   "devDependencies": {
     "env-cmd": "^10.1.0",
-    "prettier": "2.0.5"
+    "prettier": "^2.0.5"
   },
   "repository": {
     "type": "git",
