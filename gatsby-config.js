@@ -41,6 +41,7 @@ module.exports = {
             },
           },
         ],
+        icon: "static/favicon.png"
       },
     },
   ],
