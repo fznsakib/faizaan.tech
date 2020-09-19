@@ -1,1 +1,112 @@
-{"componentChunkName":"component---src-templates-post-js","path":"/blog/contentful","result":{"data":{"contentfulBlogPost":{"title":"Using Contentful","publishedDate":"30th July 2020","body":{"json":{"nodeType":"document","data":{},"content":[{"nodeType":"paragraph","content":[{"nodeType":"text","value":"I like Contentful...","marks":[],"data":{}}],"data":{}},{"nodeType":"hr","content":[],"data":{}},{"nodeType":"paragraph","content":[{"nodeType":"text","value":"Here is a ","marks":[],"data":{}},{"nodeType":"text","value":"dog!","marks":[{"type":"bold"}],"data":{}}],"data":{}},{"nodeType":"embedded-asset-block","content":[],"data":{"target":{"sys":{"space":{"sys":{"type":"Link","linkType":"Space","id":"c4cqetr9sguqp","contentful_id":"4cqetr9sguqp"}},"id":"c2CQcuSiriLaSF7PBrLVYjX","type":"Asset","createdAt":"2020-07-31T11:13:58.737Z","updatedAt":"2020-07-31T11:13:58.737Z","environment":{"sys":{"id":"master","type":"Link","linkType":"Environment","contentful_id":"master"}},"revision":1,"contentful_id":"2CQcuSiriLaSF7PBrLVYjX"},"fields":{"title":{"en-US":"Dog Test"},"file":{"en-US":{"url":"//images.ctfassets.net/4cqetr9sguqp/2CQcuSiriLaSF7PBrLVYjX/39f0cff79143e6a0517a661cba0f36ea/105992231-1561667465295gettyimages-521697453.jpeg","details":{"size":83040,"image":{"width":1600,"height":900}},"fileName":"105992231-1561667465295gettyimages-521697453.jpeg","contentType":"image/jpeg"}}}}}},{"nodeType":"paragraph","content":[{"nodeType":"text","value":"","marks":[],"data":{}}],"data":{}},{"nodeType":"paragraph","content":[{"nodeType":"text","value":"","marks":[],"data":{}}],"data":{}}]}}}},"pageContext":{"slug":"contentful"}}}
+{
+  "componentChunkName": "component---src-templates-post-js",
+  "path": "/blog/contentful",
+  "result": {
+    "data": {
+      "contentfulBlogPost": {
+        "title": "Using Contentful",
+        "publishedDate": "30th July 2020",
+        "body": {
+          "json": {
+            "nodeType": "document",
+            "data": {},
+            "content": [
+              {
+                "nodeType": "paragraph",
+                "content": [
+                  {
+                    "nodeType": "text",
+                    "value": "I like Contentful...",
+                    "marks": [],
+                    "data": {}
+                  }
+                ],
+                "data": {}
+              },
+              { "nodeType": "hr", "content": [], "data": {} },
+              {
+                "nodeType": "paragraph",
+                "content": [
+                  {
+                    "nodeType": "text",
+                    "value": "Here is a ",
+                    "marks": [],
+                    "data": {}
+                  },
+                  {
+                    "nodeType": "text",
+                    "value": "dog!",
+                    "marks": [{ "type": "bold" }],
+                    "data": {}
+                  }
+                ],
+                "data": {}
+              },
+              {
+                "nodeType": "embedded-asset-block",
+                "content": [],
+                "data": {
+                  "target": {
+                    "sys": {
+                      "space": {
+                        "sys": {
+                          "type": "Link",
+                          "linkType": "Space",
+                          "id": "c4cqetr9sguqp",
+                          "contentful_id": "4cqetr9sguqp"
+                        }
+                      },
+                      "id": "c2CQcuSiriLaSF7PBrLVYjX",
+                      "type": "Asset",
+                      "createdAt": "2020-07-31T11:13:58.737Z",
+                      "updatedAt": "2020-07-31T11:13:58.737Z",
+                      "environment": {
+                        "sys": {
+                          "id": "master",
+                          "type": "Link",
+                          "linkType": "Environment",
+                          "contentful_id": "master"
+                        }
+                      },
+                      "revision": 1,
+                      "contentful_id": "2CQcuSiriLaSF7PBrLVYjX"
+                    },
+                    "fields": {
+                      "title": { "en-US": "Dog Test" },
+                      "file": {
+                        "en-US": {
+                          "url": "//images.ctfassets.net/4cqetr9sguqp/2CQcuSiriLaSF7PBrLVYjX/39f0cff79143e6a0517a661cba0f36ea/105992231-1561667465295gettyimages-521697453.jpeg",
+                          "details": {
+                            "size": 83040,
+                            "image": { "width": 1600, "height": 900 }
+                          },
+                          "fileName": "105992231-1561667465295gettyimages-521697453.jpeg",
+                          "contentType": "image/jpeg"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "nodeType": "paragraph",
+                "content": [
+                  { "nodeType": "text", "value": "", "marks": [], "data": {} }
+                ],
+                "data": {}
+              },
+              {
+                "nodeType": "paragraph",
+                "content": [
+                  { "nodeType": "text", "value": "", "marks": [], "data": {} }
+                ],
+                "data": {}
+              }
+            ]
+          }
+        }
+      }
+    },
+    "pageContext": { "slug": "contentful" }
+  }
+}
