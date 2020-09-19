@@ -44,27 +44,37 @@
   
   
   
-.rectangle-1 {
+.rectangle-1-animation {
     height: 0.5rem;
     width: 15vw;
     background-color: #6DB1D8;
 
     -webkit-animation: scale-up-hor-left 0.6s cubic-bezier(0.770, 0.000, 0.175, 1.000) 3s backwards;
     animation: scale-up-hor-left 0.6s cubic-bezier(0.770, 0.000, 0.175, 1.000) 3s backwards;
-
   }
 
-.rectangle-2 {
+.rectangle-1 {
+    height: 0.5rem;
+    width: 15vw;
+    background-color: #6DB1D8;
+  }
+
+.rectangle-2-animation {
     height: 0.5rem;
     width: 15vw;
     background-color: #E94134;
 
     -webkit-animation: scale-up-hor-left 1.4s cubic-bezier(0.770, 0.000, 0.175, 1.000) 3s backwards;
     animation: scale-up-hor-left 1.4s cubic-bezier(0.770, 0.000, 0.175, 1.000) 3s backwards;
-
   }
 
-.rectangle-3 {
+.rectangle-2 {
+    height: 0.5rem;
+    width: 15vw;
+    background-color: #E94134;
+  }
+
+.rectangle-3-animation {
     height: 0.5rem;
     width: 15vw;
     background-color: white;
@@ -73,11 +83,23 @@
     animation: scale-up-hor-left 2.2s cubic-bezier(0.770, 0.000, 0.175, 1.000) 3s backwards;
   }
 
-.rectangle-4 {
+.rectangle-3 {
+    height: 0.5rem;
+    width: 15vw;
+    background-color: white;
+  }
+
+.rectangle-4-animation {
     height: 0.5rem;
     width: 15vw;
     background-color: black;
 
     -webkit-animation: scale-up-hor-left 3s cubic-bezier(0.770, 0.000, 0.175, 1.000) 3s backwards;
     animation: scale-up-hor-left 3s cubic-bezier(0.770, 0.000, 0.175, 1.000) 3s backwards;
+  }
+
+.rectangle-4 {
+    height: 0.5rem;
+    width: 15vw;
+    background-color: black;
   }

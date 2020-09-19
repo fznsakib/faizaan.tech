@@ -23,7 +23,8 @@
     }
   }
   
-.icon-bar {
+  
+  .icon-bar-animation {
     display: flex;
     flex-direction: row;
   
@@ -42,6 +43,22 @@
     animation: fade-in-fwd 0.6s cubic-bezier(0.860, 0.000, 0.070, 1.000) 5.5s backwards;
   }
 
+  .icon-bar {
+    display: flex;
+    flex-direction: row;
+  
+    margin-top: 3em;
+    margin-left: 0;
+    list-style: none;
+
+    a {
+        color: #999999;
+        text-decoration: none;
+        padding-right: 2rem;
+        transition: 0.3s;
+    }
+  }
+
 
 @media (max-width: 800px) {
     .icon-bar {
@@ -50,12 +67,6 @@
 
     }
 }
-
-// .icon-bar-item {
-//     color: #999999;
-//     text-decoration: none;
-//     padding-right: 2rem;
-// }
 
 @media (max-width: 800px) {
     .icon-bar-item {
