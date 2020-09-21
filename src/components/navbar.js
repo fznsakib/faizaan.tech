@@ -13,48 +13,35 @@ export default function Header(props) {
             activeClassName={navbarStyles.activeNavItem}
             to="/"
           >
-            {" "}
-            home{" "}
+            home
           </Link>
         </li>
         <li>
           <Link
-            className={navbarStyles.navItem}
-            activeClassName={navbarStyles.activeNavItem}
-            to="/about/"
+            className={navbarStyles.deactivatedNavItem}
           >
-            {" "}
-            about me{" "}
+            about me
           </Link>
         </li>
         <li>
           <Link
-            className={navbarStyles.navItem}
-            activeClassName={navbarStyles.activeNavItem}
-            to="/projects/"
+            className={navbarStyles.deactivatedNavItem}
           >
-            {" "}
-            projects{" "}
+            projects
           </Link>
         </li>
         <li>
           <Link
-            className={navbarStyles.navItem}
-            activeClassName={navbarStyles.activeNavItem}
-            to="/music/"
+            className={navbarStyles.deactivatedNavItem}
           >
-            {" "}
-            music{" "}
+            music
           </Link>
         </li>
         <li>
           <Link
-            className={navbarStyles.navItem}
-            activeClassName={navbarStyles.activeNavItem}
-            to="/blog/"
+            className={navbarStyles.deactivatedNavItem}
           >
-            {" "}
-            blog{" "}
+            blog
           </Link>
         </li>
         <li>

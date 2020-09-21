@@ -25,6 +25,15 @@
   color: #454545;
 }
 
+.deactivated-nav-item {
+  color: #999999;
+  text-decoration: line-through;
+
+  font-size: .9rem;
+  transition: background 1s;
+
+  padding-bottom: 1rem;
+}
 
 .active-nav-item{
   color: black;
