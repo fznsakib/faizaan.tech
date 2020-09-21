@@ -7,3 +7,9 @@
   margin-left: 1rem;
 
 }
+
+@media (max-width: 800px) {
+  .blocks {
+    margin-left: 0;
+  }
+}
