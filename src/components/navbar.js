@@ -18,30 +18,36 @@ export default function Header(props) {
         </li>
         <li>
           <Link
-            className={navbarStyles.deactivatedNavItem}
+            className={navbarStyles.navItem}
+            activeClassName={navbarStyles.activeNavItem}
+            to="/about"
           >
             about me
           </Link>
         </li>
         <li>
           <Link
-            className={navbarStyles.deactivatedNavItem}
+            className={navbarStyles.navItem}
+            activeClassName={navbarStyles.activeNavItem}
+            to="/projects"
           >
             projects
           </Link>
         </li>
         <li>
           <Link
-            className={navbarStyles.deactivatedNavItem}
+            className={navbarStyles.navItem}
+            activeClassName={navbarStyles.activeNavItem}
+            to="/blog"
           >
             blog
           </Link>
         </li>
-        <li>
+        {/* <li>
           <div className={navbarStyles.underConstructionNotice}>
             *website under construction
           </div>
-        </li>
+        </li> */}
       </ul>
     </nav>
   );
