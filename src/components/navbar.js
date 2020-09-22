@@ -34,13 +34,6 @@ export default function Header(props) {
           <Link
             className={navbarStyles.deactivatedNavItem}
           >
-            music
-          </Link>
-        </li>
-        <li>
-          <Link
-            className={navbarStyles.deactivatedNavItem}
-          >
             blog
           </Link>
         </li>
