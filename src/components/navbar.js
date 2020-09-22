@@ -19,8 +19,8 @@ export default function Header(props) {
         <li>
           <Link
             className={navbarStyles.navItem}
-            activeClassName={navbarStyles.activeNavItem}
-            to="/about"
+            // activeClassName={navbarStyles.activeNavItem}
+            to="/construction"
           >
             about me
           </Link>
@@ -28,8 +28,8 @@ export default function Header(props) {
         <li>
           <Link
             className={navbarStyles.navItem}
-            activeClassName={navbarStyles.activeNavItem}
-            to="/projects"
+            // activeClassName={navbarStyles.activeNavItem}
+            to="/construction"
           >
             projects
           </Link>
@@ -37,8 +37,8 @@ export default function Header(props) {
         <li>
           <Link
             className={navbarStyles.navItem}
-            activeClassName={navbarStyles.activeNavItem}
-            to="/blog"
+            // activeClassName={navbarStyles.activeNavItem}
+            to="/construction"
           >
             blog
           </Link>
