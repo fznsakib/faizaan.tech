@@ -1,0 +1,23 @@
+.container {
+    display: flex;
+    height: 100vh;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;    
+}
+
+.block {
+    h1 {
+        font-size: 4vw;
+    }
+
+    h2 {
+        font-size: 4vw;
+    }
+
+    p {
+        font-size: 4vw;
+    }
+    
+    text-align: center;
+}
