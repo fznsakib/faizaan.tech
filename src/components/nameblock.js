@@ -11,7 +11,8 @@ class NameBlock extends Component {
 
   render() {
     return (
-      <div className={nameBlockStyles.headers}>
+      <div>
+      <div className={nameBlockStyles.nameHeaders}>
         <h1
           className={
             this.state.animate
@@ -48,6 +49,8 @@ class NameBlock extends Component {
         >
           faizaan sakib
         </h1>
+      </div>
+      <div className={nameBlockStyles.jobHeader}>
         <h1
           className={
             this.state.animate
@@ -58,6 +61,8 @@ class NameBlock extends Component {
           software engineer
         </h1>
       </div>
+      </div>
+
     );
   }
 

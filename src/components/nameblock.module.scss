@@ -1,22 +1,77 @@
-.headers {
+@function clamp($number, $min, $max) {
+  @return min(max($number, $min), $max);
+}
+
+.name-headers {
+    // -webkit-background-clip: text;
     h1 {
       font-family: "Radio Grotesk";
-      font-size: 8vw;
       font-weight: 400;
       margin-bottom: -0.25em;
+      // font-size: 8vw;
+      font-size: inherit;
     }
   }
-  
+
+.job-header {
+  h1 {
+    font-family: "Radio Grotesk";
+    font-weight: 400;
+    // margin-bottom: -0.25em;
+    // font-size: 8vw;
+    font-size: inherit;
+  }
+
+}
+
+
+
+@mixin responsive-font($size, $min: $size, $max: $size) {
+  $clamp-size: #{'min(max(#{$size}, #{$min}), #{$max})'};
+  font-size: $clamp-size;
+}
+
+.name-headers, .job-header {
+  @include responsive-font(10vw, 90px, 120px)
+}
   
 @media (max-width: 800px) {
-    .headers {
+    .name-headers {
       text-align: center;
-      
-      h1 {
-        font-size: 12vw;
-      }
+      @include responsive-font(16.5vw, 80px, 90px)
     }
+    
+    .job-header {
+      text-align: center;
+      margin-top: 1rem;
+      @include responsive-font(11vw, 50px, 70px)
+    }
+
   }
+
+@media (max-width: 500px) {
+  .name-headers {
+    font-size: 2rem;
+
+    text-align: center;
+    transform: rotate(90deg);
+    
+    margin-bottom: 6rem;
+    position: relative;
+    top: 3rem;
+
+    // h1 {
+    //   font-size: 18vw;
+    // }
+
+  }
+
+  .job-header {
+    text-align: center;
+    margin-top: 2rem;
+    @include responsive-font(8vw, 50px, 50px)
+  }
+}
 
 
 @-webkit-keyframes slide-in-top {
