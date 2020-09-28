@@ -31,11 +31,11 @@
   margin-top: 3rem;
   margin-left: 0;
   list-style: none;
+  gap: 2rem;
 
   a {
       color: #999999;
       text-decoration: none;
-      margin-right: 2rem;
       transition: 0.3s;
   }
 
@@ -47,14 +47,14 @@
   display: flex;
   flex-direction: row;
 
-  margin-left: 0;
   margin-top: 3rem;
+  margin-left: 0;
   list-style: none;
+  gap: 2rem;
 
   a {
       color: #999999;
       text-decoration: none;
-      margin-right: 2rem;
       transition: 0.3s;
   }
 }
@@ -63,20 +63,15 @@
   .icon-bar {
     text-align: center;
     place-content: center;
-    margin-left: 1.45rem;
+    gap: 8vw;
     margin-top: 2rem;
   }
 
   .icon-bar-animation {
     text-align: center;
     place-content: center;
-    margin-left: 1.45rem;
+    gap: 8vw;
     margin-top: 2rem;
-  }
-
-  .icon-bar-item {
-    padding-right: 1rem;
-    padding-left: 1rem;
   }
 }
 

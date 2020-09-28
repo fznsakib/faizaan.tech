@@ -2,6 +2,7 @@
   height: 100vh;
   writing-mode: vertical-lr;
   vertical-align: middle;
+  
 }
 
 .nav-list {
@@ -9,6 +10,7 @@
   list-style: none;
   
   margin: 1rem;
+  gap: 1rem;
 }
 
 
@@ -29,6 +31,8 @@
     margin: 1rem;
     text-align: center;
     justify-content: center;
+
+    gap: 1vw;
   }
 
   .nav-item {
@@ -42,7 +46,7 @@
   text-decoration: none;
   transition: background 1s;
 
-  margin: 1rem;
+  // margin: 1rem;
 }
 
 .nav-item:hover {
