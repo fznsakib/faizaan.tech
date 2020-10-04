@@ -4,7 +4,6 @@
       font-family: "Radio Grotesk";
       font-weight: 400;
       margin-bottom: -0.25em;
-      // font-size: 8vw;
       font-size: inherit;
     }
   }
@@ -13,8 +12,6 @@
   h1 {
     font-family: "Radio Grotesk";
     font-weight: 400;
-    // margin-bottom: -0.25em;
-    // font-size: 8vw;
     font-size: inherit;
   }
 
@@ -47,25 +44,30 @@
 
 @media (max-width: 500px) {
   .name-headers {
-    font-size: 2rem;
+    font-size: 80px;
 
-    text-align: center;
     transform: rotate(90deg);
     
-    margin-bottom: 6rem;
     position: relative;
+
     top: 3rem;
+    // left: 3rem;
+
+    white-space: nowrap;
+    // overflow: hidden;
 
     // h1 {
-    //   font-size: 18vw;
+      // margin-bottom: 20px;
     // }
 
+    display: none;
   }
 
   .job-header {
     text-align: center;
-    margin-top: 2rem;
-    @include responsive-font(8vw, 50px, 50px)
+    margin-top: 10rem;
+    font-size: 42px;
+    // @include responsive-font(5vw, 40px, 80px)
   }
 }
 
