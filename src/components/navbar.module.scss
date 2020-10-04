@@ -50,6 +50,14 @@
   }
 }
 
+@media (max-width: 500px) {
+
+  .nav-list {
+    gap: 8vw;
+  }
+
+}
+
 
 .nav-item:hover {
   color: #454545;
