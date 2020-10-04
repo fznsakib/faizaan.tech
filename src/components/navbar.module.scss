@@ -2,6 +2,7 @@
   height: 100vh;
   writing-mode: vertical-lr;
   vertical-align: middle;
+  
 }
 
 .nav-list {
@@ -9,8 +10,20 @@
   list-style: none;
   
   margin: 1rem;
+  gap: 1rem;
 }
 
+.nav-item { 
+  color: #999999;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: background 1s;
+}
+
+@mixin responsive-font($size, $min: $size, $max: $size) {
+  $clamp-size: #{'min(max(#{$size}, #{$min}), #{$max})'};
+  font-size: $clamp-size;
+}
 
 @media (max-width: 800px) {
   .nav {
@@ -26,24 +39,25 @@
     display: flex;
     list-style: none;
     
-    margin: 1rem;
     text-align: center;
     justify-content: center;
+
+    gap: 12vw;
   }
 
   .nav-item {
-    margin: 1rem;
+    @include responsive-font(4vw, 14px, 18px)
   }
 }
 
-.nav-item { 
-  color: #999999;
-  font-size: .9rem;
-  text-decoration: none;
-  transition: background 1s;
+@media (max-width: 500px) {
 
-  margin: 1rem;
+  .nav-list {
+    gap: 8vw;
+  }
+
 }
+
 
 .nav-item:hover {
   color: #454545;

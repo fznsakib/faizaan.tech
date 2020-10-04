@@ -23,6 +23,11 @@
     }
   }
   
+
+@mixin responsive-font($size, $min: $size, $max: $size) {
+  $clamp-size: #{'min(max(#{$size}, #{$min}), #{$max})'};
+  font-size: $clamp-size;
+}
   
 .icon-bar-animation {
   display: flex;
@@ -31,11 +36,11 @@
   margin-top: 3rem;
   margin-left: 0;
   list-style: none;
+  gap: 3rem;
 
   a {
       color: #999999;
       text-decoration: none;
-      margin-right: 2rem;
       transition: 0.3s;
   }
 
@@ -47,14 +52,14 @@
   display: flex;
   flex-direction: row;
 
-  margin-left: 0;
   margin-top: 3rem;
+  margin-left: 0;
   list-style: none;
+  gap: 3rem;
 
   a {
       color: #999999;
       text-decoration: none;
-      margin-right: 2rem;
       transition: 0.3s;
   }
 }
@@ -63,20 +68,27 @@
   .icon-bar {
     text-align: center;
     place-content: center;
-    margin-left: 1.45rem;
+    gap: 8vw;
     margin-top: 2rem;
+    @include responsive-font(3vw, 18px, 20px)
   }
 
   .icon-bar-animation {
     text-align: center;
     place-content: center;
-    margin-left: 1.45rem;
+    gap: 8vw;
     margin-top: 2rem;
+    @include responsive-font(3vw, 18px, 20px)
+  }
+}
+
+@media (max-width: 500px) {
+  .icon-bar {
+    @include responsive-font(4.5vw, 14px, 20px)
   }
 
-  .icon-bar-item {
-    padding-right: 1rem;
-    padding-left: 1rem;
+  .icon-bar-animation {
+    @include responsive-font(4.5vw, 14px, 20px)
   }
 }
 

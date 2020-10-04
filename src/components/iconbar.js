@@ -34,7 +34,7 @@ class IconBar extends Component {
             rel="noopener noreferrer"
             className={iconBarStyles.resumeIcon}
           >
-            <FontAwesomeIcon icon={faIdBadge} size="2x" fixedWidth />
+            <FontAwesomeIcon icon={faIdBadge} size="2x" />
           </a>
         </li>
         <li>
@@ -44,7 +44,7 @@ class IconBar extends Component {
             rel="noopener noreferrer"
             className={iconBarStyles.emailIcon}
           >
-            <FontAwesomeIcon icon={faEnvelope} size="2x" fixedWidth />
+            <FontAwesomeIcon icon={faEnvelope} size="2x" />
           </a>
         </li>
         <li>
@@ -54,7 +54,7 @@ class IconBar extends Component {
             rel="noopener noreferrer"
             className={iconBarStyles.linkedinIcon}
           >
-            <FontAwesomeIcon icon={faLinkedinIn} size="2x" fixedWidth />
+            <FontAwesomeIcon icon={faLinkedinIn} size="2x" />
           </a>
         </li>
         <li>
@@ -64,7 +64,7 @@ class IconBar extends Component {
             rel="noopener noreferrer"
             className={iconBarStyles.githubIcon}
           >
-            <FontAwesomeIcon icon={faGithub} size="2x" fixedWidth />
+            <FontAwesomeIcon icon={faGithub} size="2x" />
           </a>
         </li>
         <li>
@@ -74,7 +74,7 @@ class IconBar extends Component {
             rel="noopener noreferrer"
             className={iconBarStyles.soundcloudIcon}
           >
-            <FontAwesomeIcon icon={faSoundcloud} size="2x" fixedWidth />
+            <FontAwesomeIcon icon={faSoundcloud} size="2x" />
           </a>
         </li>
       </ul>
