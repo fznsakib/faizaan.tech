@@ -1,27 +1,56 @@
+@mixin responsive-font($size, $min: $size, $max: $size) {
+  $clamp-size: #{'min(max(#{$size}, #{$min}), #{$max})'};
+  font-size: $clamp-size;
+}
+
+@mixin responsive-top($size, $min: $size, $max: $size) {
+  $clamp-size: #{'min(max(#{$size}, #{$min}), #{$max})'};
+  top: $clamp-size;
+}
+
+@mixin responsive-circle-size($size, $min: $size, $max: $size) {
+  $clamp-size: #{'min(max(#{$size}, #{$min}), #{$max})'};
+  height: $clamp-size;
+  width: $clamp-size;
+}
+
 .name-headers {
-    // -webkit-background-clip: text;
-    h1 {
-      font-family: "Radio Grotesk";
-      font-weight: 400;
-      margin-bottom: -0.25em;
-      font-size: inherit;
-    }
+  position: relative;
+
+  h1 {
+    font-family: "Radio Grotesk";
+    font-weight: 400;
+    margin-bottom: -0.25em;
+    font-size: inherit;
   }
 
+  z-index: 2;
+}
+
 .job-header {
+  position: relative;
+
   h1 {
     font-family: "Radio Grotesk";
     font-weight: 400;
     font-size: inherit;
   }
 
+  z-index: 2;
 }
 
 
+.circle {
+  position: fixed;
+  top: -16vh;
+  right: 20vw;
 
-@mixin responsive-font($size, $min: $size, $max: $size) {
-  $clamp-size: #{'min(max(#{$size}, #{$min}), #{$max})'};
-  font-size: $clamp-size;
+  // height: 120vw;
+  // width: 120vw;
+  background-color: white;
+  border-radius: 50%;
+  z-index: 1;
+  display: none;
 }
 
 .name-headers, .job-header {
@@ -29,45 +58,79 @@
 }
   
 @media (max-width: 800px) {
-    .name-headers {
-      text-align: center;
-      @include responsive-font(16.5vw, 80px, 90px)
-    }
-    
-    .job-header {
-      text-align: center;
-      margin-top: 1rem;
-      @include responsive-font(11vw, 50px, 70px)
-    }
-
+  .name-headers {
+    text-align: center;
+    @include responsive-font(16.5vw, 80px, 90px)
   }
+  
+  .job-header {
+    text-align: center;
+    margin-top: 1rem;
+    @include responsive-font(11vw, 50px, 70px)
+  }
+
+}
 
 @media (max-width: 500px) {
   .name-headers {
-    font-size: 80px;
+    text-align: center;
 
-    transform: rotate(90deg);
-    
-    position: relative;
+    @include responsive-font(26vw, 70px, 110px);
 
-    top: 3rem;
-    // left: 3rem;
-
-    white-space: nowrap;
-    // overflow: hidden;
-
-    // h1 {
-      // margin-bottom: 20px;
-    // }
-
-    display: none;
+    .name1, .name1-animation, .name2, .name2-animation, .name3, .name3-animation {
+      display: none;
+    }
   }
-
+  
   .job-header {
     text-align: center;
-    margin-top: 10rem;
-    font-size: 42px;
-    // @include responsive-font(5vw, 40px, 80px)
+    margin-top: 2rem;
+
+    @include responsive-font(10vw, 30px, 50px)
+  }
+
+  .circle {
+    display: inline-block;
+
+    -webkit-animation: slide-in-elliptic-top-fwd 1.6s cubic-bezier(0.250, 0.460, 0.450, 0.940) forwards;
+    animation: slide-in-elliptic-top-fwd 1.6s cubic-bezier(0.250, 0.460, 0.450, 0.940) forwards;
+
+    @include responsive-circle-size(120vw, 500px, 500px)
+  }
+}
+
+
+
+@-webkit-keyframes slide-in-elliptic-top-fwd {
+  0% {
+    -webkit-transform: translateY(-600px) rotateX(-30deg) scale(0);
+            transform: translateY(-600px) rotateX(-30deg) scale(0);
+    -webkit-transform-origin: 50% 100%;
+            transform-origin: 50% 100%;
+    opacity: 0;
+  }
+  100% {
+    -webkit-transform: translateY(0) rotateX(0) scale(1);
+            transform: translateY(0) rotateX(0) scale(1);
+    -webkit-transform-origin: 50% 1400px;
+            transform-origin: 50% 1400px;
+    opacity: 1;
+  }
+}
+@keyframes slide-in-elliptic-top-fwd {
+  0% {
+    -webkit-transform: translateY(-600px) rotateX(-30deg) scale(0);
+            transform: translateY(-600px) rotateX(-30deg) scale(0);
+    -webkit-transform-origin: 50% 100%;
+            transform-origin: 50% 100%;
+    opacity: 0;
+  }
+  100% {
+    -webkit-transform: translateY(0) rotateX(0) scale(1);
+            transform: translateY(0) rotateX(0) scale(1);
+    -webkit-transform-origin: 50% 1400px;
+            transform-origin: 50% 1400px;
+    opacity: 1;
   }
 }
 
@@ -152,3 +215,5 @@
   .job-title {
     color: #6DB1D8;
   }
+
+ 

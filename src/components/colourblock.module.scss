@@ -1,8 +1,5 @@
 .colour-block {
     display: flex;
-    // padding-top: 4rem;
-    // padding-bottom: 2rem;
-    // justify-content: space-between;
 }
 
 
@@ -10,9 +7,21 @@
     .colour-block {
       text-align: center;
       place-content: center;
-  
+      
+      .rectangle-1, .rectangle-1-animation, .rectangle-2, .rectangle-2-animation, .rectangle-3, .rectangle-3-animation, .rectangle-4, .rectangle-4-animation {
+        width: 21vw;
+      }
+    }
+
+  }
+
+@media (max-width: 500px) {
+  .colour-block {
+    .rectangle-1, .rectangle-1-animation, .rectangle-2, .rectangle-2-animation, .rectangle-3, .rectangle-3-animation, .rectangle-4, .rectangle-4-animation {
+      height: 0.4rem;
     }
   }
+}
 
 @-webkit-keyframes scale-up-hor-left {
   0% {
