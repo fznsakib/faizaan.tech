@@ -2,15 +2,16 @@
   height: 100vh;
   writing-mode: vertical-lr;
   vertical-align: middle;
-  
 }
 
 .nav-list {
-  display: flex;
+  display: grid;
   list-style: none;
   
+  grid-auto-flow: column;
+  max-height: 20rem;
+
   margin: 1rem;
-  gap: 1rem;
 }
 
 .nav-item { 
@@ -36,7 +37,7 @@
   }
 
   .nav-list {
-    display: flex;
+    display: grid;
     list-style: none;
     
     text-align: center;
