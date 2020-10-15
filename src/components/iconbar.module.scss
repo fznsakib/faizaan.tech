@@ -30,13 +30,15 @@
 }
   
 .icon-bar-animation {
-  display: flex;
+  display: grid;
+  grid-auto-flow: column;
   flex-direction: row;
+
+  max-width: 30rem;
 
   margin-top: 3rem;
   margin-left: 0;
   list-style: none;
-  gap: 3rem;
 
   a {
       color: #999999;
@@ -49,13 +51,15 @@
 }
 
 .icon-bar {
-  display: flex;
+  display: grid;
+  grid-auto-flow: column;
   flex-direction: row;
+
+  max-width: 30rem;
 
   margin-top: 3rem;
   margin-left: 0;
   list-style: none;
-  gap: 3rem;
 
   a {
       color: #999999;
@@ -66,6 +70,7 @@
 
 @media (max-width: 800px) {
   .icon-bar {
+    align-self: center;
     text-align: center;
     place-content: center;
     gap: 8vw;
@@ -74,6 +79,7 @@
   }
 
   .icon-bar-animation {
+    align-self: center;
     text-align: center;
     place-content: center;
     gap: 8vw;
