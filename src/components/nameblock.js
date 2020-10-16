@@ -12,7 +12,7 @@ class NameBlock extends Component {
   render() {
     return (
       <div>
-      <span className={nameBlockStyles.circle}></span>
+      <span className={this.state.animate ? `${nameBlockStyles.circleAnimation}` : `${nameBlockStyles.circle}`}></span>
       <div className={nameBlockStyles.nameHeaders}>
         <h1
           className={
