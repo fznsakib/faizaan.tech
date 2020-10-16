@@ -9,7 +9,7 @@
 }
 
 .container {
-  min-height: 100vh;
+  height: 100%;
 
   display: flex;
   justify-content: center;
@@ -29,11 +29,16 @@
 
   background-color: #FFE8D7;
 
-  min-height: 100vh;
+  height: 100vh;
 }
 
 
 @media (max-width: 500px) {
+
+  .container {
+    max-height: 100%;
+  }
+
   .content {
     display: flex;
     flex-direction: column;
