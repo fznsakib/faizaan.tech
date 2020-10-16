@@ -45,12 +45,24 @@
   top: -16vh;
   right: 20vw;
 
-  // height: 120vw;
-  // width: 120vw;
   background-color: white;
   border-radius: 50%;
   z-index: 1;
   display: none;
+}
+
+.circle-animation {
+  position: fixed;
+  top: -16vh;
+  right: 20vw;
+
+  background-color: white;
+  border-radius: 50%;
+  z-index: 1;
+  display: none;
+
+  -webkit-animation: slide-in-elliptic-top-fwd 1.6s cubic-bezier(0.250, 0.460, 0.450, 0.940) forwards;
+  animation: slide-in-elliptic-top-fwd 1.6s cubic-bezier(0.250, 0.460, 0.450, 0.940) forwards;
 }
 
 .name-headers, .job-header {
@@ -91,10 +103,11 @@
 
   .circle {
     display: inline-block;
-
-    -webkit-animation: slide-in-elliptic-top-fwd 1.6s cubic-bezier(0.250, 0.460, 0.450, 0.940) forwards;
-    animation: slide-in-elliptic-top-fwd 1.6s cubic-bezier(0.250, 0.460, 0.450, 0.940) forwards;
-
+    @include responsive-circle-size(120vw, 500px, 500px)
+  }
+  
+  .circle-animation {
+    display: inline-block;
     @include responsive-circle-size(120vw, 500px, 500px)
   }
 }
