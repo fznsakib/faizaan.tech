@@ -32,6 +32,30 @@
   height: 100vh;
 }
 
+.row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  flex-basis: 100%;
+  flex: 1 0 250px;
+
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+@media (max-width: 800px) {
+
+  .content {
+    padding-bottom: 10vh;
+  }
+}
 
 @media (max-width: 500px) {
 
