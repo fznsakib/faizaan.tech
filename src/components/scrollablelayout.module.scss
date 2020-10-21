@@ -1,0 +1,54 @@
+@mixin max-height($height-1, $height-1) {
+  $max-height: #{'max(#{$height-1}, #{$height-2})'};
+  height: $clamp-size;
+}
+
+
+:root {
+    --nav-width: 8.75rem;
+    --gutter: 12px;
+    --page-max-width: 40rem;
+  }
+  
+  .background {
+    background-color: #FFE8D7;
+  }
+  
+  .container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    align-content: flex-start;
+    flex:1;
+  }
+  
+  .content {
+    // Centering
+    padding: 1rem;
+    
+    // Expands div to fill page
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: auto;
+  
+    background-color: #FFE8D7;
+  }
+  
+  @media (max-width: 800px) {
+  
+    .content {
+      padding-bottom: 10vh;
+    }
+  }
+  
+  @media (max-width: 500px) {
+
+    .content {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center; 
+  
+      padding-bottom: 10vh;
+    }
+  }
