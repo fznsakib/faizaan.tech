@@ -1,3 +1,13 @@
+@mixin responsive-picture-width($size, $min: $size, $max: $size) {
+    $clamp-size: #{'min(max(#{$size}, #{$min}), #{$max})'};
+    width: $clamp-size;
+}
+
+@mixin responsive-font($size, $min: $size, $max: $size) {
+    $clamp-size: #{'min(max(#{$size}, #{$min}), #{$max})'};
+    font-size: $clamp-size;
+}
+
 .text {
     color: #E94134;
 
@@ -11,3 +21,52 @@
 
     font-weight: 400;
 } 
+
+
+.profile-picture {
+    margin: 0;
+    
+    border-radius: 15px 50px 30px;
+    border-style: solid;
+    border-color: white;
+    border-width: 6px;
+
+    align-self: baseline;
+
+    @include responsive-picture-width(20vw, 220px, 260px);
+    height: auto;
+}
+
+.header {
+    color: #E94134;
+    position: relative;
+
+    text-align: left;
+    vertical-align: middle;
+
+    margin: 0;
+    font-family: "Radio Grotesk";
+    font-weight: 400;
+
+    @include responsive-font(8vw, 80px, 100px)
+}
+
+
+@media (max-width: 800px) {
+
+  }
+  
+
+@media (max-width: 500px) {
+
+    .profile-picture {
+        align-self: center;
+        border-radius: 50%;
+    }
+
+    .header {
+        align-self: center;
+        @include responsive-font(18vw, 30px, 80px)
+    }
+
+}
