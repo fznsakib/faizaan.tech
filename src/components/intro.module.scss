@@ -1,18 +1,32 @@
 .profile-picture {
     margin: 0;
     
-    border-radius: 50%;
+    border-radius: 15px 50px 30px;
+    border-style: solid;
+    border-color: white;
+    border-width: 6px;
 
-    width: 40vh;
+    width: 20vw;
     height: auto;
+
+    align-self: baseline;
 }
 
 .greeting {
-    margin: 0;
-
     color: #E94134;
     position: relative;
 
-    text-align: center;
+    text-align: left;
     vertical-align: middle;
+
+    align-self: baseline;
+
+    left: 0;
+
+    h1 {
+        margin: 0;
+        font-family: "Radio Grotesk";
+        font-weight: 400;
+        font-size: 8vw;
+    }
 }
