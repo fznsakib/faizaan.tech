@@ -20,6 +20,8 @@
     width: 100%;
 
     font-weight: 400;
+
+    @include responsive-font(3vw, 13px, 16px)
 } 
 
 
