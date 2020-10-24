@@ -1,13 +1,31 @@
 .box {
-    background: rgb(255, 255, 133);
+    // background: #ffff8580;
+    background: rgba(109, 177, 216, 0.1);
+    // background: #6DB1D8;
     padding: 20px;
     display: grid;
-    place-items: center;
-    text-align: center;
+    place-items: left;
+    text-align: left;
     
     color: red;
     font-size: 20px;
     transition: 0.5s;
+
+    border-radius: 10px;
+
+    -webkit-transition: background color margin 0.5s ease-in-out;
+    -moz-transition: background color margin 0.5s ease-in-out;
+    -o-transition: background color margin 0.5s ease-in-out;
+}
+
+
+.box:hover {
+    background: #E94134;
+    color: white;
+
+    // cursor:pointer;
+    margin-top: -5px;
+    margin-bottom: 5px;
 }
 
 .header {
@@ -16,11 +34,7 @@
 
 .text {
     font-weight: 400;
-}
-
-.box:hover {
-    background: #ff97ba;
-    color: white;
+    font-size: 16px;
 }
 
 .image {

@@ -37,7 +37,8 @@
   @media (max-width: 800px) {
   
     .content {
-      padding-bottom: 10vh;
+      padding: 2rem;
+      margin-bottom: 10vh;
     }
   }
   
@@ -48,6 +49,6 @@
       flex-direction: column;
   
       padding: 1rem;
-      padding-bottom: 10vh;
+      margin-bottom: 10vh;
     }
   }
