@@ -66,6 +66,13 @@
 @media (max-width: 800px) {
     .box {
         grid-column: unset !important;
-        grid-row: unset !important;
+        grid-row: span 2;
     }
 }
+
+// @media (max-width: 500px) {
+//     .box {
+//         grid-column: unset !important;
+//         grid-row: unset !important;
+//     }
+// }

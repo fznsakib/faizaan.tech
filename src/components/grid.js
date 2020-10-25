@@ -16,14 +16,6 @@ export default function Grid() {
           <GridBox image='👨‍💻' header='currently working on' text="I'm currently looking for opportunities in software engineering, for which I'm open to roles in small to large sized companies." alt=''></GridBox>
           <GridBox image='📚' header='currently learning ' text="I'm currently looking for opportunities in software engineering, for which I'm open to roles in small to large sized companies." alt=''></GridBox>
           <GridBox image='💖' header='hobbies' text="I'm currently looking for opportunities in software engineering, for which I'm open to roles in small to large sized companies.  I'm hoping my new role can give me the chance to put my current skills to use while continuing to grow my skillset, by learning from doing and from talented engineers around me. Reach out to me via the provided options on the home page!" alt=''></GridBox>
-          {/* <GridBox image='💼' header='current employment' text="This is a test. Blah Blah Blah..." alt=''></GridBox>
-          <GridBox image='⌨️' header='favourite language' text="This is a test. Blah Blah Blah... " alt=''></GridBox>
-          <GridBox image='🛠' header='favourite framework' text="This is a test. Blah Blah Blah..." alt=''></GridBox>
-          <GridBox image='😇' header='most proud of' text="This is a test. Blah Blah Blah..." alt=''></GridBox>
-          <GridBox image='🧐' header='interested in' text="This is a test. Blah Blah Blah..." alt=''></GridBox>
-          <GridBox image='👨‍💻' header='currently working on' text="This is a test. Blah Blah Blah..." alt=''></GridBox>
-          <GridBox image='📚' header='currently learning ' text="This is a test. Blah Blah Blah..." alt=''></GridBox>
-          <GridBox image='💖' header='hobbies' text="This is a test. Blah Blah Blah..." alt=''></GridBox> */}
       </div>
     );
   }
