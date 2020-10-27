@@ -1,0 +1,27 @@
+.container {
+    position: relative;
+    max-width: 100%;
+
+    background: rgba(255, 255, 255, 0.6);
+    padding: 10px;
+    margin: 2rem 0;
+    text-align: center;
+
+    border-radius: 10px;
+}
+
+.column {
+    background: rgba(109, 177, 216, 0.1);
+    color: black;
+}
+
+.item {
+    text-align: center;
+    margin: 2rem;
+    transition: 1s;
+}
+
+.item:hover {
+    margin-top: 50px;
+    // scale: 100px;
+}
