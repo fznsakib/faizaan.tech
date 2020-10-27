@@ -1,25 +1,26 @@
 import React from "react";
-// import InfoGridBox from "../templates/infogridbox"
+
+import LanguageIcons from "../hooks/languageicons"
+import SkillIcon from "../templates/skillicon"
 
 import layoutStyles from "../components/layout.module.scss"
 import skillGridStyles from "./skillgrid.module.scss"
 
+
 export default function SkillGrid() {
+
+    const languageIcons = LanguageIcons();
+
+    console.log(languageIcons)
+
     return (
         <div className={skillGridStyles.container}>
             <div className={layoutStyles.row}>
-                <div className={layoutStyles.column + " " + skillGridStyles.column}>
-                    <p className={skillGridStyles.item}>hi</p>
-                </div>
-                <div className={layoutStyles.column + " " + skillGridStyles.column}>
-                    <p className={skillGridStyles.item}>hi</p>
-                </div>
-                <div className={layoutStyles.column + " " + skillGridStyles.column}>
-                    <p className={skillGridStyles.item}>hi</p>
-                </div>
-                <div className={layoutStyles.column + " " + skillGridStyles.column}>
-                    <p className={skillGridStyles.item}>hi</p>
-                </div>
+                {languageIcons.map((language, i) => (
+                    <div className={layoutStyles.column + " " + skillGridStyles.column} key={i}>
+                        <SkillIcon name={language.node.name} publicURL={language.node.publicURL}></SkillIcon>
+                    </div>
+                ))}
             </div>
         </div>
             

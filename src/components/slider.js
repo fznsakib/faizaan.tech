@@ -3,7 +3,7 @@ import styled from '@emotion/styled';
 import Slider from 'react-slick';
 
 import Image from 'gatsby-image';
-import ImageDataHook from '../hooks/useresumeurl';
+import ImageDataHook from '../hooks/resumeurl';
 
 const LanguageSlider = () => {
     const settings = {

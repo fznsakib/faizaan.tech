@@ -5,12 +5,12 @@ import ColourBlock from "../components/colourblock";
 import NameBlock from "../components/nameblock";
 import IconBar from "../components/iconbar";
 
-import { useResumeUrl } from "../hooks/useresumeurl";
+import { ResumeUrl } from "../hooks/resumeurl";
 
 import indexStyles from "./index.module.scss";
 
 export default function Home() {
-  const resume_url = useResumeUrl();
+  const resume_url = ResumeUrl();
   return (
     <div>
       <Layout>
