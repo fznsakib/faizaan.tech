@@ -28,13 +28,22 @@ export default function About() {
       <ScrollableLayout>
         <Head title="About Me" />
         <Img className={aboutStyles.profilePicture} fixed={data.file.childImageSharp.fixed} alt="Faizaan"/>
-        <h1 className={aboutStyles.header}>about me</h1>
-        <p className={aboutStyles.text}>I have recently graduated from the University of Bristol with a Masters in Computer Science (MEng), achieving first-class honours. Right now, I’m on the lookout for exciting opportunities in software engineering. Get in touch with me on <a href="https://www.linkedin.com/in/faizaan-sakib" target="_blank" rel="noopener noreferrer">LinkedIn!</a></p>
-        <p className={aboutStyles.text}>I have enjoyed working on many projects, aimed at solving all sorts of problems using different technologies. This has given me a strong breadth of skills, with experience working in areas of cloud computing, web development, deep learning, VR, and blockchain, just to name a few. Through this, I have developed a keen attitude to constantly learn new technologies and be able to quickly adapt where necessary.</p>
-        <h1 className={aboutStyles.subHeader + " " + aboutStyles.skillsHeader}>skills</h1>
+        <div className={aboutStyles.section} id={aboutStyles.aboutSection}>
+          <h1 className={aboutStyles.header}>about me</h1>
+          <div className={aboutStyles.underline}></div>
+          <p className={aboutStyles.text}>I have recently graduated from the University of Bristol with a Masters in Computer Science (MEng), achieving first-class honours. Right now, I’m on the lookout for exciting opportunities in software engineering. Get in touch with me on <a href="https://www.linkedin.com/in/faizaan-sakib" target="_blank" rel="noopener noreferrer">LinkedIn!</a></p>
+          <p className={aboutStyles.text}>I have enjoyed working on many projects, aimed at solving all sorts of problems using different technologies. This has given me a strong breadth of skills, with experience working in areas of cloud computing, web development, deep learning, VR, and blockchain, just to name a few. Through this, I have developed a keen attitude to constantly learn new technologies and be able to quickly adapt where necessary.</p>
+        </div>
+        <div className={aboutStyles.section} id={aboutStyles.skillsSection}>
+          <h1 className={aboutStyles.subHeader}>skills</h1>
+          <div className={aboutStyles.underline}></div>
         <SkillGrid></SkillGrid>
-        <h1 className={aboutStyles.subHeader + " " + aboutStyles.extraHeader}>a few more bits...</h1>
-        <InfoGrid></InfoGrid>
+        </div>
+        <div className={aboutStyles.section} id={aboutStyles.extraSection}>
+          <h1 className={aboutStyles.subHeader}>a few more bits</h1>
+          <div className={aboutStyles.underline}></div>
+          <InfoGrid></InfoGrid>
+        </div>
       </ScrollableLayout>
     </div>
   );

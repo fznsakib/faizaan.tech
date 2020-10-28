@@ -23,6 +23,9 @@
   }
   
   .content {
+    display: flex;
+    flex-direction: column;
+    
     // Centering
     padding: 3rem;
     

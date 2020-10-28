@@ -45,7 +45,7 @@ export default function SkillIcon(props) {
 
     return (
         <div className={className}>
-            <img src={props.publicURL} alt={props.name} />
+            <img src={props.publicURL} alt={name} />
             <div className={skillIconStyles.name}>{name}</div>
         </div>
     );
