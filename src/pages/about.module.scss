@@ -53,9 +53,30 @@
     @include responsive-font(8vw, 80px, 100px)
 }
 
+.sub-header {
+    color: #E94134;
+    position: relative;
+
+    margin: 2rem 0 0 0;
+    font-family: "Radio Grotesk";
+    font-weight: 400;
+}
+
+.skills-header {
+    text-align: right;
+    @include responsive-font(6vw, 50px, 70px)
+}
+
+.extra-header {
+    text-align: left;
+    @include responsive-font(6vw, 50px, 70px)
+}
+
 
 @media (max-width: 800px) {
-
+    .sub-header {
+        margin: 1rem 0 0 0;
+    }
   }
   
 
@@ -71,4 +92,11 @@
         @include responsive-font(18vw, 30px, 80px)
     }
 
+    .sub-header {
+        text-align: center;
+    }
+
+    .extra-header {
+        @include responsive-font(12vw, 38px, 50px)
+    }
 }
