@@ -36,7 +36,7 @@ export default function SkillGrid() {
             <div className={skillGridStyles.container}>
                 <div className={layoutStyles.row}>
                     {languageIcons.map((language, i) => (
-                        <div className={layoutStyles.column + " " + skillGridStyles.column} key={i}>
+                        <div className={layoutStyles.column + " " + skillGridStyles.languageColumn} key={i}>
                             <SkillIcon name={language.node.name} publicURL={language.node.publicURL}></SkillIcon>
                         </div>
                     ))}
@@ -46,7 +46,7 @@ export default function SkillGrid() {
             <div className={skillGridStyles.container}>
                 <div className={layoutStyles.row}>
                     {technologyIcons.map((technology, i) => (
-                        <div className={layoutStyles.column + " " + skillGridStyles.column} key={i}>
+                        <div className={layoutStyles.column + " " + skillGridStyles.technologyColumn} key={i}>
                             <SkillIcon name={technology.node.name} publicURL={technology.node.publicURL}></SkillIcon>
                         </div>
                     ))}

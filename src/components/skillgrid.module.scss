@@ -10,9 +10,12 @@
     border-radius: 10px;
 }
 
-.column {
-    // background: rgba(109, 177, 216, 0.1);
-    color: black;
+.language-column {
+    // flex: 1 0 100px;
+}
+
+.technology-column {
+    flex: 1 0 150px;
 }
 
 .item {
@@ -23,5 +26,32 @@
 
 .item:hover {
     margin-top: 50px;
-    // scale: 100px;
 }
+
+@media (max-width: 800px) {
+
+    .technology-column {
+        flex: 1 0 100px;
+    }
+
+  }
+
+@media (max-width: 500px) {
+
+    .language-column {
+        flex: 1 0 150px;
+    }
+
+    .technology-column {
+        flex: 1 0 90px;
+    }
+
+  }
+
+  @media (max-width: 420px) {
+
+    .technology-column {
+        flex: 1 0 75px;
+    }
+
+  }

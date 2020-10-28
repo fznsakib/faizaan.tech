@@ -8,7 +8,6 @@
 
     img {
         margin: 0;
-        height: 60px;
         filter: grayscale(100%) opacity(50%);
         transition: 0.6s;
     }
@@ -35,16 +34,23 @@
 
 .language {
 
-    margin: 2rem 1rem;
-    padding: 0rem 1rem;
+    margin: 2rem 0rem;
+    padding: 0rem 0.5rem;
+
+    img {
+        height: 60px;
+    }
 
 }
 
 .technology {
     
-    margin: 2rem 1rem;
-    padding: 0rem 1rem;
+    margin: 1rem 0rem;
+    padding: 0rem 0rem;
 
+    img {
+        height: 50px;
+    }
 }
 
 
@@ -55,16 +61,31 @@
     margin: 0 auto;
     font-size: 12px;
     
+    width: fit-content;
+
     opacity: 0%;
     transition: 0.3s;
 
-    // color: #E94134;
     color: black;
     font-weight: 300;
 }
 
-.cplusplus {
+@media (max-width: 800px) {
+    
+    .technology {
+        img {
+            height: 40px;
+        }
+    }
+}
 
+@media (max-width: 500px) {
+
+    .technology {
+        img {
+            height: 36px;
+        }
+    }
 }
 
 .go {
@@ -73,11 +94,8 @@
     }
 }
 
-
-.javascript {
-
-}
-
-.python {
-
+.graphql {
+    .name {
+        font-size: 10px;
+    }
 }

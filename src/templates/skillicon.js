@@ -7,7 +7,8 @@ export default function SkillIcon(props) {
         'c++': skillIconStyles.cplusplus,
         'go': skillIconStyles.go,
         'javascript': skillIconStyles.javascript,
-        'python': skillIconStyles.python
+        'python': skillIconStyles.python,
+        'graphql': skillIconStyles.graphql
     }
 
     var languageMap = {
@@ -18,7 +19,7 @@ export default function SkillIcon(props) {
     }
     
     var technologyMap = {
-        'amazonwebservices': 'Amazon Web Services',
+        'amazonwebservices': 'AWS',
         'css3': 'CSS',
         'django': 'Django',
         'flask': 'Flask',
