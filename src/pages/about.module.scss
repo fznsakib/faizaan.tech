@@ -9,17 +9,19 @@
 }
 
 .profile-picture {
-    margin: 0;
-    
-    border-radius: 15px 50px 30px;
-    border-style: solid;
-    border-color: white;
-    border-width: 6px;
+    Img {
+        margin: 0;
+        
+        border-radius: 15px 50px 30px;
+        border-style: solid;
+        border-color: white;
+        border-width: 6px;
 
-    align-self: baseline;
+        align-self: baseline;
 
-    @include responsive-picture-width(20vw, 220px, 260px);
-    height: auto;
+        @include responsive-picture-width(20vw, 220px, 260px);
+        height: auto;
+    }
 }
 
 .text {
@@ -177,7 +179,10 @@
 
     .profile-picture {
         align-self: center;
-        border-radius: 50%;
+
+        Img {
+            border-radius: 50%;
+        }
     }
 
     .header {
