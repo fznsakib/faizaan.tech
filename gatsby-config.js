@@ -4,6 +4,7 @@ module.exports = {
     title: "Faizaan Sakib",
     author: "Faizaan Sakib",
     email: "fznsakib@gmail.com",
+    siteUrl: "https://faizaan.tech",
   },
   plugins: [
     {
@@ -53,6 +54,7 @@ module.exports = {
           threshold: 0.2, // Percentage of an element's area that needs to be visible to launch animation
           once: true, // Defines if animation needs to be launched once
       }
-    }
+    },
+    `gatsby-plugin-sitemap`
   ],
 };
