@@ -10,23 +10,29 @@ export default function Head({ title }) {
       site {
         siteMetadata {
           title
+          description
         }
       }
     }
   `);
 
   return (
-    <Helmet title={`${title} | ${data.site.siteMetadata.title}`}>
+    <Helmet 
+      title={`${title} | ${data.site.siteMetadata.title}`}
+      meta={[
+        { name: 'charSet', content: 'utf-8' },
+        { name: 'description', content: data.site.siteMetadata.description },
+        { name: 'keywords', content: 'Faizaan, Sakib, software, engineer, computer, science, UK, England, backend, development, portfolio, blog' },
+        { property: 'og:type', content: 'website' }
+      ]}
+    >
         <html lang="en" />
-        <meta charSet="utf-8" />
-        <title>Faizaan Sakib | Software Engineer</title>
-        <meta name='description'>Recent masters graduate in Computer Science specialising in back-end development based in the UK. Come find out more about me and the projects I have been involved with!</meta>
         <JsonLd>
           {{
             '@context': 'https://schema.org',
             '@type': 'Portfolio',
             url: 'http://faizaan.tech',
-            name: 'Faizaan Sakib | Software Engineer',
+            name: 'Faizaan Sakib',
             author: {
               '@type': 'Person',
               'name': 'Faizaan Sakib',
