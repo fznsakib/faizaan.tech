@@ -35,6 +35,9 @@
     flex-basis: auto;
   
     background-color: #FFE8D7;
+
+    min-height: 100vh;
+    max-height: fit-content;
   }
   
   @media (max-width: 800px) {
@@ -42,6 +45,7 @@
     .content {
       padding: 2rem;
       margin-bottom: 10vh;
+      min-height: 90vh;
     }
   }
   

@@ -4,7 +4,7 @@ import Navbar from "./navbar";
 import "../styles/index.scss";
 import scrollableLayoutStyles from "./scrollablelayout.module.scss";
 
-export default function Layout(props) {
+export default function ScrollableLayout(props) {
   return (
     <div>
       <div className={scrollableLayoutStyles.container}>
