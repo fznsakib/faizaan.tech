@@ -1,9 +1,20 @@
 
+// Ensures Google does not crawl through deploy previews that may be considered duplicate content and impacting SEO
+const {
+  NODE_ENV,
+  URL: NETLIFY_SITE_URL = 'https://faizaan.tech',
+  DEPLOY_PRIME_URL: NETLIFY_DEPLOY_URL = NETLIFY_SITE_URL,
+  CONTEXT: NETLIFY_ENV = NODE_ENV,
+} = process.env
+const isNetlifyProduction = NETLIFY_ENV === 'production'
+const siteUrl = isNetlifyProduction ? NETLIFY_SITE_URL : NETLIFY_DEPLOY_URL
+
 module.exports = {
   siteMetadata: {
     title: "Faizaan Sakib",
     author: "Faizaan Sakib",
     email: "fznsakib@gmail.com",
+    siteUrl: "https://faizaan.tech",
   },
   plugins: [
     {
@@ -13,7 +24,6 @@ module.exports = {
         head: true
       }
     },
-    "gatsby-plugin-react-helmet",
     {
       resolve: "gatsby-source-contentful",
       options: {
@@ -21,7 +31,6 @@ module.exports = {
         accessToken: process.env.CONTENTFUL_ACCESS_TOKEN,
       },
     },
-    "gatsby-plugin-sass",
     {
       resolve: "gatsby-source-filesystem",
       options: {
@@ -29,7 +38,6 @@ module.exports = {
         path: `${__dirname}/src`,
       },
     },
-    "gatsby-plugin-sharp",
     {
       resolve: "gatsby-transformer-remark",
       options: {
@@ -46,13 +54,38 @@ module.exports = {
         icon: "static/favicon.png"
       },
     },
-    "gatsby-transformer-sharp",
     {
       resolve: `gatsby-plugin-scroll-reveal`,
       options: {
           threshold: 0.2, // Percentage of an element's area that needs to be visible to launch animation
           once: true, // Defines if animation needs to be launched once
       }
-    }
+    },
+    {
+      resolve: 'gatsby-plugin-robots-txt',
+      options: {
+        resolveEnv: () => NETLIFY_ENV,
+        env: {
+          production: {
+            policy: [{ userAgent: '*' }],
+          },
+          'branch-deploy': {
+            policy: [{ userAgent: '*', disallow: ['/'] }],
+            sitemap: null,
+            host: null,
+          },
+          'deploy-preview': {
+            policy: [{ userAgent: '*', disallow: ['/'] }],
+            sitemap: null,
+            host: null,
+          },
+        },
+      },
+    },
+    "gatsby-plugin-react-helmet",
+    "gatsby-plugin-sass",
+    "gatsby-plugin-sharp",
+    "gatsby-transformer-sharp",
+    `gatsby-plugin-sitemap`
   ],
 };
