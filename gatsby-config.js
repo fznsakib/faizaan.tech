@@ -1,8 +1,3 @@
-/**
- * Configure your Gatsby site with this file.
- *
- * See: https://www.gatsbyjs.org/docs/gatsby-config/
- */
 
 module.exports = {
   siteMetadata: {
@@ -11,6 +6,13 @@ module.exports = {
     email: "fznsakib@gmail.com",
   },
   plugins: [
+    {
+      resolve: `gatsby-plugin-google-analytics`,
+      options: {
+        trackingId: process.env.GOOGLE_ANALYTICS_TRACKING_ID,
+        head: true
+      }
+    },
     "gatsby-plugin-react-helmet",
     {
       resolve: "gatsby-source-contentful",
