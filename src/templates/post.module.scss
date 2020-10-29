@@ -3,9 +3,13 @@
     font-size: $clamp-size;
 }
 
+p {
+    font-size: 0.8em;
+    font-weight: 400;
+}
+
 img {
-    width: 70%;
-    align-items: center;
+    width: 80%;
 }
 
 .header {

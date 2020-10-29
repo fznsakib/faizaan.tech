@@ -2,7 +2,6 @@ import React from "react";
 import { Link, graphql, useStaticQuery } from "gatsby";
 
 import ScrollableLayout from "../components/scrollablelayout";
-import Layout from "../components/layout";
 import Head from "../components/head";
 
 import blogStyles from "./blog.module.scss";
