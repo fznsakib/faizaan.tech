@@ -2,7 +2,7 @@ import React from "react";
 import { Helmet } from "react-helmet";
 import { useStaticQuery, graphql } from "gatsby";
 
-import JsonLd from '../components/JsonLd'
+import JsonLd from './jsonld.js'
 
 export default function Head({ title }) {
   const data = useStaticQuery(graphql`
