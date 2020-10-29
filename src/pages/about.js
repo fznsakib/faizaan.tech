@@ -27,7 +27,7 @@ export default function About() {
     <div>
       <ScrollableLayout>
         <Head title="About Me" />
-        <div className={aboutStyles.profilePicture} data-sal="zoom-in" data-sal-duration="1000" data-sal-easing="ease">
+        <div className={aboutStyles.profilePicture} data-sal="zoom-out" data-sal-duration="1000" data-sal-easing="ease">
           <Img fixed={data.file.childImageSharp.fixed} alt="Faizaan"/>
         </div>
         <div className={aboutStyles.section} id={aboutStyles.aboutSection} data-sal="zoom-out" data-sal-duration="1000" data-sal-easing="ease">
