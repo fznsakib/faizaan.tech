@@ -29,6 +29,7 @@
     "gatsby-plugin-scroll-reveal": "0.0.7",
     "gatsby-plugin-sharp": "^2.6.43",
     "gatsby-plugin-sitemap": "^2.4.17",
+    "gatsby-plugin-web-font-loader": "^1.0.4",
     "gatsby-remark-images": "^3.3.23",
     "gatsby-remark-relative-images": "^0.3.0",
     "gatsby-source-contentful": "^2.3.34",

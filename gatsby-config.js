@@ -13,6 +13,7 @@ module.exports = {
   siteMetadata: {
     title: "Faizaan Sakib",
     author: "Faizaan Sakib",
+    description: "Recent masters graduate in Computer Science specialising in back-end development based in the UK. Come find out more about me and the projects I have been involved with!",
     email: "fznsakib@gmail.com",
     siteUrl: "https://faizaan.tech",
   },
@@ -86,6 +87,7 @@ module.exports = {
     "gatsby-plugin-sass",
     "gatsby-plugin-sharp",
     "gatsby-transformer-sharp",
-    `gatsby-plugin-sitemap`
+    "gatsby-plugin-sitemap",
+    "gatsby-plugin-web-font-loader",
   ],
 };
