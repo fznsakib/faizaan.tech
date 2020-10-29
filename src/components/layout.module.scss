@@ -16,6 +16,8 @@
   align-items: flex-start;
   align-content: flex-start;
   flex:1;
+
+  overflow-y: hidden;
 }
 
 .content {
@@ -32,6 +34,12 @@
   height: 100vh;
 }
 
+@media (max-width: 800px) {
+
+  .content {
+    padding-bottom: 10vh;
+  }
+}
 
 @media (max-width: 500px) {
 
@@ -47,4 +55,23 @@
 
     padding-bottom: 10vh;
   }
+}
+
+
+.row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  flex-basis: 100%;
+  flex: 1 0 100px;
+
+  align-items: center;
+  justify-content: center;
+  margin: 0;
 }

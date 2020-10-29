@@ -1,15 +1,52 @@
 import React from "react";
-import Layout from "../components/layout";
+import { graphql, useStaticQuery } from "gatsby";
+import Img from "gatsby-image"
+
+import ScrollableLayout from "../components/scrollablelayout";
 import Head from "../components/head";
+import InfoGrid from "../components/infogrid"
+import SkillGrid from "../components/skillgrid"
+
+import aboutStyles from "./about.module.scss"
 
 export default function About() {
+
+  const data = useStaticQuery(graphql`
+    query {
+      file(relativePath: { eq: "images/profile_picture.jpg" }) {
+        childImageSharp {
+          fixed(height: 280) {
+            ...GatsbyImageSharpFixed
+          }
+        }
+      }
+    }
+  `);
+
   return (
     <div>
-      <Layout>
+      <ScrollableLayout>
         <Head title="About Me" />
-        <h1>About Me</h1>
-        <p>Such wow. Very React.</p>
-      </Layout>
+        <div className={aboutStyles.profilePicture} data-sal="zoom-in" data-sal-duration="1000" data-sal-easing="ease">
+          <Img fixed={data.file.childImageSharp.fixed} alt="Faizaan"/>
+        </div>
+        <div className={aboutStyles.section} id={aboutStyles.aboutSection} data-sal="zoom-out" data-sal-duration="1000" data-sal-easing="ease">
+          <h1 className={aboutStyles.header}>about me</h1>
+          <div className={aboutStyles.underline}></div>
+          <p className={aboutStyles.text}>I have recently graduated from the University of Bristol with a Masters in Computer Science (MEng), achieving first-class honours. Right now, I’m on the lookout for exciting opportunities in software engineering. Get in touch with me on <a href="https://www.linkedin.com/in/faizaan-sakib" target="_blank" rel="noopener noreferrer">LinkedIn!</a></p>
+          <p className={aboutStyles.text}>I have enjoyed working on many projects, aimed at solving all sorts of problems using different technologies. This has given me a strong breadth of skills, with experience working in areas of cloud computing, web development, deep learning, VR, and blockchain, just to name a few. Through this, I have developed a keen attitude to constantly learn new technologies and be able to quickly adapt where necessary.</p>
+        </div>
+        <div className={aboutStyles.section} id={aboutStyles.skillsSection} data-sal="zoom-out" data-sal-duration="1000" data-sal-easing="ease">
+          <h1 className={aboutStyles.subHeader}>skills</h1>
+          <div className={aboutStyles.underline}></div>
+          <SkillGrid></SkillGrid>
+        </div>
+        <div className={aboutStyles.section} id={aboutStyles.extraSection} data-sal="zoom-out" data-sal-duration="1000" data-sal-easing="ease">
+          <h1 className={aboutStyles.subHeader}>a few more bits</h1>
+          <div className={aboutStyles.underline}></div>
+          <InfoGrid></InfoGrid>
+        </div>
+      </ScrollableLayout>
     </div>
   );
 }

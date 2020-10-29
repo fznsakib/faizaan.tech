@@ -1,8 +1,11 @@
 import React from "react";
-import Layout from "../components/layout";
-import Head from "../components/head";
 import { graphql } from "gatsby";
 import { documentToReactComponents } from "@contentful/rich-text-react-renderer";
+
+import Head from "../components/head";
+import ScrollableLayout from "../components/scrollablelayout";
+
+import postStyles from "./post.module.scss"
 
 export const query = graphql`
   query($slug: String!) {
@@ -28,14 +31,19 @@ export default function Blog(props) {
   };
 
   return (
-    <Layout>
+    <ScrollableLayout>
       <Head title={props.data.contentfulBlogPost.title} />
-      <h1>{props.data.contentfulBlogPost.title}</h1>
-      <p>{props.data.contentfulBlogPost.publishedDate}</p>
+      <h1 className={postStyles.header} data-sal="slide-down" data-sal-duration="1000" data-sal-easing="ease">{props.data.contentfulBlogPost.title}</h1>
+      <div data-sal="slide-down" data-sal-delay="400" data-sal-duration="1000" data-sal-easing="ease">
+        <p className={postStyles.date}>{props.data.contentfulBlogPost.publishedDate}</p>
+        <div className={postStyles.divider}></div>
+      </div>
+      <div className={postStyles.postContent} data-sal="slide-up" data-sal-delay="800" data-sal-duration="1200" data-sal-easing="ease">
       {documentToReactComponents(
         props.data.contentfulBlogPost.body.json,
         options
-      )}
-    </Layout>
+        )}
+      </div>
+    </ScrollableLayout>
   );
 }
