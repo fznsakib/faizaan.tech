@@ -23,7 +23,7 @@ export default function Construction(props) {
   return (
     <Layout>
       <Head title="Page under construction" />
-      <div className={constructionStyles.container}>
+      <div className={constructionStyles.container} data-sal="zoom-out" data-sal-duration="1000" data-sal-easing="ease">
         <h1 className={constructionStyles.block}>Sorry!</h1>
         <Img className={constructionStyles.image} fixed={data.file.childImageSharp.fixed} alt="Page under construction"/>
         <h2 className={constructionStyles.block}>I'm currently working on this page. It'll be available soon! <span role="img" aria-label="eyes">👀</span></h2>
