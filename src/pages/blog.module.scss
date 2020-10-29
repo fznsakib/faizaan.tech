@@ -1,3 +1,57 @@
+@mixin responsive-font($size, $min: $size, $max: $size) {
+  $clamp-size: #{'min(max(#{$size}, #{$min}), #{$max})'};
+  font-size: $clamp-size;
+}
+
+.section {
+  display: inline;
+  position: relative;
+  flex-direction: column;
+
+  &:hover {
+    .underline {
+      left: 0%;
+      max-width: 60%;
+      background-color: #6DB1D8;
+    }
+  }
+}
+
+.header {
+  color: #E94134;
+  position: relative;
+
+  text-align: left;
+  vertical-align: middle;
+
+  margin: 0;
+  font-family: "Radio Grotesk";
+  font-weight: 400;
+
+  z-index: 2;
+
+  @include responsive-font(8vw, 80px, 100px)
+}
+
+.underline {
+  background-color: #E94134;
+  height: 2.5px;
+  flex: 1;
+  max-width: 5%;
+
+  align-self: flex-end;
+      
+  position: relative;
+  left: 50px;
+  bottom: 5px;
+
+  z-index: 1;
+        
+  transition: 1.0s cubic-bezier(0.86, 0, 0.07, 1);
+
+}
+
+
 .posts {
   list-style-type: none;
   margin: 0;
@@ -5,20 +59,35 @@
 
 .post {
   margin: 1rem 0;
+  width: 80%;
+
+  transition: 1.0s cubic-bezier(0.86, 0, 0.07, 1);
+
+  &:hover {
+    width: 100%;
+  }
 
   a {
-    background: #f4f4f4;
+    background: rgba(255, 255, 255, 0.6);
     color: #000000;
+    border-radius: 10px;
 
     // Allows background to expand around tex
     display: block;
     padding: 1rem;
 
     text-decoration: none;
+
+    transition: 0.2s cubic-bezier(0.455, 0.03, 0.515, 0.955);
   }
 
   a:hover {
-    background: #e4e4e4;
+    background: #E94134;
+    color: white;
+
+    p {
+      color: #fff785;
+    }
   }
 
   h2 {
@@ -28,6 +97,24 @@
   p {
     color: #777777;
     font-size: 0.8rem;
-    // font-style: italic;
+
+    transition: 0.2s cubic-bezier(0.455, 0.03, 0.515, 0.955);
+  }
+
+}
+
+@media (max-width: 800px) {
+  .post {
+    width: auto;
+  }
+}
+
+@media (max-width: 500px) {
+  .header {
+    text-align: center;
+  }
+
+  .underline {
+    display: none;
   }
 }

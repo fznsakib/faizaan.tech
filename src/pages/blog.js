@@ -1,7 +1,9 @@
 import React from "react";
-import Layout from "../components/layout";
-import Head from "../components/head";
 import { Link, graphql, useStaticQuery } from "gatsby";
+
+import ScrollableLayout from "../components/scrollablelayout";
+import Head from "../components/head";
+
 import blogStyles from "./blog.module.scss";
 
 export default function Blog() {
@@ -24,23 +26,32 @@ export default function Blog() {
 
   return (
     <div>
-      <Layout>
+      <ScrollableLayout>
         <Head title="Blog" />
-        <h1>Blog</h1>
+        <div className={blogStyles.section}>
+          <div data-sal="slide-down" data-sal-duration="1000" data-sal-easing="ease">
+            <h1 className={blogStyles.header}>blog</h1>
+            <div className={blogStyles.underline}></div>
+          </div>
+        
 
         <ol className={blogStyles.posts}>
           {data.allContentfulBlogPost.edges.map((edge) => {
             return (
-              <li className={blogStyles.post}>
-                <Link to={`/blog/${edge.node.slug}`}>
-                  <h2>{edge.node.title}</h2>
-                  <p>{edge.node.publishedDate}</p>
-                </Link>
-              </li>
+              <div data-sal="zoom-out" data-sal-duration="1000" data-sal-easing="ease">
+                <li className={blogStyles.post}>
+                  <Link to={`/blog/${edge.node.slug}`}>
+                    <h2>{edge.node.title}</h2>
+                    <p>{edge.node.publishedDate}</p>
+                  </Link>
+                </li>
+              </div>
             );
           })}
         </ol>
-      </Layout>
+
+        </div>
+      </ScrollableLayout>
     </div>
   );
 }

@@ -37,8 +37,8 @@ export default function Header(props) {
         <li>
           <Link
             className={navbarStyles.navItem}
-            // activeClassName={navbarStyles.activeNavItem}
-            to="/construction"
+            activeClassName={navbarStyles.activeNavItem}
+            to="/blog"
           >
             blog
           </Link>
