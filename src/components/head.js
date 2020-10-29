@@ -18,8 +18,9 @@ export default function Head({ title }) {
   return (
     <Helmet title={`${title} | ${data.site.siteMetadata.title}`}>
         <html lang="en" />
+        <meta charSet="utf-8" />
         <title>Faizaan Sakib | Software Engineer</title>
-        <description>Recent masters graduate in Computer Science specialising in back-end development based in the UK. Come find out more about me and the projects I have been involved with!</description>
+        <meta name='description'>Recent masters graduate in Computer Science specialising in back-end development based in the UK. Come find out more about me and the projects I have been involved with!</meta>
         <JsonLd>
           {{
             '@context': 'https://schema.org',
