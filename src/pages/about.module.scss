@@ -35,8 +35,6 @@
     margin: 1rem auto;
     width: 100%;
 
-    font-weight: 400;
-
     @include responsive-font(3vw, 13px, 16px);
 } 
 
@@ -127,8 +125,8 @@
     vertical-align: middle;
 
     margin: 0;
-    font-family: "Radio Grotesk";
-    font-weight: 400;
+    // font-family: "Radio Grotesk";
+    // font-weight: 400;
 
     @include responsive-font(8vw, 80px, 100px)
 }
@@ -139,8 +137,8 @@
     position: relative;
 
     margin: 1rem 0 0 0;
-    font-family: "Radio Grotesk";
-    font-weight: 400;
+    // font-family: "Radio Grotesk";
+    // font-weight: 400;
 }
 
 
