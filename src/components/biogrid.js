@@ -14,7 +14,7 @@ export default function BioGrid() {
     return (
       <div className={bioGridStyles.container}>
           {bioInfo.map((info, i) => (
-            <BioGridBox image={info.node.icon.file.url} header={info.node.title} text={info.node.body.body} alt={info.node.icon.title} key={i}></BioGridBox>
+            <BioGridBox image={info.node.icon.file.url} header={info.node.title} body={info.node.body} alt={info.node.icon.title} key={i}></BioGridBox>
           ))}
       </div>
     );

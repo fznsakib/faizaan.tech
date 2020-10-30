@@ -8,7 +8,7 @@ export default function BioInfo() {
                 node {
                     title 
                     body {
-                        body
+                        json
                     }
                     icon {
                         file {
