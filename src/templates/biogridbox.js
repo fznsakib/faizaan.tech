@@ -5,7 +5,7 @@ export default function BioGridBox(props) {
   return (
     <div className={bioGridBoxStyles.box}>
         <div className={bioGridBoxStyles.content}>
-            <span className={bioGridBoxStyles.image} role="img">{props.image}</span>
+            <img className={bioGridBoxStyles.image} src={props.image} alt={props.alt} />
             <p className={bioGridBoxStyles.header}>{props.header}</p>
             <p className={bioGridBoxStyles.text}>{props.text}</p>
         </div>
