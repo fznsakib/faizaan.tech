@@ -4,7 +4,7 @@ import Img from "gatsby-image"
 
 import ScrollableLayout from "../components/scrollablelayout";
 import Head from "../components/head";
-import InfoGrid from "../components/infogrid"
+import BioGrid from "../components/biogrid"
 import SkillGrid from "../components/skillgrid"
 
 import aboutStyles from "./about.module.scss"
@@ -41,10 +41,10 @@ export default function About() {
           <div className={aboutStyles.underline}></div>
           <SkillGrid></SkillGrid>
         </div>
-        <div className={aboutStyles.section} id={aboutStyles.extraSection} data-sal="zoom-out" data-sal-duration="1000" data-sal-easing="ease">
-          <h1 className={aboutStyles.subHeader}>a few more bits</h1>
+        <div className={aboutStyles.section} id={aboutStyles.bioSection} data-sal="zoom-out" data-sal-duration="1000" data-sal-easing="ease">
+          <h1 className={aboutStyles.subHeader}>bio</h1>
           <div className={aboutStyles.underline}></div>
-          <InfoGrid></InfoGrid>
+          <BioGrid></BioGrid>
         </div>
       </ScrollableLayout>
     </div>

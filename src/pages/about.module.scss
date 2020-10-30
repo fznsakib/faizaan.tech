@@ -98,10 +98,10 @@
     }
 }
 
-#extra-section {
+#bio-section {
 
     .underline {
-        left: 20%;
+        left: 5%;
         top: 5px;
     }
 
@@ -165,7 +165,7 @@
         }
     }
 
-    #extra-section {
+    #bio-section {
         &:hover {
             .underline{
                 max-width: 90%;
@@ -202,7 +202,7 @@
         }
     }
     
-    #extra-section {
+    #bio-section {
         .sub-header {
             text-align: center;
             @include responsive-font(12vw, 38px, 50px)
