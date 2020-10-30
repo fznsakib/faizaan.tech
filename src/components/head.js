@@ -2,8 +2,6 @@ import React from "react";
 import { Helmet } from "react-helmet";
 import { useStaticQuery, graphql } from "gatsby";
 
-import JsonLd from './jsonld.js'
-
 export default function Head({ title }) {
   const data = useStaticQuery(graphql`
     query {
@@ -27,23 +25,6 @@ export default function Head({ title }) {
       ]}
     >
         <html lang="en" />
-        <JsonLd>
-          {{
-            '@context': 'https://schema.org',
-            '@type': 'Portfolio',
-            url: 'http://faizaan.tech',
-            name: 'Faizaan Sakib',
-            author: {
-              '@type': 'Person',
-              'name': 'Faizaan Sakib',
-            },
-            contactPoint: {
-              '@type': 'ContactPoint',
-              'email': 'fznsakib@gmail.com',
-              'contactType': 'Personal'
-            }
-          }}
-        </JsonLd>
     </Helmet>
   );
 }
