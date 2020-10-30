@@ -41,10 +41,11 @@ export default function About() {
           <div className={aboutStyles.underline}></div>
           <SkillGrid></SkillGrid>
         </div>
-        <div className={aboutStyles.section} id={aboutStyles.bioSection} data-sal="zoom-out" data-sal-duration="1000" data-sal-easing="ease">
+        <div className={aboutStyles.section} id={aboutStyles.bioSection} data-sal="slide-up" data-sal-duration="1000" data-sal-easing="ease">
           <h1 className={aboutStyles.subHeader}>bio</h1>
           <div className={aboutStyles.underline}></div>
           <BioGrid></BioGrid>
+          <div style={{textAlign: 'right', fontSize: '0.8em'}}>Icons made by <a href="https://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
         </div>
       </ScrollableLayout>
     </div>

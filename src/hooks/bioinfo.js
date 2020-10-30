@@ -3,7 +3,7 @@ import { useStaticQuery, graphql } from "gatsby";
 export default function BioInfo() {
     const info = useStaticQuery(graphql`
         query {
-            allContentfulBioInfo ( sort: {fields: id, order: ASC} ) {
+            allContentfulBioInfo ( sort: {fields: contentfulid, order: ASC} ) {
                 edges {
                 node {
                     title 
