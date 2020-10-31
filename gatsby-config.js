@@ -1,4 +1,3 @@
-
 // Ensures Google does not crawl through deploy previews that may be considered duplicate content and impacting SEO
 const {
   NODE_ENV,
@@ -83,8 +82,17 @@ module.exports = {
         },
       },
     },
+    {
+      resolve: "gatsby-plugin-sass",
+      options: {
+        implementation: require("sass"),
+        data: `
+          @use "${__dirname}/src/styles/variables.scss" as variables;
+          @use "${__dirname}/src/styles/mixins.scss" as mixins;
+        `
+      }
+    },
     "gatsby-plugin-react-helmet",
-    "gatsby-plugin-sass",
     "gatsby-plugin-sharp",
     "gatsby-transformer-sharp",
     "gatsby-plugin-sitemap",
