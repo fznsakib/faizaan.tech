@@ -1,28 +1,15 @@
-@mixin responsive-font($size, $min: $size, $max: $size) {
-    $clamp-size: #{'min(max(#{$size}, #{$min}), #{$max})'};
-    font-size: $clamp-size;
-}
-
-p {
-    font-size: 0.8em;
-    font-weight: 400;
-}
-
 img {
     width: 80%;
 }
 
 .header {
-    color: #E94134;
-
-    text-align: left;
+    @include mixins.title;
+    @include mixins.responsive-font(8vw, 50px, 100px);
 
     margin-bottom: 2rem;
 
     font-family: "Radio Grotesk";
     font-weight: 400;
-
-    @include responsive-font(8vw, 50px, 100px)
 }
 
 .date {

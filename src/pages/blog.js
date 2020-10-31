@@ -30,7 +30,7 @@ export default function Blog() {
         <Head title="Blog" />
         <div className={blogStyles.section}>
           <div data-sal="slide-down" data-sal-duration="1000" data-sal-easing="ease">
-            <h1 className={blogStyles.header}>blog</h1>
+            <h1 className={blogStyles.title}>blog</h1>
             <div className={blogStyles.underline}></div>
           </div>
         

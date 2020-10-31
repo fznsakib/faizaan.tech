@@ -14,19 +14,7 @@ export default function Home() {
   return (
     <div>
       <Layout>
-        <Head title="Home">
-          <link>
-            rel="stylesheet"
-            type="text/css"
-            charset="UTF-8"
-            href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick.min.css"
-          </link>
-          <link>
-            rel="stylesheet"
-            type="text/css"
-            href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick-theme.min.css"
-          </link>
-        </Head>
+        <Head title="Home"></Head>
         <div className={indexStyles.blocks}>
           <NameBlock></NameBlock>
           <ColourBlock></ColourBlock>

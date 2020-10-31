@@ -1,8 +1,5 @@
-/* Reset provided by https://github.com/gatsbyjs/gatsby-starter-blog via MIT license */
-
 html {
-  // font-family: sans-serif;
-  font-family:  "Radio Grotesk";
+  font-family: "Space Grotesk", -apple-system, Segoe UI, sans-serif;
   -ms-text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
 }
@@ -203,8 +200,8 @@ html {
 }
 body {
   color: hsla(0, 0%, 0%, 0.8);
-  font-family: sans-serif;
-  font-weight: 300;
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 400;
   word-wrap: break-word;
   font-kerning: normal;
   -moz-font-feature-settings: "kern", "liga", "clig", "calt";
@@ -223,6 +220,7 @@ img {
   padding-top: 0;
   margin-bottom: 1.45rem;
 }
+
 h1 {
   margin-left: 0;
   margin-right: 0;
@@ -233,9 +231,8 @@ h1 {
   padding-top: 0;
   margin-bottom: 1.45rem;
   color: inherit;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
-  font-weight: 600;
+  font-family: "Space Grotesk", -apple-system, Segoe UI, sans-serif;
+  font-weight: 900;
   text-rendering: optimizeLegibility;
   font-size: 2.25rem;
   line-height: 1.1;
@@ -250,8 +247,7 @@ h2 {
   padding-top: 0;
   margin-bottom: 1.45rem;
   color: inherit;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  font-family: "Space Grotesk", -apple-system, Segoe UI, sans-serif;
   font-weight: 600;
   text-rendering: optimizeLegibility;
   font-size: 1.62671rem;
@@ -267,8 +263,7 @@ h3 {
   padding-top: 0;
   margin-bottom: 1.45rem;
   color: inherit;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  font-family: "Space Grotesk", -apple-system, Segoe UI, sans-serif;
   font-weight: 600;
   text-rendering: optimizeLegibility;
   font-size: 1.38316rem;
@@ -284,8 +279,7 @@ h4 {
   padding-top: 0;
   margin-bottom: 1.45rem;
   color: inherit;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  font-family: "Space Grotesk", -apple-system, Segoe UI, sans-serif;
   font-weight: 600;
   text-rendering: optimizeLegibility;
   font-size: 1rem;
@@ -301,8 +295,7 @@ h5 {
   padding-top: 0;
   margin-bottom: 1.45rem;
   color: inherit;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  font-family: "Space Grotesk", -apple-system, Segoe UI, sans-serif;
   font-weight: 600;
   text-rendering: optimizeLegibility;
   font-size: 0.85028rem;
@@ -318,8 +311,7 @@ h6 {
   padding-top: 0;
   margin-bottom: 1.45rem;
   color: inherit;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  font-family: "Space Grotesk", -apple-system, Segoe UI, sans-serif;
   font-weight: 600;
   text-rendering: optimizeLegibility;
   font-size: 0.78405rem;
@@ -336,6 +328,7 @@ hgroup {
   margin-bottom: 1.45rem;
 }
 ul {
+  font-family: "Space Grotesk", -apple-system, Segoe UI, sans-serif;
   margin-left: 1.45rem;
   margin-right: 0;
   margin-top: 0;
@@ -348,6 +341,7 @@ ul {
   list-style-image: none;
 }
 ol {
+  font-family: "Space Grotesk", -apple-system, Segoe UI, sans-serif;
   margin-left: 1.45rem;
   margin-right: 0;
   margin-top: 0;
@@ -380,9 +374,8 @@ dd {
   margin-bottom: 1.45rem;
 }
 p {
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-  Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
-  font-weight: 600;
+  font-family: "Space Grotesk", -apple-system, Segoe UI, sans-serif;
+  font-weight: 400;
   text-rendering: optimizeLegibility;
   margin-left: 0;
   margin-right: 0;
@@ -622,6 +615,8 @@ pre tt:before,
 pre tt:after {
   content: "";
 }
+
+
 @media only screen and (max-width: 480px) {
   html {
     height: 100%;
@@ -629,7 +624,53 @@ pre tt:after {
   }
 }
 
+// FONTS
+
 @font-face {
   font-family: "Radio Grotesk";
-  src: url("../../static/fonts/RadioGrotesk-Regular.woff") format("woff");
+  src: url("../../static/fonts/RadioGrotesk/RadioGrotesk-Regular.woff") format("woff");
+} 
+
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../../static/fonts/SpaceGrotesk/SpaceGrotesk-Regular.woff") format("woff");
+  font-weight: 400;
+}
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../../static/fonts/SpaceGrotesk/SpaceGrotesk-Light.woff") format("woff");
+  font-weight: 200;
+}
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../../static/fonts/SpaceGrotesk/SpaceGrotesk-Bold.woff") format("woff");
+  font-weight: 700;
+}
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../../static/fonts/SpaceGrotesk/SpaceGrotesk-Medium.woff") format("woff");
+  font-weight: 600;
+}
+
+@font-face {
+  font-family: "Space Mono";
+  src: url("../../static/fonts/SpaceMono/SpaceMono-Regular.woff") format("woff") ;
+  font-weight: 400;
+} 
+@font-face {
+  font-family: "Space Mono";
+  src: url("../../static/fonts/SpaceMono/SpaceMono-Bold.woff") format("woff") ;
+  font-weight: 700;
+} 
+@font-face {
+  font-family: "Space Mono";
+  src: url("../../static/fonts/SpaceMono/SpaceMono-Italic.woff") format("woff") ;
+  font-weight: 400;
+  font-style: italic;
+} 
+@font-face {
+  font-family: "Space Mono";
+  src: url("../../static/fonts/SpaceMono/SpaceMono-BoldItalic.woff") format("woff") ;
+  font-weight: 700;
+  font-style: italic;
 } 

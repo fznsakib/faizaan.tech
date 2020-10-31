@@ -1,0 +1,83 @@
+@use './variables.scss' as var;
+
+// Classes
+
+@mixin title {
+    color: #E94134;
+    position: relative;
+
+    text-align: left;
+    vertical-align: middle;
+
+    margin: 0;
+
+    @media (max-width: 500px) {
+        text-align: center;
+    }
+}
+
+@mixin subtitle {
+    color: #E94134;
+    position: relative;
+
+    margin: 1rem 0 0 0;
+
+    @media (max-width: 500px) {
+        text-align: center;
+    }
+}
+
+@mixin underline {
+    position: relative;
+    flex: 1;
+    max-width: 20%;
+    height: 2.5px;
+
+    background-color: #E94134;
+
+    transition: 1.0s cubic-bezier(0.86, 0, 0.07, 1);
+
+    @media (max-width: 500px) {
+        display: none;
+    }
+}
+
+@mixin text {
+    color: #E94134;
+    background-color: rgba(255, 255, 255, 0.6);
+
+    border-radius: 10px;
+    
+    padding: 1rem;
+    margin: 1rem auto;
+    width: 100%;
+}
+
+@mixin section {
+    display: inline;
+    position: relative;
+    flex-direction: column;
+}
+
+// Functions
+
+@mixin responsive-font($size, $min: $size, $max: $size) {
+    $clamp-size: #{'min(max(#{$size}, #{$min}), #{$max})'};
+    font-size: $clamp-size;
+}
+
+@mixin responsive-top($size, $min: $size, $max: $size) {
+    $clamp-size: #{'min(max(#{$size}, #{$min}), #{$max})'};
+    top: $clamp-size;
+}
+
+@mixin responsive-circle-size($size, $min: $size, $max: $size) {
+    $clamp-size: #{'min(max(#{$size}, #{$min}), #{$max})'};
+    height: $clamp-size;
+    width: $clamp-size;
+}
+
+@mixin responsive-picture-width($size, $min: $size, $max: $size) {
+    $clamp-size: #{'min(max(#{$size}, #{$min}), #{$max})'};
+    width: $clamp-size;
+}
