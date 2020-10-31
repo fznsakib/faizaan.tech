@@ -28,7 +28,7 @@
     flex-shrink: 1;
     flex-basis: auto;
   
-    background-color: #FFE8D7;
+    background-color: variables.$background;
 
     min-height: 100vh;
     max-height: fit-content;

@@ -8,6 +8,20 @@
 
 }
 
+.name {
+  @include mixins.title;
+  font-size: 100px;
+  color: variables.$primary;
+}
+
+.job {
+  @include mixins.title;
+  font-size: 60px;
+  font-family: "Space Mono";
+
+  color: variables.$secondary;
+}
+
 @media (max-width: 800px) {
   .blocks {
     margin-left: 0;

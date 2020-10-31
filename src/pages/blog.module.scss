@@ -5,7 +5,7 @@
     .underline {
       left: 0%;
       max-width: 60%;
-      background-color: #6DB1D8;
+      background-color: variables.$underline;
     }
   }
 }
@@ -56,17 +56,9 @@
 
     transition: 0.2s cubic-bezier(0.455, 0.03, 0.515, 0.955);
   }
-
-  a:hover {
-    background: #E94134;
-    color: white;
-
-    p {
-      color: #fff785;
-    }
-  }
-
+  
   h2 {
+    color: variables.$secondary;
     margin-bottom: 0;
   }
 
@@ -76,6 +68,21 @@
 
     transition: 0.2s cubic-bezier(0.455, 0.03, 0.515, 0.955);
   }
+
+  a:hover {
+    background: variables.$primary;
+    // color: variables.$primary;
+    
+    h2 {
+      color: white;
+    }
+
+    p {
+      color: #fff785;
+    }
+
+  }
+
 
 }
 

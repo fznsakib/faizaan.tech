@@ -1,41 +1,62 @@
 .box {
-    background: rgba(109, 177, 216, 0.1);
+    background: variables.$bio-box-background;
     padding: 20px;
     display: grid;
     place-items: left;
     text-align: left;
     
-    color: red;
     font-size: 20px;
-    transition: 0.5s;
+    transition: 0.4s ease-in-out;
 
     border-radius: 10px;
 
     width: 100%;
     height: 100%;
 
-    -webkit-transition: background color margin 0.5s ease-in-out;
-    -moz-transition: background color margin 0.5s ease-in-out;
-    -o-transition: background color margin 0.5s ease-in-out;
+    -webkit-transition: background color margin 0.4s ease-in-out;
+    -moz-transition: background color margin 0.4s ease-in-out;
+    -o-transition: background color margin 0.4s ease-in-out;
 }
 
 
 .box:hover {
-    background: #E94134;
-    color: white;
+    background: variables.$secondary;
 
     // cursor:pointer;
     margin-top: -5px;
     margin-bottom: 5px;
+
+    .header {
+        color: white;
+    }
+
+    .text {
+        color: white;
+    }
+
+    a {
+        color: variables.$light-link;
+    }
 }
 
 .header {
-    font-weight: 300;
+    color: variables.$text;
+    font-weight: 900;
+
+    transition: 0.4s ease-in-out;
 }
 
 .text {
-    font-weight: 400;
+    color: variables.$text;
+    
+    font-weight: 500;
     font-size: 16px;
+
+    transition: 0.4s ease-in-out;
+}
+
+a {
+    transition: 0.4s ease-in-out;
 }
 
 .image {

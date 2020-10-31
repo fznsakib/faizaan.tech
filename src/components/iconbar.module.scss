@@ -25,8 +25,13 @@
   
   
 .icon-bar-animation {
+  
   display: grid;
   grid-auto-flow: column;
+  
+  position: fixed;
+  left: 500px;
+
   flex-direction: row;
 
   max-width: 30rem;
@@ -53,7 +58,7 @@
   display: grid;
   grid-auto-flow: column;
   flex-direction: row;
-
+  
   max-width: 30rem;
 
   margin-top: 3rem;
@@ -63,7 +68,7 @@
   z-index: 2;
   
   a {
-      color: #999999;
+      color: white;
       text-decoration: none;
       transition: 0.3s;
   }

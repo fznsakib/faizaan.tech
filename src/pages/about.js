@@ -45,7 +45,7 @@ export default function About() {
           <h1 className={aboutStyles.subtitle}>bio</h1>
           <div className={aboutStyles.underline}></div>
           <BioGrid></BioGrid>
-          <div style={{textAlign: 'right', fontSize: '0.8em'}}>Icons made by <a href="https://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
+          <div style={{textAlign: 'left', fontSize: '0.8em', color: 'white' }}>Icons made by <a href="https://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
         </div>
       </ScrollableLayout>
     </div>

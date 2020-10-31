@@ -40,14 +40,13 @@
 
     .underline {
         left: 20%;
-        top: 5px;
     }
 
     &:hover {
         .underline{
             left: 0%;
             max-width: 60%;
-            background-color: #6DB1D8;
+            background-color: variables.$primary;
         }
     }
 }
@@ -64,14 +63,13 @@
         margin: auto 0 0 auto;
         margin-right: 0;
         right: 10%;
-        top: 5px;
     }
     
     &:hover {
         .underline{
             right: 0%;
             max-width: 60%;
-            background-color: #6DB1D8;
+            background-color: variables.$primary;
         }
     }
 }
@@ -86,14 +84,13 @@
 
     .underline {
         left: 5%;
-        top: 5px;
     }
 
     &:hover {
         .underline{
             left: 0%;
             max-width: 60%;
-            background-color: #6DB1D8;
+            background-color: variables.$primary;
         }
     }
 }
