@@ -22,11 +22,7 @@ class IconBar extends Component {
   render() {
     return (
       <ul
-        className={
-          this.state.animate
-            ? `${iconBarStyles.iconBarAnimation}`
-            : `${iconBarStyles.iconBar}`
-        }
+        className={iconBarStyles.iconBar}
       >
         <li>
           <a
@@ -80,21 +76,6 @@ class IconBar extends Component {
         </li>
       </ul>
     );
-  }
-
-  componentDidMount() {
-    // Check for token
-    if (window.sessionStorage.getItem("iconBarLoaded") === null) {
-      this.setState({
-        animate: true,
-      });
-      // Set token so that animation is not performed next time
-      window.sessionStorage.setItem("iconBarLoaded", 1);
-    } else {
-      this.setState({
-        animate: false,
-      });
-    }
   }
 }
 
