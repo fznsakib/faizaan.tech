@@ -36,9 +36,9 @@ export default function Blog() {
         
 
         <ol className={blogStyles.posts}>
-          {data.allContentfulBlogPost.edges.map((edge) => {
+          {data.allContentfulBlogPost.edges.map((edge, i) => {
             return (
-              <div data-sal="zoom-out" data-sal-duration="1000" data-sal-easing="ease">
+              <div key={i} data-sal="zoom-out" data-sal-duration="1000" data-sal-easing="ease">
                 <li className={blogStyles.post}>
                   <Link to={`/blog/${edge.node.slug}`}>
                     <h2>{edge.node.title}</h2>
