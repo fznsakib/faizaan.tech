@@ -3,16 +3,13 @@ img {
 }
 
 .header {
-    color: #E94134;
-
-    text-align: left;
+    @include mixins.title;
+    @include mixins.responsive-font(8vw, 50px, 100px);
 
     margin-bottom: 2rem;
 
     font-family: "Radio Grotesk";
     font-weight: 400;
-
-    @include mixins.responsive-font(8vw, 50px, 100px)
 }
 
 .date {

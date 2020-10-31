@@ -1,7 +1,5 @@
 .section {
-  display: inline;
-  position: relative;
-  flex-direction: column;
+  @include mixins.section;
 
   &:hover {
     .underline {
@@ -12,38 +10,21 @@
   }
 }
 
-.header {
-  color: #E94134;
-  position: relative;
-
-  text-align: left;
-  vertical-align: middle;
-
-  margin: 0;
-  // font-family: "Radio Grotesk";
-  // font-weight: 400;
+.title {
+  @include mixins.title;
+  @include mixins.responsive-font(8vw, 80px, 100px);
 
   z-index: 2;
-
-  @include mixins.responsive-font(8vw, 80px, 100px)
 }
 
 .underline {
-  background-color: #E94134;
-  height: 2.5px;
-  flex: 1;
-  max-width: 5%;
+  @include mixins.underline;
 
-  align-self: flex-end;
-      
-  position: relative;
+  max-width: 5%;
   left: 50px;
   bottom: 5px;
 
   z-index: 1;
-        
-  transition: 1.0s cubic-bezier(0.86, 0, 0.07, 1);
-
 }
 
 
@@ -99,17 +80,16 @@
 }
 
 @media (max-width: 800px) {
+
+  .section {
+    &:hover {
+      .underline {
+        max-width: 90%;
+      }
+    }
+  }
+  
   .post {
-    width: auto;
-  }
-}
-
-@media (max-width: 500px) {
-  .header {
-    text-align: center;
-  }
-
-  .underline {
-    display: none;
+    width: 100%;
   }
 }
