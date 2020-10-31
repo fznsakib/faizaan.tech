@@ -16,8 +16,6 @@ export default function Home() {
       <Layout>
         <Head title="Home"></Head>
         <div className={indexStyles.blocks}>
-          <h1 className={indexStyles.pageTitleMain}>faizaan sakib</h1>
-          <h1>software engineer</h1>
           <NameBlock></NameBlock>
           <ColourBlock></ColourBlock>
           <IconBar resume_url={resume_url}></IconBar>

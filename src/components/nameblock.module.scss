@@ -1,19 +1,3 @@
-@mixin responsive-font($size, $min: $size, $max: $size) {
-  $clamp-size: #{'min(max(#{$size}, #{$min}), #{$max})'};
-  font-size: $clamp-size;
-}
-
-@mixin responsive-top($size, $min: $size, $max: $size) {
-  $clamp-size: #{'min(max(#{$size}, #{$min}), #{$max})'};
-  top: $clamp-size;
-}
-
-@mixin responsive-circle-size($size, $min: $size, $max: $size) {
-  $clamp-size: #{'min(max(#{$size}, #{$min}), #{$max})'};
-  height: $clamp-size;
-  width: $clamp-size;
-}
-
 .name-headers {
   position: relative;
 
@@ -66,19 +50,19 @@
 }
 
 .name-headers, .job-header {
-  @include responsive-font(10vw, 90px, 120px)
+  @include mixins.responsive-font(10vw, 90px, 120px)
 }
   
 @media (max-width: 800px) {
   .name-headers {
     text-align: center;
-    @include responsive-font(16.5vw, 80px, 90px)
+    @include mixins.responsive-font(16.5vw, 80px, 90px)
   }
   
   .job-header {
     text-align: center;
     margin-top: 1rem;
-    @include responsive-font(11vw, 50px, 70px)
+    @include mixins.responsive-font(11vw, 50px, 70px)
   }
 
 }
@@ -87,7 +71,7 @@
   .name-headers {
     text-align: center;
 
-    @include responsive-font(26vw, 70px, 110px);
+    @include mixins.responsive-font(26vw, 70px, 110px);
 
     .name1, .name1-animation, .name2, .name2-animation, .name3, .name3-animation {
       display: none;
@@ -98,17 +82,17 @@
     text-align: center;
     margin-top: 2rem;
 
-    @include responsive-font(10vw, 30px, 50px)
+    @include mixins.responsive-font(10vw, 30px, 50px)
   }
 
   .circle {
     display: inline-block;
-    @include responsive-circle-size(120vw, 500px, 500px)
+    @include mixins.responsive-circle-size(120vw, 500px, 500px)
   }
   
   .circle-animation {
     display: inline-block;
-    @include responsive-circle-size(120vw, 500px, 500px)
+    @include mixins.responsive-circle-size(120vw, 500px, 500px)
   }
 }
 
