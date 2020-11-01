@@ -1,16 +1,19 @@
 import React from "react";
+
 import Navbar from "./navbar";
+import Doodle from "../components/doodle"
 
 import "../styles/index.scss";
 import layoutStyles from "./layout.module.scss";
 
 export default function Layout(props) {
   return (
-    <div>
-      <div className={layoutStyles.container}>
-        <div className={layoutStyles.content}>{props.children}</div>
-        <Navbar />
+    <div className={layoutStyles.container}>
+      <Doodle className={layoutStyles.doodle}/>
+      <div className={layoutStyles.content}>
+        {props.children}
       </div>
+      <Navbar />
     </div>
   );
 }

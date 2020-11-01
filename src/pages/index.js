@@ -1,8 +1,7 @@
 import React from "react";
+
 import Layout from "../components/layout";
 import Head from "../components/head";
-import ColourBlock from "../components/colourblock";
-import NameBlock from "../components/nameblock";
 import IconBar from "../components/iconbar";
 
 import { ResumeURL } from "../hooks/resumeurl";

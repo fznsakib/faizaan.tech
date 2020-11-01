@@ -3,7 +3,7 @@
   writing-mode: vertical-lr;
   vertical-align: middle;
 
-  z-index: 3;
+  background-color: white;
 }
 
 .nav-list {
@@ -45,7 +45,6 @@
 
 @media (max-width: 800px) {
   .nav {
-    background-color: white;
     position: fixed;
     top: 90%;
     width: 100%;
