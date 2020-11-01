@@ -5,7 +5,7 @@
   
   max-width: 30rem;
 
-  margin-top: 3rem;
+  margin-top: 2rem;
   margin-left: 0;
   list-style: none;
 
@@ -14,16 +14,18 @@
   a {
       color: white;
       text-decoration: none;
-      transition: 0.3s;
+      transition: 0.8s;
   }
 
   @include mixins.responsive-font(2vw, 22px, 24px);
+  align-self: center;
+  place-content: center;
+  gap: 6vw;
 }
 
 @media (max-width: 800px) {
   .icon-bar {
     align-self: center;
-    text-align: center;
     place-content: center;
     gap: 8vw;
     margin-top: 2rem;

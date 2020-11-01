@@ -13,11 +13,13 @@ export default function Home() {
   return (
     <div>
       <Layout>
-        <Head title="Home"></Head>
+      <Head title="Home"></Head>
         <div className={indexStyles.blocks}>
-          <h1 className={indexStyles.name}>faizaan sakib</h1>
-          <h1 className={indexStyles.job}>software engineer</h1>
-          <IconBar resume_url={resume_url}></IconBar>
+          <h1 className={indexStyles.name} data-sal="slide-down" data-sal-duration="1000" data-sal-easing="ease">faizaan sakib</h1>
+          <h1 className={indexStyles.job} data-sal="slide-down" data-sal-duration="1000" data-sal-delay="500" data-sal-easing="ease">software engineer</h1>
+          <div className={indexStyles.iconBar} data-sal="slide-down" data-sal-duration="1000" data-sal-delay="1000" data-sal-easing="ease">
+            <IconBar resume_url={resume_url}></IconBar>
+          </div>
         </div>
       </Layout>
     </div>
