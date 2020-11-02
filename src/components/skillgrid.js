@@ -32,7 +32,7 @@ export default function SkillGrid() {
     // },[])
 
     return (
-        <div>
+        <div data-sal="zoom-out" data-sal-duration="1000" data-sal-easing="ease">
             <div className={skillGridStyles.container}>
                 <div className={layoutStyles.row}>
                     {languageIcons.map((language, i) => (

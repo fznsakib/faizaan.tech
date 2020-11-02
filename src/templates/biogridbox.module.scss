@@ -84,11 +84,18 @@ a {
     grid-row: span 1;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 900px) {
     .box {
         grid-column: unset !important;
-        grid-row: span 2;
+        grid-row: span 1;
     }
+
+    // .box:nth-child(8) {
+    //     grid-row: unset !important;
+    //     grid-column: unset !important;
+    //     grid-column: span 4;
+    //     margin: 100px;
+    // }
 }
 
 // @media (max-width: 500px) {
