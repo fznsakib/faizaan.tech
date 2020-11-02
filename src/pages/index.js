@@ -2,6 +2,7 @@ import React from "react";
 
 import Layout from "../components/layout";
 import Head from "../components/head";
+import Intro from "../components/intro";
 import IconBar from "../components/iconbar";
 
 import { ResumeURL } from "../hooks/resumeurl";
@@ -15,9 +16,8 @@ export default function Home() {
       <Layout>
       <Head title="Home"></Head>
         <div className={indexStyles.blocks}>
-          <h1 className={indexStyles.name} data-sal="slide-down" data-sal-duration="1000" data-sal-easing="ease">faizaan sakib</h1>
-          <h1 className={indexStyles.job} data-sal="slide-down" data-sal-duration="1000" data-sal-delay="500" data-sal-easing="ease">software engineer</h1>
-          <div className={indexStyles.iconBar} data-sal="slide-down" data-sal-duration="1000" data-sal-delay="1000" data-sal-easing="ease">
+          <Intro></Intro>
+          <div className={indexStyles.iconBar}>
             <IconBar resume_url={resume_url}></IconBar>
           </div>
         </div>
