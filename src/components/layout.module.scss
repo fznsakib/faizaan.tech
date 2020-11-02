@@ -19,6 +19,8 @@
   flex:1;
 
   overflow-y: hidden;
+
+  padding-right: 65px;
 }
 
 .content {
@@ -37,6 +39,10 @@
 }
 
 @media (max-width: 800px) {
+
+  .container {
+    padding-right: 0px;
+  }
 
   .content {
     padding-bottom: 10vh;
