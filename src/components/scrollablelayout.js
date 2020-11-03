@@ -7,6 +7,8 @@ import "../styles/index.scss";
 import scrollableLayoutStyles from "./scrollablelayout.module.scss";
 
 export default function ScrollableLayout(props) {
+  LoadableDoodle.preload();
+  
   return (
     <div className={scrollableLayoutStyles.container}>
       <LoadableDoodle/>
