@@ -27,8 +27,7 @@ class Intro extends Component {
             wrapper[1].classList.add(introStyles.active);
         }
         
-        // requestAnimationFrame(draw, 300);
-        setTimeout(draw, 100);
+        setTimeout(draw, 1000);
     }
 }
 
