@@ -1,6 +1,6 @@
 
 .container {
-    width: 80%;
+    width: 70vw;
     height: fit-content;
 
     svg {
@@ -8,8 +8,27 @@
     }
 }
 
-// NAME ANIMATION
+.name-container {
+  margin-bottom: 1rem;
+}
 
+.job-container {
+  margin-bottom: 40px;
+}
+
+@media (max-width: 800px) {
+  .container {
+    width: 90%;
+  }
+}
+
+@media (max-width: 500px) {
+  .container {
+    width: 100%;
+  }
+}
+
+// NAME ANIMATION
 
  svg .name-1 {
     stroke-dashoffset: 441.17730712890625px;

@@ -24,52 +24,47 @@ class IconBar extends Component {
       <ul
         className={iconBarStyles.iconBar}
       >
-        <li>
+        <li className={iconBarStyles.resumeIcon}>
           <a
             href={this.props.resume_url}
             target="_blank"
             rel="noopener noreferrer"
-            className={iconBarStyles.resumeIcon}
           >
             <FontAwesomeIcon icon={faIdBadge} size="2x" />
           </a>
         </li>
-        <li>
+        <li className={iconBarStyles.emailIcon}>
           <OutboundLink
             href="mailto:fznsakib@gmail.com"
             target="_blank"
             rel="noopener noreferrer"
-            className={iconBarStyles.emailIcon}
           >
             <FontAwesomeIcon icon={faEnvelope} size="2x" />
           </OutboundLink>
         </li>
-        <li>
+        <li className={iconBarStyles.linkedinIcon}>
           <OutboundLink
             href="https://www.linkedin.com/in/faizaan-sakib"
             target="_blank"
             rel="noopener noreferrer"
-            className={iconBarStyles.linkedinIcon}
           >
             <FontAwesomeIcon icon={faLinkedinIn} size="2x" />
           </OutboundLink>
         </li>
-        <li>
+        <li className={iconBarStyles.githubIcon}>
           <OutboundLink
             href="https://www.github.com/fznsakib"
             target="_blank"
             rel="noopener noreferrer"
-            className={iconBarStyles.githubIcon}
           >
             <FontAwesomeIcon icon={faGithub} size="2x" />
           </OutboundLink>
         </li>
-        <li>
+        <li className={iconBarStyles.soundcloudIcon}>
           <OutboundLink
             href="https://soundcloud.com/etaki"
             target="_blank"
             rel="noopener noreferrer"
-            className={iconBarStyles.soundcloudIcon}
           >
             <FontAwesomeIcon icon={faSoundcloud} size="2x" />
           </OutboundLink>

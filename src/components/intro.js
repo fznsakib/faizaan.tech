@@ -11,7 +11,7 @@ class Intro extends Component {
   render() {
     return (
         <div className={introStyles.container}>
-            <div>
+            <div className={introStyles.nameContainer}>
                 <svg width="100%" height="100%" viewBox="0 0 803 101" version="1.1" xmlns="http://www.w3.org/2000/svg">
                     <title>name</title>
                     <g id="Website" stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
@@ -82,7 +82,7 @@ class Intro extends Component {
                     </g>
                 </svg>
             </div>
-            <div>
+            <div className={introStyles.jobContainer}>
                 <svg width="100%" height="100%" viewBox="0 0 911 91" version="1.1" xmlns="http://www.w3.org/2000/svg">
                     <title>job</title>
                     <g id="Website" stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">

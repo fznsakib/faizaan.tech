@@ -48,16 +48,18 @@
   
   max-width: 30rem;
 
-  margin-top: 2rem;
+  // margin-top: 2rem;
   margin-left: 0;
+  margin-bottom: 0;
   list-style: none;
 
   z-index: 2;
   
+  
   a {
       color: white;
       text-decoration: none;
-      transition: 0.8s;
+      transition: ease-in-out 0.5s;
   }
 
   @include mixins.responsive-font(2vw, 22px, 24px);
@@ -74,33 +76,50 @@
     align-self: center;
     place-content: center;
     gap: 8vw;
-    margin-top: 2rem;
     @include mixins.responsive-font(3vw, 18px, 20px)
   }
 }
 
 @media (max-width: 500px) {
   .icon-bar {
-    @include mixins.responsive-font(4.5vw, 14px, 20px)
+    @include mixins.responsive-font(4vw, 14px, 20px)
   }
 }
 
+.resume-icon, .email-icon, .linkedin-icon, .github-icon, .soundcloud-icon {
+  transition: ease-out 1.0s;
+}
+
+.resume-icon:hover, .email-icon:hover, .linkedin-icon:hover, .github-icon:hover, .soundcloud-icon:hover {
+  transform: scale(1.2);
+}
+
 .resume-icon:hover{
-    color: #6DB1D8;
+  a {
+    color: #78B7DB;
+  }
 }
 
 .email-icon:hover{
-    color: #E94234;
+  a {
+    color: #FF5C6C; 
+  }
 }
 
-.linkedin-icon:hover{
+.linkedin-icon:hover {
+  a {
     color: #0076B4; 
+  }
 }
 
 .github-icon:hover{
+  a {
     color: black; 
+  }
 }
 
 .soundcloud-icon:hover{
+  a {
     color: #FC6800; 
+  }
 }
