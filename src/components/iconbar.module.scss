@@ -67,8 +67,8 @@
   place-content: center;
   gap: 6vw;
 
-  -webkit-animation: slide-in-bottom 1.6s cubic-bezier(0.860, 0.000, 0.070, 1.000) 7s both;
-          animation: slide-in-bottom 1.6s cubic-bezier(0.860, 0.000, 0.070, 1.000) 7s both;
+  -webkit-animation: slide-in-bottom 1.6s cubic-bezier(0.860, 0.000, 0.070, 1.000) 5s both;
+          animation: slide-in-bottom 1.6s cubic-bezier(0.860, 0.000, 0.070, 1.000) 5s both;
 }
 
 @media (max-width: 800px) {
