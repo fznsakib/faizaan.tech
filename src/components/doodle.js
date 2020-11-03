@@ -1,11 +1,8 @@
-import React, { Component } from "react";
+import React from "react";
 import 'css-doodle';
-// import cssDoodle from "css-doodle";
 
-class Doodle extends Component {
-  render() {
-    return (
-      <css-doodle>{`
+const Doodle = props => {
+  return <css-doodle>{`
           :doodle{
               // @grid: 30x45;
               @grid: 20x35;
@@ -30,9 +27,7 @@ class Doodle extends Component {
           background: rgba(221, 166, 170,  @rand(0, 0.25));
           transform: rotate(@p(±45deg));
           
-      `}</css-doodle>
-    )
-  }
+        `}</css-doodle>
 }
 
 export default Doodle;
