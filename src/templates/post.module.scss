@@ -6,21 +6,37 @@ img {
     @include mixins.title;
     @include mixins.responsive-font(8vw, 50px, 100px);
 
-    margin-bottom: 2rem;
-
     font-family: "Radio Grotesk";
     font-weight: 400;
+    color: variables.$primary;
 }
 
 .date {
     font-weight: 300;
     margin-bottom: 0.5rem;
+    text-align: right;
 }
 
 .divider {
-    background-color: #E94134;
+    background-color: variables.$underline;
     height: 1px;
     max-width: 100%;
 
     margin-bottom: 2rem;
+}
+
+.content {
+    h1, h2, h3, h4, h5, h6, p, li {
+        color: variables.$primary;
+    }
+
+    p, li, ul, ol {
+        color: #622C31;
+    }
+}
+
+@media (max-width: 500px) {
+    .header {
+        margin-bottom: 1rem;
+    }
 }

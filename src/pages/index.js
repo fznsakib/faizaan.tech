@@ -1,8 +1,8 @@
 import React from "react";
+
 import Layout from "../components/layout";
 import Head from "../components/head";
-import ColourBlock from "../components/colourblock";
-import NameBlock from "../components/nameblock";
+import Intro from "../components/intro";
 import IconBar from "../components/iconbar";
 
 import { ResumeURL } from "../hooks/resumeurl";
@@ -14,11 +14,12 @@ export default function Home() {
   return (
     <div>
       <Layout>
-        <Head title="Home"></Head>
+      <Head title="Home"></Head>
         <div className={indexStyles.blocks}>
-          <NameBlock></NameBlock>
-          <ColourBlock></ColourBlock>
-          <IconBar resume_url={resume_url}></IconBar>
+          <Intro></Intro>
+          <div className={indexStyles.iconBar}>
+            <IconBar resume_url={resume_url}></IconBar>
+          </div>
         </div>
       </Layout>
     </div>

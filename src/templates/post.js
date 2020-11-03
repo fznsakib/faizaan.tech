@@ -38,7 +38,7 @@ export default function Blog(props) {
         <p className={postStyles.date}>{props.data.contentfulBlogPost.publishedDate}</p>
         <div className={postStyles.divider}></div>
       </div>
-      <div className={postStyles.postContent} data-sal="slide-up" data-sal-delay="800" data-sal-duration="1200" data-sal-easing="ease">
+      <div className={postStyles.content} data-sal="slide-up" data-sal-delay="800" data-sal-duration="1200" data-sal-easing="ease">
       {documentToReactComponents(
         props.data.contentfulBlogPost.body.json,
         options

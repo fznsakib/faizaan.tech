@@ -9,10 +9,11 @@ export default function BioGridBox(props) {
         <div className={bioGridBoxStyles.content}>
             <img className={bioGridBoxStyles.image} src={props.image} alt={props.alt} />
             <p className={bioGridBoxStyles.header}>{props.header}</p>
-            <p className={bioGridBoxStyles.text}>{props.text}</p>
+            <div className={bioGridBoxStyles.text}>
             {documentToReactComponents(
               props.body.json
             )}
+            </div>
         </div>
     </div>
   );

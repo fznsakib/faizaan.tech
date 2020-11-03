@@ -1,23 +1,43 @@
 .blocks {
   display: flex;
 
+  flex: 1;
+  flex-grow: 1;
+
+  height: 100%;
+
   // Components flow down vertically
   flex-direction: column;
   text-align: left;
-  margin-left: 1rem;
+
+  justify-content: center;
+  align-items: center;
 
 }
 
+.name {
+  @include mixins.title;
+  font-size: 100px;
+  color: variables.$primary;
+}
+
+.job {
+  @include mixins.title;
+  font-size: 60px;
+  font-family: "Space Mono";
+
+  color: variables.$secondary;
+}
+
+.icon-bar {
+  align-items: baseline;
+}
+
 @media (max-width: 800px) {
-  .blocks {
-    margin-left: 0;
-  }
+
 }
 
 
 @media (max-width: 500px) {
-  .blocks {
-    justify-content: center;
-    align-items: center;
-  }
+
 }
