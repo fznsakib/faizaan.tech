@@ -2,11 +2,9 @@
 
 <p align="center">My portfolio website</p>
 
+---
 
-![Gatsby.js](https://img.shields.io/badge/made%20with%20Gatsby.js-663399?style=for-the-badge&logo=gatsby) [![Netlify Status](https://api.netlify.com/api/v1/badges/7659c8f9-5cb4-45cb-97a1-f40552e8e8d7/deploy-status)](https://app.netlify.com/sites/laughing-bohr-fee76e/deploys)
-
-#### Lighthouse scores
-![Lighthouse accessibility](https://img.shields.io/badge/accessibility-89%25-A4A61D.svg) ![Lighthouse best practices](https://img.shields.io/badge/best%20practices-100%25-green.svg) ![Lighthouse performance](https://img.shields.io/badge/performance-76%25-A4A61D.svg) ![Lighthouse SEO](https://img.shields.io/badge/SEO-100%25-green.svg)
+![Gatsby.js](https://img.shields.io/badge/Made%20with%20Gatsby.js-663399?style=flat&logo=gatsby) [![Netlify Status](https://api.netlify.com/api/v1/badges/7659c8f9-5cb4-45cb-97a1-f40552e8e8d7/deploy-status)](https://app.netlify.com/sites/laughing-bohr-fee76e/deploys) [![Lighthouse accessibility](https://img.shields.io/badge/accessibility-89%25-A4A61D.svg)](https://lighthouse-dot-webdotdevsite.appspot.com//lh/html?url=https%3A%2F%2Ffaizaan.tech%2F) [![Lighthouse best practices](https://img.shields.io/badge/best%20practices-100%25-green.svg)](https://lighthouse-dot-webdotdevsite.appspot.com//lh/html?url=https%3A%2F%2Ffaizaan.tech%2F) [![Lighthouse performance](https://img.shields.io/badge/performance-76%25-A4A61D.svg)](https://lighthouse-dot-webdotdevsite.appspot.com//lh/html?url=https%3A%2F%2Ffaizaan.tech%2F) [![Lighthouse SEO](https://img.shields.io/badge/SEO-100%25-green.svg)](https://lighthouse-dot-webdotdevsite.appspot.com//lh/html?url=https%3A%2F%2Ffaizaan.tech%2F)
 
 [faizaan.tech](https://faizaan.tech) allows visitors to find out more about me, my interests and the projects that I have worked on. It includes a blog where I will document anything interesting that I come across, whether it is programming-related or something entirely different.
 
