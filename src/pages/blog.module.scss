@@ -31,6 +31,8 @@
 .posts {
   list-style-type: none;
   margin: 0;
+
+  @include animations.fade-in-bck(1s, 0s);
 }
 
 .post {

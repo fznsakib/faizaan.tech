@@ -89,6 +89,7 @@ module.exports = {
         data: `
           @use "${__dirname}/src/styles/variables.scss" as variables;
           @use "${__dirname}/src/styles/mixins.scss" as mixins;
+          @use "${__dirname}/src/styles/animations.scss" as animations;
         `
       }
     },

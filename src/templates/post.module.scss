@@ -9,6 +9,8 @@ img {
     font-family: "Radio Grotesk";
     font-weight: 400;
     color: variables.$primary;
+
+    @include animations.fade-in-top(1s, 0s);
 }
 
 .date {
@@ -25,6 +27,10 @@ img {
     margin-bottom: 2rem;
 }
 
+.date, .divider {
+    @include animations.fade-in-top(1s, 0.4s);
+}
+
 .content {
     h1, h2, h3, h4, h5, h6, p, li {
         color: variables.$primary;
@@ -33,6 +39,8 @@ img {
     p, li, ul, ol {
         color: #622C31;
     }
+
+    @include animations.fade-in-bottom(1s, 1s);
 }
 
 @media (max-width: 500px) {
