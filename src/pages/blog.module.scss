@@ -5,7 +5,7 @@
     .underline {
       left: 0%;
       max-width: 60%;
-      background-color: variables.$underline;
+      background-color: variables.$primary;
     }
   }
 }
@@ -22,11 +22,14 @@
 
   max-width: 5%;
   left: 50px;
-  bottom: 10px;
+  bottom: 15px;
 
   z-index: 1;
 }
 
+.title, .underline {
+  @include animations.fade-in-top(1s, 0s);
+}
 
 .posts {
   list-style-type: none;
@@ -54,24 +57,25 @@
 
     text-decoration: none;
 
-    transition: 0.2s cubic-bezier(0.455, 0.03, 0.515, 0.955);
+    transition: 0.8s cubic-bezier(0.455, 0.03, 0.515, 0.955);
   }
   
   h2 {
     color: variables.$secondary;
     margin-bottom: 0;
+
+    transition: 0.8s cubic-bezier(0.455, 0.03, 0.515, 0.955);
   }
 
   p {
     color: #777777;
     font-size: 0.8rem;
 
-    transition: 0.2s cubic-bezier(0.455, 0.03, 0.515, 0.955);
+    transition: 0.8s cubic-bezier(0.455, 0.03, 0.515, 0.955);
   }
 
   a:hover {
     background: variables.$primary;
-    // color: variables.$primary;
     
     h2 {
       color: white;
@@ -83,7 +87,7 @@
 
   }
 
-
+  @include animations.fade-in-bottom(1s, var(--fade-delay));
 }
 
 @media (max-width: 800px) {
