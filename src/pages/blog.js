@@ -28,7 +28,7 @@ export default function Blog() {
     <div>
       <ScrollableLayout>
         <Head title="Blog" />
-        <div className={blogStyles.section}>
+        <main className={blogStyles.section}>
           <div>
             <h1 className={blogStyles.title}>blog</h1>
             <div className={blogStyles.underline}></div>
@@ -50,7 +50,7 @@ export default function Blog() {
           })}
         </ol>
 
-        </div>
+        </main>
       </ScrollableLayout>
     </div>
   );
