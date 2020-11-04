@@ -25,21 +25,23 @@ class IconBar extends Component {
         className={iconBarStyles.iconBar}
       >
         <li className={iconBarStyles.resumeIcon}>
-          <a
+          <OutboundLink
             href={this.props.resume_url}
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="CV"
           >
-            <FontAwesomeIcon icon={faIdBadge} size="2x" />
-          </a>
+            <FontAwesomeIcon icon={faIdBadge} size="2x" aria-hidden="true"/>
+          </OutboundLink>
         </li>
         <li className={iconBarStyles.emailIcon}>
           <OutboundLink
             href="mailto:fznsakib@gmail.com"
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="Email"
           >
-            <FontAwesomeIcon icon={faEnvelope} size="2x" />
+            <FontAwesomeIcon icon={faEnvelope} size="2x" aria-hidden="true"/>
           </OutboundLink>
         </li>
         <li className={iconBarStyles.linkedinIcon}>
@@ -47,8 +49,9 @@ class IconBar extends Component {
             href="https://www.linkedin.com/in/faizaan-sakib"
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="LinkedIn"
           >
-            <FontAwesomeIcon icon={faLinkedinIn} size="2x" />
+            <FontAwesomeIcon icon={faLinkedinIn} size="2x" aria-hidden="true"/>
           </OutboundLink>
         </li>
         <li className={iconBarStyles.githubIcon}>
@@ -56,8 +59,9 @@ class IconBar extends Component {
             href="https://www.github.com/fznsakib"
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="GitHub"
           >
-            <FontAwesomeIcon icon={faGithub} size="2x" />
+            <FontAwesomeIcon icon={faGithub} size="2x" aria-hidden="true"/>
           </OutboundLink>
         </li>
         <li className={iconBarStyles.soundcloudIcon}>
@@ -65,8 +69,9 @@ class IconBar extends Component {
             href="https://soundcloud.com/etaki"
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="SoundCloud"
           >
-            <FontAwesomeIcon icon={faSoundcloud} size="2x" />
+            <FontAwesomeIcon icon={faSoundcloud} size="2x" aria-hidden="true"/>
           </OutboundLink>
         </li>
       </ul>
