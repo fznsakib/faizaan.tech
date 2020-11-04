@@ -29,7 +29,7 @@ export default function Blog() {
       <ScrollableLayout>
         <Head title="Blog" />
         <div className={blogStyles.section}>
-          <div data-sal="slide-down" data-sal-duration="1000" data-sal-easing="ease">
+          <div>
             <h1 className={blogStyles.title}>blog</h1>
             <div className={blogStyles.underline}></div>
           </div>
@@ -38,8 +38,8 @@ export default function Blog() {
         <ol className={blogStyles.posts}>
           {data.allContentfulBlogPost.edges.map((edge, i) => {
             return (
-              <div key={i} data-sal="zoom-out" data-sal-duration="1000" data-sal-easing="ease">
-                <li className={blogStyles.post}>
+              <div key={i}>
+                <li className={blogStyles.post} style={{'--fade-delay': `${1 + (i * 0.25)}s`}}>
                   <Link to={`/blog/${edge.node.slug}`}>
                     <h2>{edge.node.title}</h2>
                     <p>{edge.node.publishedDate}</p>
