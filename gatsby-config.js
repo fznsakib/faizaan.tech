@@ -12,7 +12,7 @@ module.exports = {
   siteMetadata: {
     title: "Faizaan Sakib",
     author: "Faizaan Sakib",
-    description: "Recent masters graduate in Computer Science specialising in back-end development based in the UK. Come find out more about me and the projects I have been involved with!",
+    description: "Recent graduate in MEng Computer Science specialising in backend development based in the UK. Find out more about me and the projects I have worked on!",
     email: "fznsakib@gmail.com",
     siteUrl: "https://faizaan.tech",
   },
