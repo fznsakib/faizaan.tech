@@ -9,8 +9,6 @@
     img {
         margin: 0;
         filter: grayscale(100%) opacity(50%);
-        // filter: ;
-        // filter: contrast(80%);
         
         transition: 0.6s;
     }
@@ -31,7 +29,7 @@
         right: 0;
         margin: 0 auto;
 
-        opacity: 50%;
+        opacity: 0.5;
     }
 }
 
@@ -66,7 +64,7 @@
     
     width: fit-content;
 
-    opacity: 0%;
+    opacity: 0;
     transition: 0.3s;
 
     color: black;
