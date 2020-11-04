@@ -15,12 +15,12 @@ export default function Home() {
     <div>
       <Layout>
       <Head title="Home"></Head>
-        <div className={indexStyles.blocks}>
+        <main className={indexStyles.blocks}>
           <Intro></Intro>
           <div className={indexStyles.iconBar}>
             <IconBar resume_url={resume_url}></IconBar>
           </div>
-        </div>
+        </main>
       </Layout>
     </div>
   );
