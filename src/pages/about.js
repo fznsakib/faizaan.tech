@@ -45,7 +45,7 @@ export default function About() {
           <h1 className={aboutStyles.subtitle} data-sal="zoom-out" data-sal-duration="1000" data-sal-easing="ease">bio</h1>
           <div className={aboutStyles.underline} data-sal="zoom-out" data-sal-duration="1000" data-sal-easing="ease"></div>
           <BioGrid></BioGrid>
-          <div style={{textAlign: 'left', fontSize: '0.8em', color: 'white' }}>Icons made by <a href="https://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
+          <div className={aboutStyles.attribution}>Icons made by <a href="https://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
         </div>
       </ScrollableLayout>
     </div>
