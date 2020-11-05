@@ -41,7 +41,9 @@
 
     img {
         position: relative;
-        width: 30rem;
+        height: auto;
+        width: auto;
+        max-height: 60vh;
     
         left: 50%;
         transform: translateX(-50%);
