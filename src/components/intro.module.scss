@@ -8,7 +8,7 @@
     transform: translateZ(0);
     backface-visibility: hidden;
     perspective: 1000;
-    will-change: stroke-dashoffset, stroke-dasharray;
+    will-change: transform, opacity, stroke-dashoffset, stroke-dasharray;
 }
 
 .name-container {
