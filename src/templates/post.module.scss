@@ -1,7 +1,3 @@
-img {
-    width: 80%;
-}
-
 .header {
     @include mixins.title;
     @include mixins.responsive-font(8vw, 50px, 100px);
@@ -32,18 +28,43 @@ img {
 }
 
 .content {
+
+    position: relative;
+
     h1, h2, h3, h4, h5, h6, p, li {
         color: variables.$primary;
     }
 
     p, li, ul, ol {
-        color: #622C31;
+        color: variables.$post-text;
+    }
+
+    img {
+        position: relative;
+        width: 30rem;
+    
+        left: 50%;
+        transform: translateX(-50%);
+    
+        border-radius: 10px;
+        border: 5px variables.$underline solid;
     }
 
     @include animations.fade-in-bottom(1s, 1s);
 }
 
+@media (max-width: 800px) {
+    img {
+        width: 25rem;
+    }
+}
+
 @media (max-width: 500px) {
+
+    img {
+        width: 80vw;
+    }
+
     .header {
         margin-bottom: 1rem;
     }
