@@ -98,5 +98,6 @@ module.exports = {
     "gatsby-transformer-sharp",
     "gatsby-plugin-sitemap",
     "gatsby-plugin-web-font-loader",
+    "gatsby-plugin-preload-fonts"
   ],
 };
