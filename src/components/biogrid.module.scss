@@ -1,22 +1,22 @@
 .container {
-    position: relative;
-    display: grid;
-    max-width: 100%;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    grid-template-rows: minmax(100px, auto);
-    grid-auto-flow: dense;    
-    gap: 10px;
+  position: relative;
+  display: grid;
+  max-width: 100%;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-rows: minmax(100px, auto);
+  grid-auto-flow: dense;
+  gap: 10px;
 
-    background: variables.$text-background;
-    margin: 1rem 0;
-    padding: 10px;
-    text-align: center;
+  background: variables.$text-background;
+  margin: 1rem 0;
+  padding: 10px;
+  text-align: center;
 
-    border-radius: 10px;
+  border-radius: 10px;
 }
 
 @media (min-width: 800px) {
-    .container {
-        grid-template-columns: repeat(auto-fill, minmax(33%, 1fr));
-    }
+  .container {
+    grid-template-columns: repeat(auto-fill, minmax(33%, 1fr));
+  }
 }

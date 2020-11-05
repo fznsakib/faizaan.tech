@@ -13,19 +13,19 @@
 .nav-list {
   display: grid;
   list-style: none;
-  
+
   grid-auto-flow: column;
   max-height: 20rem;
 
   margin: 1rem;
 }
 
-.nav-item { 
+.nav-item {
   color: #545454;
   font-size: 0.9rem;
   border-radius: 6px;
   padding: 0.5rem 0 0.5rem 0;
-  
+
   text-decoration: none;
   text-decoration-color: variables.$background;
 
@@ -37,7 +37,7 @@
   color: black;
 }
 
-.active-nav-item{
+.active-nav-item {
   color: black;
   font-weight: 700;
 }
@@ -54,7 +54,7 @@
   .nav-list {
     display: grid;
     list-style: none;
-    
+
     text-align: center;
     justify-content: center;
 
@@ -62,14 +62,12 @@
   }
 
   .nav-item {
-    @include mixins.responsive-font(4vw, 14px, 18px)
+    @include mixins.responsive-font(4vw, 14px, 18px);
   }
 }
 
 @media (max-width: 500px) {
-
   .nav-list {
     gap: 8vw;
   }
-
 }

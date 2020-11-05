@@ -10,37 +10,36 @@
  * animation fade-in-bottom
  * ----------------------------------------
  */
- @-webkit-keyframes fade-in-bottom {
+@-webkit-keyframes fade-in-bottom {
   0% {
     -webkit-transform: translateY(50px);
-            transform: translateY(50px);
+    transform: translateY(50px);
     opacity: 0;
   }
   100% {
     -webkit-transform: translateY(0);
-            transform: translateY(0);
+    transform: translateY(0);
     opacity: 1;
   }
 }
 @keyframes fade-in-bottom {
   0% {
     -webkit-transform: translateY(50px);
-            transform: translateY(50px);
+    transform: translateY(50px);
     opacity: 0;
   }
   100% {
     -webkit-transform: translateY(0);
-            transform: translateY(0);
+    transform: translateY(0);
     opacity: 1;
   }
 }
-
 
 .icon-bar {
   display: grid;
   grid-auto-flow: column;
   flex-direction: row;
-  
+
   max-width: 30rem;
 
   // margin-top: 2rem;
@@ -49,19 +48,17 @@
   list-style: none;
 
   z-index: 2;
-  
-  
+
   a {
-      color: white;
-      text-decoration: none;
-      transition: ease-in-out 0.5s;
+    color: white;
+    text-decoration: none;
+    transition: ease-in-out 0.5s;
   }
 
   @include mixins.responsive-font(2vw, 22px, 24px);
   align-self: center;
   place-content: center;
   gap: 6vw;
-  
 
   @include animations.fade-in-bottom(1s, 6s);
 }
@@ -71,50 +68,58 @@
     align-self: center;
     place-content: center;
     gap: 8vw;
-    @include mixins.responsive-font(3vw, 18px, 20px)
+    @include mixins.responsive-font(3vw, 18px, 20px);
   }
 }
 
 @media (max-width: 500px) {
   .icon-bar {
-    @include mixins.responsive-font(4vw, 14px, 20px)
+    @include mixins.responsive-font(4vw, 14px, 20px);
   }
 }
 
-.resume-icon, .email-icon, .linkedin-icon, .github-icon, .soundcloud-icon {
-  transition: ease-out 1.0s;
+.resume-icon,
+.email-icon,
+.linkedin-icon,
+.github-icon,
+.soundcloud-icon {
+  transition: ease-out 1s;
 }
 
-.resume-icon:hover, .email-icon:hover, .linkedin-icon:hover, .github-icon:hover, .soundcloud-icon:hover {
+.resume-icon:hover,
+.email-icon:hover,
+.linkedin-icon:hover,
+.github-icon:hover,
+.soundcloud-icon:hover {
   transform: scale(1.2);
 }
 
-.resume-icon:hover{
+.resume-icon:hover {
   a {
-    color: #78B7DB;
+    color: #78b7db;
   }
 }
 
-.email-icon:hover{
+.email-icon:hover {
   a {
-    color: #FF5C6C; 
+    color: #ff5c6c;
   }
 }
 
 .linkedin-icon:hover {
   a {
-    color: #0076B4; 
+    color: #0076b4;
   }
 }
 
-.github-icon:hover{
+.github-icon:hover {
   a {
-    color: black; 
+    color: black;
   }
 }
 
-.soundcloud-icon:hover{
+.soundcloud-icon:hover {
   a {
-    color: #FC6800; 
+    color: #fc6800;
   }
 }

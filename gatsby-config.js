@@ -1,18 +1,19 @@
 // Ensures Google does not crawl through deploy previews that may be considered duplicate content and impacting SEO
 const {
   NODE_ENV,
-  URL: NETLIFY_SITE_URL = 'https://faizaan.tech',
+  URL: NETLIFY_SITE_URL = "https://faizaan.tech",
   DEPLOY_PRIME_URL: NETLIFY_DEPLOY_URL = NETLIFY_SITE_URL,
   CONTEXT: NETLIFY_ENV = NODE_ENV,
-} = process.env
-const isNetlifyProduction = NETLIFY_ENV === 'production'
-const siteUrl = isNetlifyProduction ? NETLIFY_SITE_URL : NETLIFY_DEPLOY_URL
+} = process.env;
+const isNetlifyProduction = NETLIFY_ENV === "production";
+const siteUrl = isNetlifyProduction ? NETLIFY_SITE_URL : NETLIFY_DEPLOY_URL;
 
 module.exports = {
   siteMetadata: {
     title: "Faizaan Sakib",
     author: "Faizaan Sakib",
-    description: "Recent graduate in MEng Computer Science specialising in backend development based in the UK. Find out more about me and the projects I have worked on!",
+    description:
+      "Recent graduate in MEng Computer Science specialising in backend development based in the UK. Find out more about me and the projects I have worked on!",
     email: "fznsakib@gmail.com",
     siteUrl: "https://faizaan.tech",
   },
@@ -21,8 +22,8 @@ module.exports = {
       resolve: `gatsby-plugin-google-analytics`,
       options: {
         trackingId: process.env.GOOGLE_ANALYTICS_TRACKING_ID,
-        head: true
-      }
+        head: true,
+      },
     },
     {
       resolve: "gatsby-source-contentful",
@@ -51,31 +52,31 @@ module.exports = {
             },
           },
         ],
-        icon: "static/favicon.png"
+        icon: "static/favicon.png",
       },
     },
     {
       resolve: `gatsby-plugin-scroll-reveal`,
       options: {
-          threshold: 0.25, // Percentage of an element's area that needs to be visible to launch animation
-          once: true, // Defines if animation needs to be launched once
-      }
+        threshold: 0.25, // Percentage of an element's area that needs to be visible to launch animation
+        once: true, // Defines if animation needs to be launched once
+      },
     },
     {
-      resolve: 'gatsby-plugin-robots-txt',
+      resolve: "gatsby-plugin-robots-txt",
       options: {
         resolveEnv: () => NETLIFY_ENV,
         env: {
           production: {
-            policy: [{ userAgent: '*' }],
+            policy: [{ userAgent: "*" }],
           },
-          'branch-deploy': {
-            policy: [{ userAgent: '*', disallow: ['/'] }],
+          "branch-deploy": {
+            policy: [{ userAgent: "*", disallow: ["/"] }],
             sitemap: null,
             host: null,
           },
-          'deploy-preview': {
-            policy: [{ userAgent: '*', disallow: ['/'] }],
+          "deploy-preview": {
+            policy: [{ userAgent: "*", disallow: ["/"] }],
             sitemap: null,
             host: null,
           },
@@ -90,8 +91,8 @@ module.exports = {
           @use "${__dirname}/src/styles/variables.scss" as variables;
           @use "${__dirname}/src/styles/mixins.scss" as mixins;
           @use "${__dirname}/src/styles/animations.scss" as animations;
-        `
-      }
+        `,
+      },
     },
     "gatsby-plugin-react-helmet",
     "gatsby-plugin-sharp",

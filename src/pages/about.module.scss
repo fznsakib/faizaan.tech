@@ -1,144 +1,141 @@
 .profile-picture {
-    Img {
-        margin: 0;
-        
-        border-radius: 15px 50px 30px;
-        border-style: solid;
-        border-color: white;
-        border-width: 6px;
+  Img {
+    margin: 0;
 
-        align-self: baseline;
+    border-radius: 15px 50px 30px;
+    border-style: solid;
+    border-color: white;
+    border-width: 6px;
 
-        @include mixins.responsive-picture-width(20vw, 220px, 260px);
-        height: auto;
-    }
+    align-self: baseline;
+
+    @include mixins.responsive-picture-width(20vw, 220px, 260px);
+    height: auto;
+  }
 }
 
 .title {
-    @include mixins.title;
-    @include mixins.responsive-font(8vw, 80px, 100px);
+  @include mixins.title;
+  @include mixins.responsive-font(8vw, 80px, 100px);
 }
 
-
 .subtitle {
-    @include mixins.subtitle;
-    @include mixins.responsive-font(6vw, 50px, 70px)
+  @include mixins.subtitle;
+  @include mixins.responsive-font(6vw, 50px, 70px);
 }
 
 .text {
-    @include mixins.text;
-    @include mixins.responsive-font(3vw, 13px, 16px);
-} 
+  @include mixins.text;
+  @include mixins.responsive-font(3vw, 13px, 16px);
+}
 
 .underline {
-    @include mixins.underline;
+  @include mixins.underline;
 }
 
 #about-section {
+  @include mixins.section;
 
-    @include mixins.section;
+  .underline {
+    left: 20%;
+  }
 
+  &:hover {
     .underline {
-        left: 20%;
+      left: 0%;
+      max-width: 60%;
+      background-color: variables.$primary;
     }
-
-    &:hover {
-        .underline{
-            left: 0%;
-            max-width: 60%;
-            background-color: variables.$primary;
-        }
-    }
+  }
 }
 
 #skills-section {
+  @include mixins.section;
 
-    @include mixins.section;
+  .subtitle {
+    text-align: right;
+  }
 
-    .subtitle {
-        text-align: right;
-    }
+  .underline {
+    margin: auto 0 0 auto;
+    margin-right: 0;
+    right: 10%;
+  }
 
+  &:hover {
     .underline {
-        margin: auto 0 0 auto;
-        margin-right: 0;
-        right: 10%;
+      right: 0%;
+      max-width: 60%;
+      background-color: variables.$primary;
     }
-    
-    &:hover {
-        .underline{
-            right: 0%;
-            max-width: 60%;
-            background-color: variables.$primary;
-        }
-    }
+  }
 }
 
 #bio-section {
+  @include mixins.section;
 
-    @include mixins.section;
+  .subtitle {
+    text-align: left;
+  }
 
-    .subtitle {
-        text-align: left;
-    }
+  .underline {
+    left: 5%;
+  }
 
+  &:hover {
     .underline {
-        left: 5%;
+      left: 0%;
+      max-width: 60%;
+      background-color: variables.$primary;
     }
-
-    &:hover {
-        .underline{
-            left: 0%;
-            max-width: 60%;
-            background-color: variables.$primary;
-        }
-    }
+  }
 }
 
 .attribution {
-    text-align: left;
-    font-size: 0.8em;
-    color: white;
+  text-align: left;
+  font-size: 0.8em;
+  color: white;
 }
 
 @media (max-width: 800px) {
-    .subtitle {
-        margin: 1rem 0 0 0;
-    }
+  .subtitle {
+    margin: 1rem 0 0 0;
+  }
 
-    #about-section, #skills-section, #bio-section {
-        &:hover {
-            .underline{
-                max-width: 90%;
-            }
-        }
+  #about-section,
+  #skills-section,
+  #bio-section {
+    &:hover {
+      .underline {
+        max-width: 90%;
+      }
+    }
+  }
+}
+
+@media (max-width: 500px) {
+  .profile-picture {
+    align-self: center;
+
+    Img {
+      border-radius: 50%;
     }
   }
 
-
-@media (max-width: 500px) {
-
-    .profile-picture {
-        align-self: center;
-
-        Img {
-            border-radius: 50%;
-        }
+  #about-section {
+    .title {
+      @include mixins.responsive-font(18vw, 30px, 80px);
     }
+  }
 
-    #about-section {
-        .title {
-            @include mixins.responsive-font(18vw, 30px, 80px);
-        }
+  #skills-section,
+  #bio-section {
+    .subtitle {
+      text-align: center;
     }
+  }
 
-    #skills-section, #bio-section {
-        .subtitle {
-            text-align: center;
-        }
-    }
-
-    .attribution {
-        text-align: center;
-    }
+  .attribution {
+    text-align: center;
+  }
 }

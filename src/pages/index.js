@@ -14,7 +14,7 @@ export default function Home() {
   return (
     <div>
       <Layout>
-      <Head title="Home"></Head>
+        <Head title="Home"></Head>
         <main className={indexStyles.blocks}>
           <Intro></Intro>
           <div className={indexStyles.iconBar}>

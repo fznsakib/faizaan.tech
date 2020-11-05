@@ -1,1 +1,60 @@
-{"timestamp":1604564618006,"hash":"030aa8fc7849c9410b3e359de37258b7","assets":{"/blog/first-blog-post/":{"/static/RadioGrotesk-Regular-4c3b2b4a539c371131ac606591c8adb6.woff":true,"/static/SpaceGrotesk-Bold-7b9e40f6db710fa59344e5dc8cc34539.woff":true,"/static/SpaceGrotesk-Light-f5c67c0c4c54897c8b64ac0957fdc364.woff":true,"/static/SpaceGrotesk-Regular-fbbf6d98bfb9f3410a0de34728e9250e.woff":true,"/static/SpaceGrotesk-Medium-61a3f6134b0f3a5eb11b6b740ffcabaa.woff":true},"/blog/contentful/":{"/static/RadioGrotesk-Regular-4c3b2b4a539c371131ac606591c8adb6.woff":true,"/static/SpaceGrotesk-Regular-fbbf6d98bfb9f3410a0de34728e9250e.woff":true,"/static/SpaceGrotesk-Bold-7b9e40f6db710fa59344e5dc8cc34539.woff":true,"/static/SpaceGrotesk-Light-f5c67c0c4c54897c8b64ac0957fdc364.woff":true},"/dev-404-page/":{"/static/SpaceGrotesk-Regular-fbbf6d98bfb9f3410a0de34728e9250e.woff":true,"/static/SpaceGrotesk-Bold-7b9e40f6db710fa59344e5dc8cc34539.woff":true,"/static/SpaceGrotesk-Medium-61a3f6134b0f3a5eb11b6b740ffcabaa.woff":true},"/404/":{"/static/SpaceGrotesk-Regular-fbbf6d98bfb9f3410a0de34728e9250e.woff":true,"/static/SpaceGrotesk-Bold-7b9e40f6db710fa59344e5dc8cc34539.woff":true},"/about/":{"/static/SpaceGrotesk-Bold-7b9e40f6db710fa59344e5dc8cc34539.woff":true,"/static/SpaceGrotesk-Regular-fbbf6d98bfb9f3410a0de34728e9250e.woff":true,"/static/SpaceMono-Regular-febc54f445758c07422f921f58cf8b4f.woff":true},"/blog/":{"/static/SpaceGrotesk-Medium-61a3f6134b0f3a5eb11b6b740ffcabaa.woff":true,"/static/SpaceGrotesk-Bold-7b9e40f6db710fa59344e5dc8cc34539.woff":true,"/static/SpaceGrotesk-Regular-fbbf6d98bfb9f3410a0de34728e9250e.woff":true},"/construction/":{"/static/SpaceGrotesk-Bold-7b9e40f6db710fa59344e5dc8cc34539.woff":true,"/static/SpaceGrotesk-Regular-fbbf6d98bfb9f3410a0de34728e9250e.woff":true,"/static/SpaceGrotesk-Medium-61a3f6134b0f3a5eb11b6b740ffcabaa.woff":true},"/":{"/static/SpaceGrotesk-Regular-fbbf6d98bfb9f3410a0de34728e9250e.woff":true,"/static/SpaceGrotesk-Bold-7b9e40f6db710fa59344e5dc8cc34539.woff":true},"/music/":{"/static/SpaceGrotesk-Bold-7b9e40f6db710fa59344e5dc8cc34539.woff":true,"/static/SpaceGrotesk-Regular-fbbf6d98bfb9f3410a0de34728e9250e.woff":true},"/projects/":{"/static/SpaceGrotesk-Bold-7b9e40f6db710fa59344e5dc8cc34539.woff":true,"/static/SpaceGrotesk-Medium-61a3f6134b0f3a5eb11b6b740ffcabaa.woff":true,"/static/SpaceGrotesk-Regular-fbbf6d98bfb9f3410a0de34728e9250e.woff":true},"/404.html":{"/static/SpaceGrotesk-Bold-7b9e40f6db710fa59344e5dc8cc34539.woff":true,"/static/SpaceGrotesk-Regular-fbbf6d98bfb9f3410a0de34728e9250e.woff":true}}}
+{
+  "timestamp": 1604564618006,
+  "hash": "030aa8fc7849c9410b3e359de37258b7",
+  "assets": {
+    "/blog/first-blog-post/": {
+      "/static/RadioGrotesk-Regular-4c3b2b4a539c371131ac606591c8adb6.woff": true,
+      "/static/SpaceGrotesk-Bold-7b9e40f6db710fa59344e5dc8cc34539.woff": true,
+      "/static/SpaceGrotesk-Light-f5c67c0c4c54897c8b64ac0957fdc364.woff": true,
+      "/static/SpaceGrotesk-Regular-fbbf6d98bfb9f3410a0de34728e9250e.woff": true,
+      "/static/SpaceGrotesk-Medium-61a3f6134b0f3a5eb11b6b740ffcabaa.woff": true
+    },
+    "/blog/contentful/": {
+      "/static/RadioGrotesk-Regular-4c3b2b4a539c371131ac606591c8adb6.woff": true,
+      "/static/SpaceGrotesk-Regular-fbbf6d98bfb9f3410a0de34728e9250e.woff": true,
+      "/static/SpaceGrotesk-Bold-7b9e40f6db710fa59344e5dc8cc34539.woff": true,
+      "/static/SpaceGrotesk-Light-f5c67c0c4c54897c8b64ac0957fdc364.woff": true
+    },
+    "/dev-404-page/": {
+      "/static/SpaceGrotesk-Regular-fbbf6d98bfb9f3410a0de34728e9250e.woff": true,
+      "/static/SpaceGrotesk-Bold-7b9e40f6db710fa59344e5dc8cc34539.woff": true,
+      "/static/SpaceGrotesk-Medium-61a3f6134b0f3a5eb11b6b740ffcabaa.woff": true
+    },
+    "/404/": {
+      "/static/SpaceGrotesk-Regular-fbbf6d98bfb9f3410a0de34728e9250e.woff": true,
+      "/static/SpaceGrotesk-Bold-7b9e40f6db710fa59344e5dc8cc34539.woff": true
+    },
+    "/about/": {
+      "/static/SpaceGrotesk-Bold-7b9e40f6db710fa59344e5dc8cc34539.woff": true,
+      "/static/SpaceGrotesk-Regular-fbbf6d98bfb9f3410a0de34728e9250e.woff": true,
+      "/static/SpaceMono-Regular-febc54f445758c07422f921f58cf8b4f.woff": true
+    },
+    "/blog/": {
+      "/static/SpaceGrotesk-Medium-61a3f6134b0f3a5eb11b6b740ffcabaa.woff": true,
+      "/static/SpaceGrotesk-Bold-7b9e40f6db710fa59344e5dc8cc34539.woff": true,
+      "/static/SpaceGrotesk-Regular-fbbf6d98bfb9f3410a0de34728e9250e.woff": true
+    },
+    "/construction/": {
+      "/static/SpaceGrotesk-Bold-7b9e40f6db710fa59344e5dc8cc34539.woff": true,
+      "/static/SpaceGrotesk-Regular-fbbf6d98bfb9f3410a0de34728e9250e.woff": true,
+      "/static/SpaceGrotesk-Medium-61a3f6134b0f3a5eb11b6b740ffcabaa.woff": true
+    },
+    "/": {
+      "/static/SpaceGrotesk-Regular-fbbf6d98bfb9f3410a0de34728e9250e.woff": true,
+      "/static/SpaceGrotesk-Bold-7b9e40f6db710fa59344e5dc8cc34539.woff": true
+    },
+    "/music/": {
+      "/static/SpaceGrotesk-Bold-7b9e40f6db710fa59344e5dc8cc34539.woff": true,
+      "/static/SpaceGrotesk-Regular-fbbf6d98bfb9f3410a0de34728e9250e.woff": true
+    },
+    "/projects/": {
+      "/static/SpaceGrotesk-Bold-7b9e40f6db710fa59344e5dc8cc34539.woff": true,
+      "/static/SpaceGrotesk-Medium-61a3f6134b0f3a5eb11b6b740ffcabaa.woff": true,
+      "/static/SpaceGrotesk-Regular-fbbf6d98bfb9f3410a0de34728e9250e.woff": true
+    },
+    "/404.html": {
+      "/static/SpaceGrotesk-Bold-7b9e40f6db710fa59344e5dc8cc34539.woff": true,
+      "/static/SpaceGrotesk-Regular-fbbf6d98bfb9f3410a0de34728e9250e.woff": true
+    }
+  }
+}

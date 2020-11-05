@@ -1,18 +1,18 @@
 .container {
-    display: flex;
-    height: 100vh;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+  display: flex;
+  height: 100vh;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 
-    color: variables.$text;
-    text-align: center;
+  color: variables.$text;
+  text-align: center;
 
-    h1 {
-        margin-bottom: 0;
-    }
+  h1 {
+    margin-bottom: 0;
+  }
 }
 
 .image {
-    margin: 1rem;
+  margin: 1rem;
 }

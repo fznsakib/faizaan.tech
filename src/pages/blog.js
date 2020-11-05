@@ -33,23 +33,24 @@ export default function Blog() {
             <h1 className={blogStyles.title}>blog</h1>
             <div className={blogStyles.underline}></div>
           </div>
-        
 
-        <ol className={blogStyles.posts}>
-          {data.allContentfulBlogPost.edges.map((edge, i) => {
-            return (
-              <div key={i}>
-                <li className={blogStyles.post} style={{'--fade-delay': `${1 + (i * 0.25)}s`}}>
-                  <Link to={`/blog/${edge.node.slug}`}>
-                    <h2>{edge.node.title}</h2>
-                    <p>{edge.node.publishedDate}</p>
-                  </Link>
-                </li>
-              </div>
-            );
-          })}
-        </ol>
-
+          <ol className={blogStyles.posts}>
+            {data.allContentfulBlogPost.edges.map((edge, i) => {
+              return (
+                <div key={i}>
+                  <li
+                    className={blogStyles.post}
+                    style={{ "--fade-delay": `${1 + i * 0.25}s` }}
+                  >
+                    <Link to={`/blog/${edge.node.slug}`}>
+                      <h2>{edge.node.title}</h2>
+                      <p>{edge.node.publishedDate}</p>
+                    </Link>
+                  </li>
+                </div>
+              );
+            })}
+          </ol>
         </main>
       </ScrollableLayout>
     </div>
