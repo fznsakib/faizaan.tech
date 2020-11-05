@@ -21,7 +21,7 @@
 }
 
 .nav-item { 
-  color: #999999;
+  color: #545454;
   font-size: 0.9rem;
   border-radius: 6px;
   padding: 0.5rem 0 0.5rem 0;
@@ -34,16 +34,11 @@
 
 .nav-item:hover {
   border-radius: 2px;
-  color: #454545;
+  color: black;
 }
 
 .active-nav-item{
   color: black;
-  font-weight: 600;
-}
-
-.under-construction-notice {
-  color: #E94134;
   font-weight: 700;
 }
 
