@@ -544,7 +544,7 @@ li > p {
   margin-bottom: calc(1.45rem / 2);
 }
 code {
-  font-size: 0.85rem;
+  font-size: inherit;
   line-height: 1.45rem;
 }
 kbd {
@@ -594,13 +594,11 @@ td:last-child {
 }
 tt,
 code {
-  background-color: hsla(0, 0%, 0%, 0.04);
-  border-radius: 3px;
-  font-family: "SFMono-Regular", Consolas, "Roboto Mono", "Droid Sans Mono",
+  background-color: hsla(0, 0%, 0%, 0.05);
+  border-radius: 5px;
+  font-family: "Space Mono", "SFMono-Regular", Consolas, "Roboto Mono", "Droid Sans Mono",
     "Liberation Mono", Menlo, Courier, monospace;
   padding: 0;
-  padding-top: 0.2em;
-  padding-bottom: 0.2em;
 }
 pre code {
   background: none;
@@ -609,10 +607,7 @@ pre code {
 code:before,
 code:after,
 tt:before,
-tt:after {
-  letter-spacing: -0.2em;
-  content: " ";
-}
+tt:after,
 pre code:before,
 pre code:after,
 pre tt:before,
