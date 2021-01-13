@@ -52,39 +52,21 @@
     color: #000000;
     border-radius: 10px;
 
-    // Allows background to expand around tex
+    // Allows background to expand around text
     display: block;
     padding: 1rem;
 
     text-decoration: none;
-
-    transition: 0.8s cubic-bezier(0.455, 0.03, 0.515, 0.955);
   }
 
   h2 {
     color: variables.$secondary;
     margin-bottom: 0;
-
-    transition: 0.8s cubic-bezier(0.455, 0.03, 0.515, 0.955);
   }
 
   p {
     color: #777777;
     font-size: 0.8rem;
-
-    transition: 0.8s cubic-bezier(0.455, 0.03, 0.515, 0.955);
-  }
-
-  a:hover {
-    background: variables.$primary;
-
-    h2 {
-      color: white;
-    }
-
-    p {
-      color: #fff785;
-    }
   }
 
   @include animations.fade-in-bottom(1s, var(--fade-delay));
