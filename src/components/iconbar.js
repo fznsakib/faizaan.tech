@@ -7,7 +7,7 @@ import {
   faGithub,
   faSoundcloud,
 } from "@fortawesome/free-brands-svg-icons";
-import { OutboundLink } from "gatsby-plugin-google-analytics"
+import { OutboundLink } from "gatsby-plugin-google-analytics";
 
 import iconBarStyles from "./iconbar.module.scss";
 
@@ -21,9 +21,7 @@ class IconBar extends Component {
 
   render() {
     return (
-      <ul
-        className={iconBarStyles.iconBar}
-      >
+      <ul className={iconBarStyles.iconBar}>
         <li className={iconBarStyles.resumeIcon}>
           <OutboundLink
             href={this.props.resume_url}
@@ -31,7 +29,7 @@ class IconBar extends Component {
             rel="noopener noreferrer"
             aria-label="CV"
           >
-            <FontAwesomeIcon icon={faIdBadge} size="2x" aria-hidden="true"/>
+            <FontAwesomeIcon icon={faIdBadge} size="2x" aria-hidden="true" />
           </OutboundLink>
         </li>
         <li className={iconBarStyles.emailIcon}>
@@ -41,7 +39,7 @@ class IconBar extends Component {
             rel="noopener noreferrer"
             aria-label="Email"
           >
-            <FontAwesomeIcon icon={faEnvelope} size="2x" aria-hidden="true"/>
+            <FontAwesomeIcon icon={faEnvelope} size="2x" aria-hidden="true" />
           </OutboundLink>
         </li>
         <li className={iconBarStyles.linkedinIcon}>
@@ -51,7 +49,7 @@ class IconBar extends Component {
             rel="noopener noreferrer"
             aria-label="LinkedIn"
           >
-            <FontAwesomeIcon icon={faLinkedinIn} size="2x" aria-hidden="true"/>
+            <FontAwesomeIcon icon={faLinkedinIn} size="2x" aria-hidden="true" />
           </OutboundLink>
         </li>
         <li className={iconBarStyles.githubIcon}>
@@ -61,7 +59,7 @@ class IconBar extends Component {
             rel="noopener noreferrer"
             aria-label="GitHub"
           >
-            <FontAwesomeIcon icon={faGithub} size="2x" aria-hidden="true"/>
+            <FontAwesomeIcon icon={faGithub} size="2x" aria-hidden="true" />
           </OutboundLink>
         </li>
         <li className={iconBarStyles.soundcloudIcon}>
@@ -71,7 +69,7 @@ class IconBar extends Component {
             rel="noopener noreferrer"
             aria-label="SoundCloud"
           >
-            <FontAwesomeIcon icon={faSoundcloud} size="2x" aria-hidden="true"/>
+            <FontAwesomeIcon icon={faSoundcloud} size="2x" aria-hidden="true" />
           </OutboundLink>
         </li>
       </ul>

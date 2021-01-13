@@ -1,8 +1,9 @@
 import React from "react";
-import 'css-doodle';
+import "css-doodle";
 
-const Doodle = props => {
-  return <css-doodle>{`
+const Doodle = (props) => {
+  return (
+    <css-doodle>{`
           :doodle{
               // @grid: 30x45;
               @grid: 20x35;
@@ -28,6 +29,7 @@ const Doodle = props => {
           transform: rotate(@p(±45deg));
           
         `}</css-doodle>
-}
+  );
+};
 
 export default Doodle;

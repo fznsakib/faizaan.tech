@@ -1,105 +1,95 @@
-
 .skill {
+  position: relative;
 
-    position: relative;
+  transition: transform 0.6s;
+  cursor: pointer;
 
-    transition: transform .6s;
-    cursor: pointer;
+  img {
+    margin: 0;
+    filter: grayscale(100%) opacity(50%);
 
-    img {
-        margin: 0;
-        filter: grayscale(100%) opacity(50%);
-        
-        transition: 0.6s;
-    }
-
+    transition: 0.6s;
+  }
 }
 
 .skill:hover {
+  transform: scale(1.1);
 
-    transform: scale(1.1);
+  img {
+    filter: grayscale(0%) opacity(100%);
+  }
 
-    img {
-        filter: grayscale(0%) opacity(100%);
-    }
-    
-    .name {
-        position: absolute;
-        left: 0;
-        right: 0;
-        margin: 0 auto;
-
-        opacity: 0.5;
-    }
-}
-
-.language {
-
-    margin: 2rem 0rem;
-    padding: 0rem 0.5rem;
-
-    img {
-        width: 60px;
-    }
-
-}
-
-.technology {
-    
-    margin: 2rem 0rem;
-    padding: 0rem 0rem;
-
-    img {
-        height: 50px;
-    }
-}
-
-
-.name {
+  .name {
     position: absolute;
     left: 0;
     right: 0;
     margin: 0 auto;
-    font-size: 12px;
-    
-    width: fit-content;
 
-    opacity: 0;
-    transition: 0.3s;
+    opacity: 0.5;
+  }
+}
 
-    color: black;
+.language {
+  margin: 2rem 0rem;
+  padding: 0rem 0.5rem;
 
-    font-family: 'Space Mono';
-    font-weight: 300;
+  img {
+    width: 60px;
+  }
+}
+
+.technology {
+  margin: 2rem 0rem;
+  padding: 0rem 0rem;
+
+  img {
+    height: 50px;
+  }
+}
+
+.name {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  font-size: 12px;
+
+  width: fit-content;
+
+  opacity: 0;
+  transition: 0.3s;
+
+  color: black;
+
+  font-family: "Space Mono";
+  font-weight: 300;
 }
 
 @media (max-width: 800px) {
-    
-    .technology {
-        img {
-            height: 50px;
-        }
+  .technology {
+    img {
+      height: 50px;
     }
+  }
 }
 
 @media (max-width: 500px) {
-
-    .technology {
-        img {
-            height: 46px;
-        }
+  .technology {
+    img {
+      height: 46px;
     }
+  }
 }
 
 .go {
-    img {
-        // height: 60px;
-        width: 100px;
-    }
+  img {
+    // height: 60px;
+    width: 100px;
+  }
 }
 
 .graphql {
-    .name {
-        font-size: 10px;
-    }
+  .name {
+    font-size: 10px;
+  }
 }

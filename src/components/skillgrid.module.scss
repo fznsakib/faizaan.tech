@@ -1,57 +1,51 @@
 .container {
-    position: relative;
-    max-width: 100%;
+  position: relative;
+  max-width: 100%;
 
-    background: variables.$skills-background;
-    padding: 10px;
-    margin: 1rem 0;
-    text-align: center;
+  background: variables.$skills-background;
+  padding: 10px;
+  margin: 1rem 0;
+  text-align: center;
 
-    border-radius: 10px;
+  border-radius: 10px;
 }
 
 .language-column {
-    flex: 1 0 100px;
+  flex: 1 0 100px;
 }
 
 .technology-column {
-    flex: 1 0 150px;
+  flex: 1 0 150px;
 }
 
 .item {
-    text-align: center;
-    margin: 2rem;
-    transition: 1s;
+  text-align: center;
+  margin: 2rem;
+  transition: 1s;
 }
 
 .item:hover {
-    margin-top: 50px;
+  margin-top: 50px;
 }
 
 @media (max-width: 800px) {
-
-    .technology-column {
-        flex: 1 0 100px;
-    }
-
+  .technology-column {
+    flex: 1 0 100px;
   }
+}
 
 @media (max-width: 500px) {
-
-    .language-column {
-        flex: 1 0 150px;
-    }
-
-    .technology-column {
-        flex: 1 0 90px;
-    }
-
+  .language-column {
+    flex: 1 0 150px;
   }
 
-  @media (max-width: 420px) {
-
-    .technology-column {
-        flex: 1 0 75px;
-    }
-
+  .technology-column {
+    flex: 1 0 90px;
   }
+}
+
+@media (max-width: 420px) {
+  .technology-column {
+    flex: 1 0 75px;
+  }
+}

@@ -34,7 +34,6 @@
     </a>
 </p>
 
-
 [faizaan.tech](https://faizaan.tech) allows visitors to find out more about me, my interests and the projects that I have worked on. It includes a blog where I will document anything interesting that I come across, whether it is programming-related or something entirely different.
 
 The app was created using the performance-first React-based web framework Gatsby. It ensures that the website is light-weight and fast, while being highly customisable and extensible if required in the future. Since Gatsby is a static site generator, the serving of code and data are decoupled. For this website, content such as blog posts are created in [Contentful](https://www.contentful.com), with which the Gatsby app is linked to. On build, the app creates a [GraphQL](https://graphql.org) schema with a static snapshot of all static and Contentful data, which can be queried and used in React components where needed.

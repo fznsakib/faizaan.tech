@@ -8,13 +8,11 @@ import layoutStyles from "./layout.module.scss";
 
 export default function Layout(props) {
   LoadableDoodle.preload();
-  
+
   return (
     <div className={layoutStyles.container}>
-      <LoadableDoodle/>
-      <div className={layoutStyles.content}>
-        {props.children}
-      </div>
+      <LoadableDoodle />
+      <div className={layoutStyles.content}>{props.children}</div>
       <Navbar />
     </div>
   );

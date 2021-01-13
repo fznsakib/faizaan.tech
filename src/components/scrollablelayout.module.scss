@@ -1,61 +1,59 @@
 :root {
-    --nav-width: 8.75rem;
-    --gutter: 12px;
-    --page-max-width: 40rem;
-  }
-  
-  .background {
-    background-color: #FFE8D7;
-  }
-  
-  .container {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    align-content: flex-start;
-    flex:1;
+  --nav-width: 8.75rem;
+  --gutter: 12px;
+  --page-max-width: 40rem;
+}
 
-    padding-right: 65px;
+.background {
+  background-color: #ffe8d7;
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  align-content: flex-start;
+  flex: 1;
+
+  padding-right: 65px;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+
+  // Centering
+  padding: 3rem;
+
+  // Expands div to fill page
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: auto;
+
+  background-color: transparent;
+
+  min-height: 100vh;
+  max-height: fit-content;
+}
+
+@media (max-width: 800px) {
+  .container {
+    padding-right: 0px;
   }
-  
+
+  .content {
+    padding: 2rem;
+    margin-bottom: 10vh;
+    min-height: 90vh;
+  }
+}
+
+@media (max-width: 500px) {
   .content {
     display: flex;
     flex-direction: column;
-    
-    // Centering
-    padding: 3rem;
-    
-    // Expands div to fill page
-    flex-grow: 1;
-    flex-shrink: 1;
-    flex-basis: auto;
-  
-    background-color: transparent;
 
-    min-height: 100vh;
-    max-height: fit-content;
+    padding: 1rem;
+    margin-bottom: 10vh;
   }
-  
-  @media (max-width: 800px) {
-  
-    .container {
-      padding-right: 0px;
-    }
-    
-    .content {
-      padding: 2rem;
-      margin-bottom: 10vh;
-      min-height: 90vh;
-    }
-  }
-  
-  @media (max-width: 500px) {
-
-    .content {
-      display: flex;
-      flex-direction: column;
-  
-      padding: 1rem;
-      margin-bottom: 10vh;
-    }
-  }
+}

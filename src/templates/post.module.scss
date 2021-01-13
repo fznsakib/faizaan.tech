@@ -1,73 +1,82 @@
 .header {
-    @include mixins.title;
-    @include mixins.responsive-font(8vw, 50px, 100px);
+  @include mixins.title;
+  @include mixins.responsive-font(8vw, 50px, 100px);
 
-    font-family: "Radio Grotesk";
-    font-weight: 400;
-    color: variables.$primary;
+  font-family: "Radio Grotesk";
+  font-weight: 400;
+  color: variables.$primary;
 
-    @include animations.fade-in-top(1s, 0s);
+  @include animations.fade-in-top(1s, 0s);
 }
 
 .date {
-    font-weight: 300;
-    margin-bottom: 0.5rem;
-    text-align: right;
+  font-weight: 300;
+  margin-bottom: 0.5rem;
+  text-align: right;
 }
 
 .divider {
-    background-color: variables.$underline;
-    height: 1px;
-    max-width: 100%;
+  background-color: variables.$underline;
+  height: 1px;
+  max-width: 100%;
 
-    margin-bottom: 2rem;
+  margin-bottom: 2rem;
 }
 
-.date, .divider {
-    @include animations.fade-in-top(1s, 0.4s);
+.date,
+.divider {
+  @include animations.fade-in-top(1s, 0.4s);
 }
 
 .content {
+  position: relative;
 
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p,
+  li {
+    color: variables.$primary;
+  }
+
+  p,
+  li,
+  ul,
+  ol {
+    color: variables.$post-text;
+  }
+
+  img {
     position: relative;
+    height: auto;
+    width: auto;
+    max-height: 60vh;
 
-    h1, h2, h3, h4, h5, h6, p, li {
-        color: variables.$primary;
-    }
+    left: 50%;
+    transform: translateX(-50%);
 
-    p, li, ul, ol {
-        color: variables.$post-text;
-    }
+    border-radius: 10px;
+    border: 5px variables.$underline solid;
+  }
 
-    img {
-        position: relative;
-        height: auto;
-        width: auto;
-        max-height: 60vh;
-    
-        left: 50%;
-        transform: translateX(-50%);
-    
-        border-radius: 10px;
-        border: 5px variables.$underline solid;
-    }
-
-    @include animations.fade-in-bottom(1s, 1s);
+  @include animations.fade-in-bottom(1s, 1s);
 }
 
 @media (max-width: 800px) {
-    img {
-        width: 25rem;
-    }
+  img {
+    width: 25rem;
+  }
 }
 
 @media (max-width: 500px) {
+  img {
+    width: 80vw;
+  }
 
-    img {
-        width: 80vw;
-    }
-
-    .header {
-        margin-bottom: 1rem;
-    }
+  .header {
+    margin-bottom: 1rem;
+  }
 }
