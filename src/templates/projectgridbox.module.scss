@@ -1,0 +1,32 @@
+.box {
+  background: variables.$bio-box-background;
+  padding: 20px;
+  display: grid;
+  place-items: left;
+  text-align: left;
+
+  font-size: 20px;
+  transition: 0.4s ease-in-out;
+
+  border-radius: 10px;
+
+  width: 100%;
+  height: 100%;
+
+  -webkit-transition: background color margin 0.4s ease-in-out;
+  -moz-transition: background color margin 0.4s ease-in-out;
+  -o-transition: background color margin 0.4s ease-in-out;
+}
+
+.box:hover {
+  cursor: pointer;
+  margin-top: -5px;
+  margin-bottom: 5px;
+}
+
+@media (max-width: 900px) {
+  .box {
+    grid-column: unset !important;
+    grid-row: span 1;
+  }
+}
