@@ -3,7 +3,7 @@ import React from "react";
 // import ProjectGridBox from "../templates/projectgridbox";
 import Projects from "../hooks/projects";
 import ProjectGridBox from "../templates/projectgridbox";
-import projectGridStyles from "./biogrid.module.scss";
+import projectGridStyles from "./projectgrid.module.scss";
 
 export default function ProjectGrid() {
   const projects = Projects();
@@ -13,11 +13,11 @@ export default function ProjectGrid() {
       {projects.map((project, i) => (
         <ProjectGridBox
           name={project.node.name}
-          field={project.node.field}
-          year={project.node.year}
-          url={project.node.url}
-          technologies={project.node.technologies}
-          image={project.node.previewImage.file.url}
+          type={project.node.type}
+          tags={project.node.tags}
+          github={project.node.github}
+          website={project.node.website}
+          image={project.node.image.file.url}
           key={i}
         ></ProjectGridBox>
       ))}
