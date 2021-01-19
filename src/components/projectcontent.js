@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 
 import ProjectGrid from "../components/projectgrid";
-import BioGrid from "../components/biogrid"
 import ProjectTypeSelector from "../components/projecttypeselector"
 
 class ProjectContent extends Component {
@@ -22,7 +21,7 @@ class ProjectContent extends Component {
             <div>
                 <ProjectTypeSelector state={this.state.showPersonal} trigger={this.triggerProjectTypeState}></ProjectTypeSelector>
                 {this.state.showPersonal && <ProjectGrid/>}
-                {!this.state.showPersonal && <BioGrid/>}
+                {!this.state.showPersonal && <ProjectGrid/>}
             </div>
         )
     }
