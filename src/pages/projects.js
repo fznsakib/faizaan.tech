@@ -1,8 +1,9 @@
 import React from "react";
-import ScrollableLayout from "../components/scrollablelayout";
-import Head from "../components/head";
 
-import ProjectGrid from "../components/projectgrid";
+import Head from "../components/head";
+import ScrollableLayout from "../components/scrollablelayout";
+import ProjectContent from "../components/projectcontent";
+
 import projectsStyles from "./projects.module.scss";
 
 export default function Projects() {
@@ -15,7 +16,7 @@ export default function Projects() {
             <h1 className={projectsStyles.title}>projects</h1>
             <div className={projectsStyles.underline}></div>
           </div>
-          <ProjectGrid></ProjectGrid>
+          <ProjectContent></ProjectContent>
         </main>
       </ScrollableLayout>
     </div>

@@ -1,6 +1,5 @@
 import React from "react";
 
-// import ProjectGridBox from "../templates/projectgridbox";
 import Projects from "../hooks/projects";
 import ProjectGridBox from "../templates/projectgridbox";
 import projectGridStyles from "./projectgrid.module.scss";
