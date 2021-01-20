@@ -1,13 +1,5 @@
 .section {
   @include mixins.section;
-
-  &:hover {
-    .underline {
-      left: 0%;
-      max-width: 60%;
-      background-color: variables.$primary;
-    }
-  }
 }
 
 .title {
