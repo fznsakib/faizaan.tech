@@ -20,8 +20,7 @@ class ProjectContent extends Component {
         return(
             <div>
                 <ProjectTypeSelector state={this.state.showPersonal} trigger={this.triggerProjectTypeState}></ProjectTypeSelector>
-                {this.state.showPersonal && <ProjectGrid/>}
-                {!this.state.showPersonal && <ProjectGrid/>}
+                <ProjectGrid state={this.state.showPersonal}></ProjectGrid>
             </div>
         )
     }

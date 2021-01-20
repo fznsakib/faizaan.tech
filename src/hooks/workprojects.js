@@ -1,16 +1,22 @@
 import { useStaticQuery, graphql } from "gatsby";
 
-export default function Projects() {
+export default function WorkProjects() {
   const info = useStaticQuery(graphql`
     query {
-      allContentfulProject(sort: { fields: date, order: DESC }) {
+      allContentfulWorkProject(sort: { fields: endDate, order: DESC }) {
         edges {
           node {
             name
-            type
+            company
+            position
+            startDate
+            endDate
             tags
             github
             website
+            description {
+              json
+            }
             image {
               file {
                 url
@@ -22,5 +28,5 @@ export default function Projects() {
     }
   `);
 
-  return info.allContentfulProject.edges;
+  return info.allContentfulWorkProject.edges;
 }

@@ -3,16 +3,16 @@ import { OutboundLink } from "gatsby-plugin-google-analytics";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
 
-import projectGridBoxStyles from "./projectgridbox.module.scss";
+import workProjectGridBoxStyles from "./workprojectgridbox.module.scss";
 
-export default function ProjectGridBox(props) {
+export default function WorkProjectGridBox(props) {
   return (
-    <div className={projectGridBoxStyles.box}>
-      <img className={projectGridBoxStyles.image} src={props.image} alt={props.name} />
-      <div className={projectGridBoxStyles.infoContainer}>
-        <div className={projectGridBoxStyles.name}>{props.name}</div>
-        <div className={projectGridBoxStyles.tags}>{props.tags}</div>
-        <div className={projectGridBoxStyles.links}>
+    <div className={workProjectGridBoxStyles.box}>
+      <img className={workProjectGridBoxStyles.image} src={props.image} alt={props.name} />
+      <div className={workProjectGridBoxStyles.infoContainer}>
+        <div className={workProjectGridBoxStyles.name}>{props.name}</div>
+        <div className={workProjectGridBoxStyles.tags}>{props.tags}</div>
+        <div className={workProjectGridBoxStyles.links}>
           <OutboundLink
             href={props.github}
             target="_blank"
