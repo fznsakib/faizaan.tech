@@ -5,7 +5,7 @@ import projectTypeSelectorStyles from "./projecttypeselector.module.scss";
 // Use props.state to change button styling
 export default function ProjectTypeSelector(props) {
   return (
-    <div className={projectTypeSelectorStyles.background}>
+    <div className={projectTypeSelectorStyles.container}>
       <button
         className={
           props.state
