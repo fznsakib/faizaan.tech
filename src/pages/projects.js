@@ -17,7 +17,7 @@ export default function Projects() {
             <h1 className={projectsStyles.title}>projects</h1>
             <div className={projectsStyles.underline}></div>
           </div>
-          <ProjectGrid/>
+          <ProjectGrid />
         </main>
       </ScrollableLayout>
     </div>

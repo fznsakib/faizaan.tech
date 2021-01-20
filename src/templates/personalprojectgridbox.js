@@ -8,7 +8,11 @@ import personalProjectGridBoxStyles from "./personalprojectgridbox.module.scss";
 export default function PersonalProjectGridBox(props) {
   return (
     <div className={personalProjectGridBoxStyles.box}>
-      <img className={personalProjectGridBoxStyles.image} src={props.image} alt={props.name} />
+      <img
+        className={personalProjectGridBoxStyles.image}
+        src={props.image}
+        alt={props.name}
+      />
       <div className={personalProjectGridBoxStyles.infoContainer}>
         <div className={personalProjectGridBoxStyles.name}>{props.name}</div>
         <div className={personalProjectGridBoxStyles.tags}>{props.tags}</div>

@@ -1,40 +1,41 @@
 .background {
+  margin-left: auto;
+  margin-top: 1rem;
+
+  width: fit-content;
+  padding: 2px;
+  border-radius: 6px;
+  background-color: rgba(white, 0.5);
+
+  @media (max-width: 500px) {
     margin-left: auto;
-    margin-top: 1rem;
-
-    width: fit-content;
-    padding: 2px;
-    border-radius: 6px;
-    background-color: rgba(white, 0.5);
-
-    @media (max-width: 500px) {
-        margin-left: auto;
-        margin-right: auto;
-    }
+    margin-right: auto;
+  }
 }
 
-.button, .active-button {
-    width: 100px;
-    height: 40px;
-    margin: 5px;
+.button,
+.active-button {
+  width: 100px;
+  height: 40px;
+  margin: 5px;
 
-    border-radius: 6px;
-    border: 0px;
+  border-radius: 6px;
+  border: 0px;
 
-    color: variables.$primary;
-    outline: none;
+  color: variables.$primary;
+  outline: none;
 }
 
 .button {
-    background-color: rgba(white, 0.6);
+  background-color: rgba(white, 0.6);
 }
 
 .button:hover {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .active-button {
-    background-color: rgba(white, 1.0);
+  background-color: rgba(white, 1);
 
-    font-weight: 700;
+  font-weight: 700;
 }

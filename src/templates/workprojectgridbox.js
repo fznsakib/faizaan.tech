@@ -8,7 +8,11 @@ import workProjectGridBoxStyles from "./workprojectgridbox.module.scss";
 export default function WorkProjectGridBox(props) {
   return (
     <div className={workProjectGridBoxStyles.box}>
-      <img className={workProjectGridBoxStyles.image} src={props.image} alt={props.name} />
+      <img
+        className={workProjectGridBoxStyles.image}
+        src={props.image}
+        alt={props.name}
+      />
       <div className={workProjectGridBoxStyles.infoContainer}>
         <div className={workProjectGridBoxStyles.name}>{props.name}</div>
         <div className={workProjectGridBoxStyles.tags}>{props.tags}</div>
