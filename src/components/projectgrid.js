@@ -29,10 +29,10 @@ class ProjectGrid extends Component {
 
     return (
       <div>
-        <ProjectTypeSelector
+        <ProjectTypeSelector 
           state={this.state.showPersonal}
           trigger={this.triggerProjectTypeState}
-        ></ProjectTypeSelector>
+        />
         <div className={projectGridStyles.container}>
           {this.state.showPersonal &&
             personalProjects.map((project, i) => (
