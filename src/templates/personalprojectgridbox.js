@@ -26,7 +26,8 @@ export default function PersonalProjectGridBox(props) {
             return <li className={personalProjectGridBoxStyles.tag}>{tag}</li>
           })}
         </ul>
-        <div className={personalProjectGridBoxStyles.links}>
+      </div>
+      <div className={personalProjectGridBoxStyles.linksContainer}>
           {githubExists &&
             <OutboundLink
               href={props.github}
@@ -49,7 +50,6 @@ export default function PersonalProjectGridBox(props) {
               <FontAwesomeIcon icon={faExternalLinkAlt} size="2x" aria-hidden="true" />
             </OutboundLink>
           }
-        </div>
       </div>
     </div>
   );

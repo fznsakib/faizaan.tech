@@ -1,9 +1,11 @@
 .box {
   background: variables.$text-background;
-  padding: 10px;
   display: grid;
+  position: relative;
   place-items: left;
   text-align: left;
+ 
+  padding: 10px;
 
   grid-auto-rows: max-content;
 
@@ -31,6 +33,7 @@
 }
 
 .info-container {
+  display: grid;
   margin: 10px 0 0 0;
 }
 
@@ -47,6 +50,8 @@
   overflow: hidden; 
   margin: 0;
   padding: 0;
+
+  max-width: 80%;
 
   li {
     float: left; 
@@ -92,14 +97,21 @@
 }
 
 
-.links {
-  margin-top: auto;
-  float: right;
+.links-container {
+  margin-bottom: auto;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  margin: 10px;
+  margin-top: 20px;
 }
 
 .github, .website {
   color: variables.$unselected;
   transition: 0.4s;
+}
+
+.github {
   font-size: 18px;
 }
 
@@ -109,6 +121,7 @@
 
 .website {
   margin-left: 16px;
+  font-size: 17px;
 }
 
 .website:hover {
