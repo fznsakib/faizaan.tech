@@ -12,11 +12,13 @@ export default function PersonalProjectGridBox(props) {
 
   return (
     <div className={personalProjectGridBoxStyles.box}>
-      <img
-        className={personalProjectGridBoxStyles.image}
-        src={props.image}
-        alt={props.name}
-      />
+      <div className={personalProjectGridBoxStyles.imageContainer}>
+        <img
+          className={personalProjectGridBoxStyles.image}
+          src={props.image}
+          alt={props.name}
+        />
+      </div>
       <div className={personalProjectGridBoxStyles.infoContainer}>
         <div className={personalProjectGridBoxStyles.name}>{props.name}</div>
         <ul className={personalProjectGridBoxStyles.tags}>
