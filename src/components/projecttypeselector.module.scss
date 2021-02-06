@@ -1,0 +1,43 @@
+.container {
+  margin-left: auto;
+
+  width: fit-content;
+  padding: 2px;
+  border-radius: 6px;
+  background-color: rgba(white, 0.5);
+
+  @media (max-width: 500px) {
+    margin-top: 1rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  @include animations.fade-in-top(1s, 1s);
+}
+
+.button,
+.active-button {
+  width: 100px;
+  height: 40px;
+  margin: 5px;
+
+  border-radius: 6px;
+  border: 0px;
+
+  color: variables.$primary;
+  outline: none;
+}
+
+.button {
+  background-color: rgba(white, 0.6);
+}
+
+.button:hover {
+  cursor: pointer;
+}
+
+.active-button {
+  background-color: rgba(white, 1);
+
+  font-weight: 700;
+}

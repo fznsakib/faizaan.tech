@@ -39,14 +39,6 @@
   .underline {
     left: 20%;
   }
-
-  &:hover {
-    .underline {
-      left: 0%;
-      max-width: 60%;
-      background-color: variables.$primary;
-    }
-  }
 }
 
 #skills-section {
@@ -61,14 +53,6 @@
     margin-right: 0;
     right: 10%;
   }
-
-  &:hover {
-    .underline {
-      right: 0%;
-      max-width: 60%;
-      background-color: variables.$primary;
-    }
-  }
 }
 
 #bio-section {
@@ -81,14 +65,6 @@
   .underline {
     left: 5%;
   }
-
-  &:hover {
-    .underline {
-      left: 0%;
-      max-width: 60%;
-      background-color: variables.$primary;
-    }
-  }
 }
 
 .attribution {
@@ -100,16 +76,6 @@
 @media (max-width: 800px) {
   .subtitle {
     margin: 1rem 0 0 0;
-  }
-
-  #about-section,
-  #skills-section,
-  #bio-section {
-    &:hover {
-      .underline {
-        max-width: 90%;
-      }
-    }
   }
 }
 

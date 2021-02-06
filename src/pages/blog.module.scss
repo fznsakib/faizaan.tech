@@ -1,13 +1,5 @@
 .section {
   @include mixins.section;
-
-  &:hover {
-    .underline {
-      left: 0%;
-      max-width: 60%;
-      background-color: variables.$primary;
-    }
-  }
 }
 
 .title {
@@ -73,14 +65,6 @@
 }
 
 @media (max-width: 800px) {
-  .section {
-    &:hover {
-      .underline {
-        max-width: 90%;
-      }
-    }
-  }
-
   .post {
     width: 100%;
   }

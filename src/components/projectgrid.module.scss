@@ -1,0 +1,36 @@
+.personal-container, .work-container {
+  position: relative;
+  display: grid;
+  max-width: 100%;
+  
+  grid-auto-flow: dense;
+  gap: 10px;
+
+  background: rgba($color: white, $alpha: 0.5);
+  margin: 1rem 0;
+  padding: 10px;
+  text-align: center;
+
+  border-radius: 10px;
+  @include animations.fade-in-bottom(1s, 1.25s);
+}
+
+.personal-container {
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-rows: minmax(100px, auto);
+}
+
+.work-container {
+  grid-template-columns: repeat(auto-fill, minmax(100%, 1fr));
+  grid-template-rows: minmax(100px, auto);
+}
+
+@media (min-width: 1000px) {
+  .personal-container {
+    grid-template-columns: repeat(auto-fill, minmax(32%, 1fr));
+  }
+  
+  // .work-container {
+  //   grid-template-columns: repeat(auto-fill, minmax(100%, 1fr));
+  // }
+}

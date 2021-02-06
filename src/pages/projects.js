@@ -1,17 +1,24 @@
 import React from "react";
-import Layout from "../components/layout";
+
 import Head from "../components/head";
+import ScrollableLayout from "../components/scrollablelayout";
+import ProjectGrid from "../components/projectgrid";
+
+import projectsStyles from "./projects.module.scss";
 
 export default function Projects() {
   return (
     <div>
-      <Layout>
+      <ScrollableLayout>
         <Head title="Projects" />
-        <h1>Projects</h1>
-        <h2>Test Title</h2>
-        <h3>Lets see how good this looks!</h3>
-        <p>Such wow. Very React.</p>
-      </Layout>
+        <main className={projectsStyles.section}>
+          <div>
+            <h1 className={projectsStyles.title}>projects</h1>
+            <div className={projectsStyles.underline}></div>
+          </div>
+          <ProjectGrid />
+        </main>
+      </ScrollableLayout>
     </div>
   );
 }
