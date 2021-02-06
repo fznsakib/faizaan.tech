@@ -64,7 +64,7 @@ class ProjectGrid extends Component {
                 tags={project.node.tags}
                 github={project.node.github}
                 website={project.node.website}
-                description={project.node.description.json}
+                description={project.node.description}
                 image={project.node.image.file.url}
                 key={i}
               />
