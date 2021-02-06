@@ -1,6 +1,7 @@
 .box {
     background: variables.$text-background;
     display: flex;
+    flex-direction: row;
     position: relative;
     place-items: left;
     text-align: left;
@@ -18,6 +19,16 @@
 .left-card {
     display: flex;
     flex-direction: column;
+    flex-grow: 1;
+
+    margin: 1rem;
+
+    width: fit-content;
+}
+
+.right-card {
+    display: flex;
+    flex-direction: column;
 
     align-items: center;
     justify-content: center;
@@ -28,15 +39,6 @@
     margin: 1rem;
 }
 
-.right-card {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-
-    margin: 1rem;
-
-    width: 100%;
-}
 
 .name {
     color: variables.$text;
@@ -71,6 +73,8 @@
 }
 
 .position, .company {
+    text-align: center;
+
     color: variables.$text;
     font-weight: 700;
     font-size: 26px;
@@ -84,7 +88,14 @@
 }
 
 .description {
+    word-wrap: normal;
     color: variables.$light-text;
+}
+
+.tags-container {
+    display: flex;
+    flex-grow: 1;
+    flex-direction: row;
 }
 
 .tags {
@@ -137,10 +148,6 @@
 }
 
 .links-container {
-    margin-bottom: auto;
-    position: absolute;
-    bottom: 0;
-    right: 0;
     margin: 1rem;
   }
   
@@ -150,7 +157,7 @@
   }
   
   .github {
-    font-size: 18px;
+    font-size: 14px;
   }
   
   .github:hover {
@@ -158,10 +165,55 @@
   }
   
   .website {
-    margin-left: 16px;
-    font-size: 17px;
+    font-size: 14px;
   }
   
   .website:hover {
     color: variables.$link;
   }
+
+@media (max-width: 1000px) {
+    .box {
+        flex-direction: column-reverse;
+    }
+    
+    .right-card {
+        flex-direction: column;
+        flex-grow: 1;
+        align-items: center;
+        justify-content: center;
+
+        margin-bottom: 0;
+
+        height: 50%;
+        max-width: 100%;
+    }
+
+    .left-card {
+        margin-top: 0;
+    }
+
+    .image {
+        width: 60%;
+    }
+
+    .description {
+        font-size: 18px;
+    }
+
+    .tags-container {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 550px) {
+
+    .header {
+        flex-direction: column;
+    }
+
+    .at {
+        margin: 1rem;
+    }
+    
+}

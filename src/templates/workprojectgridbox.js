@@ -28,15 +28,6 @@ export default function WorkProjectGridBox(props) {
   return (
     <div className={workProjectGridBoxStyles.box}>
       <div className={workProjectGridBoxStyles.leftCard}>
-        <img
-          className={workProjectGridBoxStyles.image}
-          src={props.image}
-          alt={props.company}
-        />
-        <div className={workProjectGridBoxStyles.name}>{props.name}</div>
-        <div className={workProjectGridBoxStyles.date}>{startDate} - {endDate}</div>
-      </div>
-      <div className={workProjectGridBoxStyles.rightCard}>
         <div className={workProjectGridBoxStyles.header}>
           <div className={workProjectGridBoxStyles.position}>{props.position}</div>
           <div className={workProjectGridBoxStyles.at}>@</div>
@@ -45,11 +36,22 @@ export default function WorkProjectGridBox(props) {
         <div className={workProjectGridBoxStyles.description}>
           {documentToReactComponents(props.description.json)}
         </div>
-        <ul className={workProjectGridBoxStyles.tags}>
-          {props.tags.map((tag, index) => {
-            return <li className={workProjectGridBoxStyles.tag}>{tag}</li>
-          })}
-        </ul>
+        <div className={workProjectGridBoxStyles.tagsContainer}>
+          <ul className={workProjectGridBoxStyles.tags}>
+            {props.tags.map((tag, index) => {
+              return <li className={workProjectGridBoxStyles.tag}>{tag}</li>
+            })}
+          </ul>
+        </div>
+      </div>
+      <div className={workProjectGridBoxStyles.rightCard}>
+        <img
+          className={workProjectGridBoxStyles.image}
+          src={props.image}
+          alt={props.company}
+        />
+        <div className={workProjectGridBoxStyles.name}>{props.name}</div>
+        <div className={workProjectGridBoxStyles.date}>{startDate} - {endDate}</div>
         <div className={workProjectGridBoxStyles.linksContainer}>
           {githubExists &&
             <OutboundLink
