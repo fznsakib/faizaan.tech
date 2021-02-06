@@ -2,7 +2,6 @@ import React from "react";
 
 import Head from "../components/head";
 import ScrollableLayout from "../components/scrollablelayout";
-// import ProjectContent from "../components/projectcontent";
 import ProjectGrid from "../components/projectgrid";
 
 import projectsStyles from "./projects.module.scss";

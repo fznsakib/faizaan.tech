@@ -6,26 +6,31 @@ import { faGithub } from "@fortawesome/free-brands-svg-icons";
 import workProjectGridBoxStyles from "./workprojectgridbox.module.scss";
 
 export default function WorkProjectGridBox(props) {
+  console.log(props.startDate)
+
+  function convertDateToString (date) {
+    return new Date(date).toLocaleDateString(
+      'en-gb',
+      {
+        year: 'numeric',
+        month: 'long'
+      }
+    )
+  }
+
+  const startDate = convertDateToString(props.startDate)
+  const endDate = convertDateToString(props.endDate)
+
   return (
     <div className={workProjectGridBoxStyles.box}>
-      <img
-        className={workProjectGridBoxStyles.image}
-        src={props.image}
-        alt={props.name}
-      />
-      <div className={workProjectGridBoxStyles.infoContainer}>
+      <div className={workProjectGridBoxStyles.leftCard}>
+        <img
+          className={workProjectGridBoxStyles.image}
+          src={props.image}
+          alt={props.company}
+        />
         <div className={workProjectGridBoxStyles.name}>{props.name}</div>
-        <div className={workProjectGridBoxStyles.tags}>{props.tags}</div>
-        <div className={workProjectGridBoxStyles.links}>
-          <OutboundLink
-            href={props.github}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="GitHub"
-          >
-            <FontAwesomeIcon icon={faGithub} size="2x" aria-hidden="true" />
-          </OutboundLink>
-        </div>
+        <div className={workProjectGridBoxStyles.date}>{startDate} - {endDate}</div>
       </div>
     </div>
   );

@@ -1,0 +1,51 @@
+.box {
+    background: variables.$text-background;
+    display: grid;
+    position: relative;
+    place-items: left;
+    text-align: left;
+   
+    padding: 10px;
+  
+    grid-auto-rows: max-content;
+  
+    font-size: 20px;
+    transition: 0.4s ease-in-out;
+  
+    border-radius: 10px;
+}
+
+.left-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+
+    width: 300px;
+    height: 300px;
+
+    margin: 1rem;
+}
+
+
+.name {
+    color: variables.$text;
+    font-weight: 700;
+    font-size: 24px;
+
+    margin: 1rem;
+}
+
+.date {
+    color: variables.$unselected;
+    font-weight: 600;
+}
+
+
+
+.image {
+    width: 80%;
+
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}

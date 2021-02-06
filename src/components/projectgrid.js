@@ -33,16 +33,22 @@ class ProjectGrid extends Component {
           state={this.state.showPersonal}
           trigger={this.triggerProjectTypeState}
         />
-        <div className={projectGridStyles.container}>
+
+
+
+        <div className={
+            this.state.showPersonal
+              ? `${projectGridStyles.personalContainer}`
+              : `${projectGridStyles.workContainer}`
+        }>
           {this.state.showPersonal &&
             personalProjects.map((project, i) => (
               <PersonalProjectGridBox
                 name={project.node.name}
-                type={project.node.type}
+                image={project.node.image.file.url}
                 tags={project.node.tags}
                 github={project.node.github}
                 website={project.node.website}
-                image={project.node.image.file.url}
                 key={i}
               />
             ))}
@@ -51,10 +57,14 @@ class ProjectGrid extends Component {
             workProjects.map((project, i) => (
               <WorkProjectGridBox
                 name={project.node.name}
-                type={project.node.type}
+                company={project.node.company}
+                position={project.node.position}
+                startDate={project.node.startDate}
+                endDate={project.node.endDate}
                 tags={project.node.tags}
                 github={project.node.github}
                 website={project.node.website}
+                description={project.node.description.json}
                 image={project.node.image.file.url}
                 key={i}
               />
