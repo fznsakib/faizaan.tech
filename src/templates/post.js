@@ -4,6 +4,7 @@ import { documentToReactComponents } from "@contentful/rich-text-react-renderer"
 
 import Head from "../components/head";
 import ScrollableLayout from "../components/scrollablelayout";
+import CodeSnippet from "../templates/codesnippet"
 
 import postStyles from "./post.module.scss";
 
@@ -27,6 +28,10 @@ export default function Blog(props) {
         const url = node.data.target.fields.file["en-US"].url;
         return <img alt={alt} src={url} />;
       },
+      "embedded-entry-block": (node) => {
+        const md = String(node.data.target.fields.body["en-US"]);
+        return <CodeSnippet markdown={md}></CodeSnippet>
+      }
     },
   };
 
