@@ -5,6 +5,7 @@ import { documentToReactComponents } from "@contentful/rich-text-react-renderer"
 import Head from "../components/head";
 import ScrollableLayout from "../components/scrollablelayout";
 import CodeSnippet from "../templates/codesnippet"
+import CodeSnippetHTML from "../hooks/codesnippethtml"
 
 import postStyles from "./post.module.scss";
 
@@ -29,8 +30,12 @@ export default function Blog(props) {
         return <img alt={alt} src={url} />;
       },
       "embedded-entry-block": (node) => {
-        const md = String(node.data.target.fields.body["en-US"]);
-        return <CodeSnippet markdown={md}></CodeSnippet>
+        // Get ID of this code snippet
+        const id = node.data.target.sys["contentful_id"];
+        // Query allContentfulCodeSnippet and get the required snippet by ID
+        const html = CodeSnippetHTML(id);
+        
+        return <CodeSnippet markdown={html}></CodeSnippet>
       }
     },
   };

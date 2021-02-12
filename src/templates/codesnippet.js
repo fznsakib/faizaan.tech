@@ -1,21 +1,28 @@
 import React, { useEffect } from 'react';
-import MarkdownIt from 'markdown-it';
 import Prism from 'prismjs';
 
-const md = new MarkdownIt({
-  html: true,
-  linkify: false,
-});
+// Try markdownit
+
+// Prism theme configuration
+// require("prismjs/themes/prism-custom.css");
+require("prismjs/themes/prism-duotonedark.css");
+require("prismjs/plugins/line-numbers/prism-line-numbers.css");
+
+// Prism language requirements
+require('prismjs/components/prism-python');
+
 
 export default function CodeSnippet({ markdown }) {
   useEffect(() => {
     Prism.highlightAll();
   });
 
-  console.log(markdown);
-
   return (
-    <div dangerouslySetInnerHTML={{ __html: md.render(markdown) }} />
+    <div
+      dangerouslySetInnerHTML={{
+        __html: markdown,
+      }}
+    ></div>
   );
 };
 
