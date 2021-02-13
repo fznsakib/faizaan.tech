@@ -4,8 +4,8 @@ import Prism from 'prismjs';
 // Try markdownit
 
 // Prism theme configuration
-// require("prismjs/themes/prism-custom.css");
-require("prismjs/themes/prism-duotonedark.css");
+require("prismjs/themes/prism-custom.css");
+// require("prismjs/themes/prism-duotonedark.css");
 require("prismjs/plugins/line-numbers/prism-line-numbers.css");
 
 // Prism language requirements
