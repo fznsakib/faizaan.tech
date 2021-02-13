@@ -51,6 +51,15 @@ module.exports = {
               linkImagesToOriginal: false,
             },
           },
+          {
+            resolve: `gatsby-remark-prismjs`,
+            options: {
+              // classPrefix: "language-",
+              // inlineCodeMarker: null,
+              showLineNumbers: true,
+              noInlineHighlight: false,
+            },
+          }
         ],
         icon: "static/favicon.png",
       },
