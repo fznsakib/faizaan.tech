@@ -4,8 +4,8 @@ import { documentToReactComponents } from "@contentful/rich-text-react-renderer"
 
 import Head from "../components/head";
 import ScrollableLayout from "../components/scrollablelayout";
-import CodeSnippet from "../templates/codesnippet"
-import CodeSnippetHTML from "../hooks/codesnippethtml"
+import CodeSnippet from "../templates/codesnippet";
+import CodeSnippetHTML from "../hooks/codesnippethtml";
 
 import postStyles from "./post.module.scss";
 
@@ -21,7 +21,7 @@ export const query = graphql`
   }
 `;
 
-export default function Blog(props) {
+export default function Post(props) {
   const options = {
     renderNode: {
       "embedded-asset-block": (node) => {
@@ -34,9 +34,9 @@ export default function Blog(props) {
         const id = node.data.target.sys["contentful_id"];
         // Query allContentfulCodeSnippet and get the required snippet by ID
         const html = CodeSnippetHTML(id);
-        
-        return <CodeSnippet markdown={html}></CodeSnippet>
-      }
+
+        return <CodeSnippet markdown={html}></CodeSnippet>;
+      },
     },
   };
 

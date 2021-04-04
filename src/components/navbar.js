@@ -43,11 +43,6 @@ export default function Header(props) {
             blog
           </Link>
         </li>
-        {/* <li>
-          <div className={navbarStyles.underConstructionNotice}>
-            *website under construction
-          </div>
-        </li> */}
       </ul>
     </nav>
   );

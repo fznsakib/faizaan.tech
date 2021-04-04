@@ -11,25 +11,6 @@ export default function SkillGrid() {
   const languageIcons = LanguageIcons();
   const technologyIcons = TechnologyIcons();
 
-  // Defined a separate function that allows a row to be inserted for every nth item found in the technologies
-  // folder, that would not be otherwise possible using the map function.
-  // var rowContents = [];
-  // var rowThreshold = 16
-
-  // const technologyRender = TechnologyIcons().reduce((content, technology, i) => {
-  //     rowContents.push(
-  //         <div className={layoutStyles.column + " " + skillGridStyles.column} key={i}>
-  //             <SkillIcon name={technology.node.name} publicURL={technology.node.publicURL}></SkillIcon>
-  //         </div>
-  //     );
-
-  //     if (i % rowThreshold === rowThreshold - 1) {
-  //         content.push(<div className={layoutStyles.row} key={i}>{rowContents}</div>);
-  //         rowContents = [];
-  //     }
-  //     return content;
-  // },[])
-
   return (
     <div data-sal="zoom-out" data-sal-duration="1000" data-sal-easing="ease">
       <div className={skillGridStyles.container}>
