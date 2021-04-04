@@ -225,12 +225,12 @@ img {
 h1 {
   margin-left: 0;
   margin-right: 0;
-  margin-top: 0;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
   padding-bottom: 0;
   padding-left: 0;
   padding-right: 0;
   padding-top: 0;
-  margin-bottom: 1.45rem;
   color: inherit;
   font-family: "Space Grotesk", -apple-system, Segoe UI, sans-serif;
   font-weight: 900;
@@ -241,12 +241,12 @@ h1 {
 h2 {
   margin-left: 0;
   margin-right: 0;
-  margin-top: 0;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
   padding-bottom: 0;
   padding-left: 0;
   padding-right: 0;
   padding-top: 0;
-  margin-bottom: 1.45rem;
   color: inherit;
   font-family: "Space Grotesk", -apple-system, Segoe UI, sans-serif;
   font-weight: 600;
@@ -257,12 +257,12 @@ h2 {
 h3 {
   margin-left: 0;
   margin-right: 0;
-  margin-top: 0;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
   padding-bottom: 0;
   padding-left: 0;
   padding-right: 0;
   padding-top: 0;
-  margin-bottom: 1.45rem;
   color: inherit;
   font-family: "Space Grotesk", -apple-system, Segoe UI, sans-serif;
   font-weight: 600;
@@ -273,12 +273,12 @@ h3 {
 h4 {
   margin-left: 0;
   margin-right: 0;
-  margin-top: 0;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
   padding-bottom: 0;
   padding-left: 0;
   padding-right: 0;
   padding-top: 0;
-  margin-bottom: 1.45rem;
   color: inherit;
   font-family: "Space Grotesk", -apple-system, Segoe UI, sans-serif;
   font-weight: 600;
@@ -289,12 +289,12 @@ h4 {
 h5 {
   margin-left: 0;
   margin-right: 0;
-  margin-top: 0;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
   padding-bottom: 0;
   padding-left: 0;
   padding-right: 0;
   padding-top: 0;
-  margin-bottom: 1.45rem;
   color: inherit;
   font-family: "Space Grotesk", -apple-system, Segoe UI, sans-serif;
   font-weight: 600;
@@ -305,12 +305,12 @@ h5 {
 h6 {
   margin-left: 0;
   margin-right: 0;
-  margin-top: 0;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
   padding-bottom: 0;
   padding-left: 0;
   padding-right: 0;
   padding-top: 0;
-  margin-bottom: 1.45rem;
   color: inherit;
   font-family: "Space Grotesk", -apple-system, Segoe UI, sans-serif;
   font-weight: 600;
@@ -387,7 +387,7 @@ p {
   padding-left: 0;
   padding-right: 0;
   padding-top: 0;
-  margin-bottom: 1.45rem;
+  margin-bottom: 1rem;
   color: inherit;
 }
 figure {
@@ -622,7 +622,6 @@ pre tt:after {
   }
 }
 
-
 // PRISM CODE SNIPPETS
 
 /**
@@ -630,9 +629,6 @@ pre tt:after {
  * and overflow that we removed from <pre>.
  */
 .gatsby-highlight {
-  // Custom
-  // background-color: #272822;
-  // Duotone Dark
   background-color: #2a2734;
 
   border-radius: 10px;
