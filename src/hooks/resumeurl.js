@@ -1,6 +1,6 @@
 import { useStaticQuery, graphql } from "gatsby";
 
-export const ResumeURL = () => {
+export default function ResumeURL() {
   const resume = useStaticQuery(graphql`
     query {
       contentfulAsset(title: { eq: "resume" }) {
@@ -12,4 +12,4 @@ export const ResumeURL = () => {
   `);
 
   return resume.contentfulAsset.file.url;
-};
+}

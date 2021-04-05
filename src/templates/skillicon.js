@@ -3,51 +3,25 @@ import React from "react";
 import skillIconStyles from "./skillicon.module.scss";
 
 export default function SkillIcon(props) {
+  const { name, url, isLanguage } = props;
+
   var classMap = {
     "c++": skillIconStyles.cplusplus,
-    go: skillIconStyles.go,
+    Go: skillIconStyles.go,
     javascript: skillIconStyles.javascript,
     python: skillIconStyles.python,
     graphql: skillIconStyles.graphql,
   };
 
-  var languageMap = {
-    "c++": "C++",
-    go: "Golang",
-    javascript: "JavaScript",
-    python: "Python",
-  };
-
-  var technologyMap = {
-    amazonwebservices: "AWS",
-    css3: "CSS",
-    django: "Django",
-    flask: "Flask",
-    gatsbyjs: "Gatsby.js",
-    git: "Git",
-    graphql: "GraphQL",
-    heroku: "Heroku",
-    html5: "HTML",
-    jupyter: "Jupyter",
-    opencv: "OpenCV",
-    pandas: "Pandas",
-    pytorch: "PyTorch",
-    sqlite: "SQLite",
-    unity: "Unity",
-    vuejs: "Vue.js",
-  };
-
   // Differentiate between language and technology grid
-  const isLanguage = props.name in languageMap;
-  const name = isLanguage ? languageMap[props.name] : technologyMap[props.name];
-  var className = skillIconStyles.skill + " " + classMap[props.name];
+  var className = skillIconStyles.skill + " " + classMap[name];
   className += isLanguage
     ? " " + skillIconStyles.language
     : " " + skillIconStyles.technology;
 
   return (
     <div className={className}>
-      <img src={props.publicURL} alt={name} />
+      <img src={url} alt={name} />
       <div className={skillIconStyles.name}>{name}</div>
     </div>
   );

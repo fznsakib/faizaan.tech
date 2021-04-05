@@ -43,7 +43,9 @@ export default function Blog() {
                     style={{ "--fade-delay": `${1 + i * 0.25}s` }}
                   >
                     <Link to={`/blog/${edge.node.slug}`}>
-                      <h2>{edge.node.title}</h2>
+                      <h2 className={blogStyles.postTitle}>
+                        {edge.node.title}
+                      </h2>
                       <p>{edge.node.publishedDate}</p>
                     </Link>
                   </li>
