@@ -1,30 +1,25 @@
 import React from "react";
 
-import LanguageIcons from "../hooks/languageicons";
-import TechnologyIcons from "../hooks/technologyicons";
+import Languages from "../hooks/languages";
+import Technologies from "../hooks/technologies";
 import SkillIcon from "../templates/skillicon";
 
-import layoutStyles from "../components/layout.module.scss";
 import skillGridStyles from "./skillgrid.module.scss";
 
 export default function SkillGrid() {
-  const languageIcons = LanguageIcons();
-  const technologyIcons = TechnologyIcons();
+  const languages = Languages();
+  const technologies = Technologies();
 
   return (
     <div data-sal="zoom-out" data-sal-duration="1000" data-sal-easing="ease">
       <div className={skillGridStyles.container}>
-        <div className={layoutStyles.row}>
-          {languageIcons.map((language, i) => (
-            <div
-              className={
-                layoutStyles.column + " " + skillGridStyles.languageColumn
-              }
-              key={i}
-            >
+        <div className={skillGridStyles.row}>
+          {languages.map((language, i) => (
+            <div className={skillGridStyles.languageColumn} key={i}>
               <SkillIcon
                 name={language.node.name}
-                publicURL={language.node.publicURL}
+                url={language.node.image.file.url}
+                isLanguage={true}
               ></SkillIcon>
             </div>
           ))}
@@ -32,17 +27,13 @@ export default function SkillGrid() {
       </div>
 
       <div className={skillGridStyles.container}>
-        <div className={layoutStyles.row}>
-          {technologyIcons.map((technology, i) => (
-            <div
-              className={
-                layoutStyles.column + " " + skillGridStyles.technologyColumn
-              }
-              key={i}
-            >
+        <div className={skillGridStyles.row}>
+          {technologies.map((technology, i) => (
+            <div className={skillGridStyles.technologyColumn} key={i}>
               <SkillIcon
                 name={technology.node.name}
-                publicURL={technology.node.publicURL}
+                url={technology.node.image.file.url}
+                isLanguage={false}
               ></SkillIcon>
             </div>
           ))}
