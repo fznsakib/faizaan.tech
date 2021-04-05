@@ -9,7 +9,7 @@ import {
 } from "@fortawesome/free-brands-svg-icons";
 import { OutboundLink } from "gatsby-plugin-google-analytics";
 
-import { ResumeURL } from "../hooks/resumeurl";
+import ResumeURL from "../hooks/resumeurl";
 import iconBarStyles from "./iconbar.module.scss";
 
 export default function IconBar() {

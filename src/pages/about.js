@@ -1,25 +1,15 @@
 import React from "react";
-import { graphql, useStaticQuery } from "gatsby";
 import Img from "gatsby-image";
 
 import ScrollableLayout from "../components/scrollablelayout";
 import Head from "../components/head";
 import SkillGrid from "../components/skillgrid";
+import ProfilePicture from "../hooks/profilepicture";
 
 import aboutStyles from "./about.module.scss";
 
 export default function About() {
-  const data = useStaticQuery(graphql`
-    query {
-      file(relativePath: { eq: "images/profile_picture.jpg" }) {
-        childImageSharp {
-          fixed(height: 280) {
-            ...GatsbyImageSharpFixed
-          }
-        }
-      }
-    }
-  `);
+  const profilePicture = ProfilePicture();
 
   return (
     <div>
@@ -31,7 +21,7 @@ export default function About() {
           data-sal-duration="1000"
           data-sal-easing="ease"
         >
-          <Img fixed={data.file.childImageSharp.fixed} alt="Faizaan" />
+          <Img fixed={profilePicture} alt="Faizaan" />
         </div>
         <main id={aboutStyles.aboutSection}>
           <h1
