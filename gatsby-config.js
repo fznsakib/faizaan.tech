@@ -54,12 +54,10 @@ module.exports = {
           {
             resolve: `gatsby-remark-prismjs`,
             options: {
-              // classPrefix: "language-",
-              // inlineCodeMarker: null,
-              showLineNumbers: true,
+              showLineNumbers: false,
               noInlineHighlight: false,
             },
-          }
+          },
         ],
         icon: "static/favicon.png",
       },
