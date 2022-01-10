@@ -44,10 +44,12 @@ export default function About() {
             data-sal-duration="1000"
             data-sal-easing="ease"
           >
-            I have recently graduated from the University of Bristol with a
-            Masters in Computer Science (MEng), achieving first-class honours.
-            Right now, I’m on the lookout for exciting opportunities in software
-            engineering. Get in touch with me on{" "}
+            I am currently working at Bx, a climate-tech start-up looking to use
+            technology to transform the way we produce food in order to reverse
+            climate change. I work as a full-stack engineer, moving between
+            web/mobile development, cloud and DevOps. Before that, I graduated
+            from the University of Bristol with a Masters in Computer Science
+            (MEng), having achieved first-class honours. Get in touch with me on{" "}
             <a
               href="https://www.linkedin.com/in/faizaan-sakib"
               target="_blank"
