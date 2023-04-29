@@ -13,7 +13,7 @@ module.exports = {
     title: "Faizaan Sakib",
     author: "Faizaan Sakib",
     description:
-      "Recent graduate in MEng Computer Science specialising in backend development based in the UK. Find out more about me and the projects I have worked on!",
+      "Full-stack software engineer based in the UK. Find out more about me and the projects I have worked on!",
     email: "fznsakib@gmail.com",
     siteUrl: "https://faizaan.tech",
   },
