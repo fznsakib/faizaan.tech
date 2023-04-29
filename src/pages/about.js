@@ -44,12 +44,10 @@ export default function About() {
             data-sal-duration="1000"
             data-sal-easing="ease"
           >
-            I am currently working at Bx, a climate-tech start-up looking to use
-            technology to transform the way we produce food in order to reverse
-            climate change. I work as a full-stack engineer, moving between
-            web/mobile development, cloud and DevOps. Before that, I graduated
-            from the University of Bristol with a Masters in Computer Science
-            (MEng), having achieved first-class honours. Get in touch with me on{" "}
+            I am currently working at PolyAI in London. I work as a full-stack
+            engineer on a low-code platform which allows users to build and
+            maintain their own customer service voice assistants powered by AI.
+            Get in touch with me on{" "}
             <a
               href="https://www.linkedin.com/in/faizaan-sakib"
               target="_blank"
@@ -57,20 +55,6 @@ export default function About() {
             >
               LinkedIn!
             </a>
-          </p>
-          <p
-            className={aboutStyles.text}
-            data-sal="zoom-out"
-            data-sal-duration="1000"
-            data-sal-easing="ease"
-          >
-            I have enjoyed working on many projects, aimed at solving all sorts
-            of problems using different technologies. This has given me a strong
-            breadth of skills, with experience working in areas of cloud
-            computing, web development, deep learning, VR, and blockchain, just
-            to name a few. Through this, I have developed a keen attitude to
-            constantly learn new technologies and be able to quickly adapt where
-            necessary.
           </p>
         </main>
         <main id={aboutStyles.skillsSection}>
