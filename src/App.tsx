@@ -11,6 +11,7 @@ function App() {
     <ThemeProvider theme={theme}>
       <Background />
       <Styled.AppContainer>
+        <Styled.HeaderText>(faiz)aan sakib</Styled.HeaderText>
         <Canvas
           style={{
             position: "fixed",
@@ -18,6 +19,7 @@ function App() {
             left: 0,
             width: "100%",
             height: "100%",
+            zIndex: 10,
           }}
         >
           <ambientLight intensity={5} />

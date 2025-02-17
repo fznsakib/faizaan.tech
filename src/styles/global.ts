@@ -1,6 +1,13 @@
 import { createGlobalStyle } from "styled-components";
 
 export const GlobalStyle = createGlobalStyle`
+  @font-face {
+    font-family: 'Golos Text';
+    src: url('https://fonts.googleapis.com/css2?family=Golos+Text:wght@400..900&display=swap');
+    font-weight: 400 900;
+    font-display: swap;
+  }
+
   * {
     box-sizing: border-box;
     margin: 0;
@@ -8,7 +15,7 @@ export const GlobalStyle = createGlobalStyle`
   }
 
   :root {
-    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+    font-family: 'Golos Text', Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
     line-height: 1.5;
     font-weight: 400;
 
