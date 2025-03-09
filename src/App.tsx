@@ -3,6 +3,7 @@ import { ThemeProvider } from "styled-components";
 
 import * as Styled from "./App.styled";
 import Background from "./components/Background";
+import GlassPanel from "./components/GlassPanel";
 import Head from "./components/Head";
 import { theme } from "./styles/theme";
 
@@ -10,6 +11,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <Background />
+      <GlassPanel />
       <Styled.HeaderText>(faiz)aan sakib</Styled.HeaderText>
       <Styled.SubtitleText bottom="52" left="2" width="20">
         senior
