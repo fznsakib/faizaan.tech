@@ -5,6 +5,7 @@ import * as Styled from "./App.styled";
 import Background from "./components/Background";
 import GlassPanel from "./components/GlassPanel";
 import Head from "./components/Head";
+import PixelIcon from "./components/PixelIcon";
 import { theme } from "./styles/theme";
 
 function App() {
@@ -31,6 +32,16 @@ function App() {
       <Styled.SubtitleText bottom="2" left="2">
         affirm
       </Styled.SubtitleText>
+
+      <Styled.SocialIconsContainer>
+        <PixelIcon
+          imagePath="src/assets/linkedin.png"
+          link={"https://www.linkedin.com/in/faizaan-sakib/"}
+          initialPixelSize={16}
+        />
+      </Styled.SocialIconsContainer>
+
+      {/* three.js canvas */}
       <Styled.AppContainer>
         <Canvas
           style={{
