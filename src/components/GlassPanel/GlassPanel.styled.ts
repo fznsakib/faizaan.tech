@@ -31,6 +31,7 @@ export const GlassShape = styled.div<{
   width: string;
   height: string;
   animationDelay: string;
+  scale: string;
 }>`
   position: absolute;
   background: rgba(255, 255, 255, 0.1);
@@ -44,14 +45,13 @@ export const GlassShape = styled.div<{
   width: ${({ width }) => width};
   height: ${({ height }) => height};
   animation-delay: ${({ animationDelay }) => animationDelay};
+  scale: ${({ scale }) => scale};
 
-  /* Border and shadow for 3D effect */
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2),
     inset 0 0 0 1px rgba(255, 255, 255, 0.08),
     inset 0 0 30px rgba(255, 255, 255, 0.05);
 
-  /* Highlights for 3D effect */
   &::before {
     content: "";
     position: absolute;
@@ -70,22 +70,9 @@ export const GlassShape = styled.div<{
   animation: ${float} 10s ease-in-out infinite;
   animation-duration: ${() => 8 + Math.random() * 6}s;
 
-  opacity: 0;
+  opacity: ${0.5 + Math.random() * 0.5};
   transition: opacity 0.8s ease-out;
 
-  &:nth-child(1) {
-    opacity: 0.8;
-  }
-
-  &:nth-child(2) {
-    opacity: 0.7;
-  }
-
-  &:nth-child(3) {
-    opacity: 0.6;
-  }
-
-  /* Perspective for 3D effect */
   transform-style: preserve-3d;
   perspective: 1000px;
 `;

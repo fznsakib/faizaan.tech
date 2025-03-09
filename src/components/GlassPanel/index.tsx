@@ -1,29 +1,32 @@
 import React, { useEffect, useState } from "react";
 
 import { GlassPanelContainer, GlassShape } from "./GlassPanel.styled";
+import { clamp } from "../../utils/random";
+import { clampedRandom } from "../../utils/random";
+
 const generateRandomPolygon = (points: number = 6) => {
   let polygon = "";
 
-  // Create a series of points that form a somewhat circular but jagged shape
   for (let i = 0; i < points; i++) {
     // Calculate base position on a circle
     const angle = (i / points) * Math.PI * 2;
     // Add some randomness to the radius (between 40% and 100%)
     const radius = 40 + Math.random() * 60;
 
-    // Convert to x,y coordinates (50,50 is center)
     const x = 50 + radius * Math.cos(angle);
     const y = 50 + radius * Math.sin(angle);
 
-    polygon += `${x}% ${y}% `;
+    polygon += `${clamp(x, 0, 100)}% ${clamp(y, 0, 100)}%`;
+
+    if (i < points - 1) {
+      polygon += ", ";
+    }
   }
 
-  // Close the polygon by ensuring we have the exact number of points requested
-  // and not just a rectangle with 4 corners
-  return `polygon(${polygon.trim()})`;
+  polygon = `polygon(${polygon.trim()})`;
+  return polygon;
 };
 
-// Function to generate a random rotation
 const generateRandomRotation = () => {
   return `rotateX(${Math.random() * 20 - 10}) 
           rotateY(${Math.random() * 20 - 10}) 
@@ -41,28 +44,33 @@ const GlassPanel: React.FC = () => {
       width: string;
       height: string;
       delay: string;
+      scale: string;
     }>
   >([]);
 
   useEffect(() => {
-    const generatePanels = () => {
-      const newPanels = Array.from({ length: 3 }, (_, i) => ({
+    const generatePanels = (numPanels = 3) => {
+      const newPanels = Array.from({ length: numPanels }, (_, i) => ({
         id: i,
-        clipPath: generateRandomPolygon(6 + Math.floor(Math.random() * 4)),
+        clipPath: generateRandomPolygon(clampedRandom(3, 8)),
         transform: generateRandomRotation(),
         top: `${20 + Math.random() * 50}%`,
         left: `${10 + Math.random() * 70}%`,
         width: `${200 + Math.random() * 200}px`,
         height: `${150 + Math.random() * 150}px`,
         delay: `${i * 0.2}s`,
+        scale: `${clampedRandom(0.2, 1)}`,
       }));
 
       setPanels(newPanels);
     };
 
-    generatePanels();
+    generatePanels(5);
 
-    const intervalId = setInterval(generatePanels, 4000);
+    const intervalId = setInterval(
+      () => generatePanels(clampedRandom(3, 5)),
+      4000
+    );
 
     return () => clearInterval(intervalId);
   }, []);
@@ -79,6 +87,7 @@ const GlassPanel: React.FC = () => {
           width={panel.width}
           height={panel.height}
           animationDelay={panel.delay}
+          scale={panel.scale}
         />
       ))}
     </GlassPanelContainer>
