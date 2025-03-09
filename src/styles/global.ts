@@ -1,13 +1,6 @@
 import { createGlobalStyle } from "styled-components";
 
 export const GlobalStyle = createGlobalStyle`
-  @font-face {
-    font-family: 'Golos Text';
-    src: url('https://fonts.googleapis.com/css2?family=Golos+Text:wght@400..900&display=swap');
-    font-weight: 400 900;
-    font-display: swap;
-  }
-
   * {
     box-sizing: border-box;
     margin: 0;
@@ -86,7 +79,7 @@ export const GlobalStyle = createGlobalStyle`
 
   @media (prefers-color-scheme: light) {
     :root {
-      color: #213547;
+      color: white;
       background-color: #ffffff;
     }
     

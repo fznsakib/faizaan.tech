@@ -26,10 +26,10 @@ export const HeaderText = styled.h1`
   width: 110%;
   text-align: center;
   font-size: 12rem;
-  color: white;
   z-index: 1;
   font-weight: bold;
-  /* animation: fontCycle 1s linear infinite; */
+  font-family: "Golos Text", sans-serif;
+  /* animation: fontCycle 2s linear infinite; */
 
   @keyframes fontCycle {
     0%,
@@ -80,4 +80,72 @@ export const HeaderText = styled.h1`
       transform: skew(0deg);
     }
   }
+`;
+
+export const SubtitleText = styled.h2<{
+  bottom: string;
+  left: string;
+  width?: string;
+  size?: "lg" | "md";
+}>`
+  position: fixed;
+  left: ${(props) => props.left}%;
+  bottom: ${(props) => props.bottom}%;
+  width: ${(props) => props.width}%;
+  font-size: ${(props) => (props.size === "md" ? "5em" : "6em")};
+  line-height: 1;
+  text-align: left;
+  margin: 0;
+  font-family: "Doto", sans-serif;
+  /* font-weight: 400; */
+  animation: fontWeightAndSpacingAnimation 1s infinite alternate;
+
+  @keyframes fontWeightAndSpacingAnimation {
+    0%,
+    19.99% {
+      font-weight: 500;
+    }
+    20%,
+    39.99% {
+      font-weight: 100;
+    }
+    40%,
+    59.99% {
+      font-weight: 300;
+    }
+    60%,
+    79.99% {
+      font-weight: 900;
+    }
+    80%,
+    100% {
+      font-weight: 800;
+    }
+  }
+
+  @keyframes letterSpacingAnimation {
+    0% {
+      letter-spacing: ${() =>
+        Math.max(-0.8, Math.min(0.12, Math.random() * 0.2 - 0.08))}em;
+    }
+    25% {
+      letter-spacing: ${() =>
+        Math.max(-0.8, Math.min(0.12, Math.random() * 0.2 - 0.08))}em;
+    }
+    50% {
+      letter-spacing: ${() =>
+        Math.max(-0.8, Math.min(0.12, Math.random() * 0.2 - 0.08))}em;
+    }
+    75% {
+      letter-spacing: ${() =>
+        Math.max(-0.8, Math.min(0.12, Math.random() * 0.2 - 0.08))}em;
+    }
+    100% {
+      letter-spacing: ${() =>
+        Math.max(-0.8, Math.min(0.12, Math.random() * 0.2 - 0.08))}em;
+    }
+  }
+
+  animation: fontWeightAndSpacingAnimation 1s infinite alternate,
+    letterSpacingAnimation 1.3s infinite alternate;
 `;

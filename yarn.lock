@@ -147,7 +147,7 @@
   dependencies:
     "@babel/helper-plugin-utils" "^7.25.9"
 
-"@babel/runtime@^7.17.8":
+"@babel/runtime@^7.17.8", "@babel/runtime@^7.26.0":
   version "7.26.9"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/@babel/runtime/-/runtime-7.26.9.tgz#aa4c6facc65b9cb3f87d75125ffd47781b475433"
   integrity sha1-qkxvrMZbnLP4fXUSX/1HeBtHVDM=
@@ -454,6 +454,18 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
+"@mediapipe/tasks-vision@0.10.17":
+  version "0.10.17"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/@mediapipe/tasks-vision/-/tasks-vision-0.10.17.tgz#2c1c73ed81902b21d37336a587b96183bb6882d5"
+  integrity sha1-LBxz7YGQKyHTczalh7lhg7togtU=
+
+"@monogrid/gainmap-js@^3.0.6":
+  version "3.1.0"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/@monogrid/gainmap-js/-/gainmap-js-3.1.0.tgz#4ac1f88abd6affdf0b51d79318109183b499c502"
+  integrity sha1-SsH4ir1q/98LUdeTGBCRg7SZxQI=
+  dependencies:
+    promise-worker-transferable "^1.0.4"
+
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz"
@@ -474,6 +486,79 @@
   dependencies:
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
+
+"@react-spring/animated@~9.7.5":
+  version "9.7.5"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/@react-spring/animated/-/animated-9.7.5.tgz#eb0373aaf99b879736b380c2829312dae3b05f28"
+  integrity sha1-6wNzqvmbh5c2s4DCgpMS2uOwXyg=
+  dependencies:
+    "@react-spring/shared" "~9.7.5"
+    "@react-spring/types" "~9.7.5"
+
+"@react-spring/core@~9.7.5":
+  version "9.7.5"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/@react-spring/core/-/core-9.7.5.tgz#72159079f52c1c12813d78b52d4f17c0bf6411f7"
+  integrity sha1-chWQefUsHBKBPXi1LU8XwL9kEfc=
+  dependencies:
+    "@react-spring/animated" "~9.7.5"
+    "@react-spring/shared" "~9.7.5"
+    "@react-spring/types" "~9.7.5"
+
+"@react-spring/rafz@~9.7.5":
+  version "9.7.5"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/@react-spring/rafz/-/rafz-9.7.5.tgz#ee7959676e7b5d6a3813e8c17d5e50df98b95df9"
+  integrity sha1-7nlZZ257XWo4E+jBfV5Q35i5Xfk=
+
+"@react-spring/shared@~9.7.5":
+  version "9.7.5"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/@react-spring/shared/-/shared-9.7.5.tgz#6d513622df6ad750bbbd4dedb4ca0a653ec92073"
+  integrity sha1-bVE2It9q11C7vU3ttMoKZT7JIHM=
+  dependencies:
+    "@react-spring/rafz" "~9.7.5"
+    "@react-spring/types" "~9.7.5"
+
+"@react-spring/three@~9.7.5":
+  version "9.7.5"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/@react-spring/three/-/three-9.7.5.tgz#46bcd22354afa873a809f1c6d7e07b59600b4d08"
+  integrity sha1-RrzSI1SvqHOoCfHG1+B7WWALTQg=
+  dependencies:
+    "@react-spring/animated" "~9.7.5"
+    "@react-spring/core" "~9.7.5"
+    "@react-spring/shared" "~9.7.5"
+    "@react-spring/types" "~9.7.5"
+
+"@react-spring/types@~9.7.5":
+  version "9.7.5"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/@react-spring/types/-/types-9.7.5.tgz#e5dd180f3ed985b44fd2cd2f32aa9203752ef3e8"
+  integrity sha1-5d0YDz7ZhbRP0s0vMqqSA3Uu8+g=
+
+"@react-three/drei@^9.121.5":
+  version "9.121.5"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/@react-three/drei/-/drei-9.121.5.tgz#994b36f1a845e9a341f25dde0fcf779bed9d828c"
+  integrity sha1-mUs28ahF6aNB8l3eD893m+2dgow=
+  dependencies:
+    "@babel/runtime" "^7.26.0"
+    "@mediapipe/tasks-vision" "0.10.17"
+    "@monogrid/gainmap-js" "^3.0.6"
+    "@react-spring/three" "~9.7.5"
+    "@use-gesture/react" "^10.3.1"
+    camera-controls "^2.9.0"
+    cross-env "^7.0.3"
+    detect-gpu "^5.0.56"
+    glsl-noise "^0.0.0"
+    hls.js "^1.5.17"
+    maath "^0.10.8"
+    meshline "^3.3.1"
+    react-composer "^5.0.3"
+    stats-gl "^2.2.8"
+    stats.js "^0.17.0"
+    suspend-react "^0.1.3"
+    three-mesh-bvh "^0.7.8"
+    three-stdlib "^2.35.6"
+    troika-three-text "^0.52.0"
+    tunnel-rat "^0.1.2"
+    utility-types "^3.11.0"
+    zustand "^5.0.1"
 
 "@react-three/fiber@^8.17.14":
   version "8.17.14"
@@ -630,6 +715,11 @@
   dependencies:
     "@babel/types" "^7.20.7"
 
+"@types/draco3d@^1.4.0":
+  version "1.4.10"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/@types/draco3d/-/draco3d-1.4.10.tgz#63ec0ba78b30bd58203ec031f4e4f0198c596dca"
+  integrity sha1-Y+wLp4swvVggPsAx9OTwGYxZbco=
+
 "@types/estree@1.0.6", "@types/estree@^1.0.6":
   version "1.0.6"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/@types/estree/-/estree-1.0.6.tgz"
@@ -652,6 +742,11 @@
   version "0.0.29"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/@types/json5/-/json5-0.0.29.tgz"
   integrity sha1-7ihweulOEdK4J7y+UnC86n8+ce4=
+
+"@types/offscreencanvas@^2019.6.4":
+  version "2019.7.3"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/@types/offscreencanvas/-/offscreencanvas-2019.7.3.tgz#90267db13f64d6e9ccb5ae3eac92786a7c77a516"
+  integrity sha1-kCZ9sT9k1unMta4+rJJ4anx3pRY=
 
 "@types/prop-types@*":
   version "15.7.14"
@@ -709,7 +804,7 @@
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/@types/stylis/-/stylis-4.2.5.tgz"
   integrity sha1-HapkVvQJWdBhV2mKZTqasKcCgd8=
 
-"@types/three@^0.173.0":
+"@types/three@*", "@types/three@^0.173.0":
   version "0.173.0"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/@types/three/-/three-0.173.0.tgz#527a9d13b963cf98bf2789b9a771fca0c98554a3"
   integrity sha1-UnqdE7ljz5i/J4m5p3H8oMmFVKM=
@@ -721,7 +816,7 @@
     fflate "~0.8.2"
     meshoptimizer "~0.18.1"
 
-"@types/webxr@*":
+"@types/webxr@*", "@types/webxr@^0.5.2":
   version "0.5.21"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/@types/webxr/-/webxr-0.5.21.tgz#2e25353af14c7569bcf082f2fb75921d2130db7e"
   integrity sha1-LiU1OvFMdWm88ILy+3WSHSEw234=
@@ -806,6 +901,18 @@
   dependencies:
     "@typescript-eslint/types" "8.24.0"
     eslint-visitor-keys "^4.2.0"
+
+"@use-gesture/core@10.3.1":
+  version "10.3.1"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/@use-gesture/core/-/core-10.3.1.tgz#976c9421e905f0079d49822cfd5c2e56b808fc56"
+  integrity sha1-l2yUIekF8AedSYIs/VwuVrgI/FY=
+
+"@use-gesture/react@^10.3.1":
+  version "10.3.1"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/@use-gesture/react/-/react-10.3.1.tgz#17a743a894d9bd9a0d1980c618f37f0164469867"
+  integrity sha1-F6dDqJTZvZoNGYDGGPN/AWRGmGc=
+  dependencies:
+    "@use-gesture/core" "10.3.1"
 
 "@vitejs/plugin-react@^4.3.4":
   version "4.3.4"
@@ -953,6 +1060,13 @@ base64-js@^1.3.1, base64-js@^1.5.1:
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/base64-js/-/base64-js-1.5.1.tgz#1b1b440160a5bf7ad40b650f095963481903930a"
   integrity sha1-GxtEAWClv3rUC2UPCVljSBkDkwo=
 
+bidi-js@^1.0.2:
+  version "1.0.3"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/bidi-js/-/bidi-js-1.0.3.tgz#6f8bcf3c877c4d9220ddf49b9bb6930c88f877d2"
+  integrity sha1-b4vPPId8TZIg3fSbm7aTDIj4d9I=
+  dependencies:
+    require-from-string "^2.0.2"
+
 brace-expansion@^1.1.7:
   version "1.1.11"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/brace-expansion/-/brace-expansion-1.1.11.tgz"
@@ -1029,6 +1143,11 @@ camelize@^1.0.0:
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/camelize/-/camelize-1.0.1.tgz"
   integrity sha1-ibfhaIQFYzGjXWta0GQzLJHapsM=
 
+camera-controls@^2.9.0:
+  version "2.10.0"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/camera-controls/-/camera-controls-2.10.0.tgz#d3da9ba4d0ae0b67104b051e27ef0670000498d9"
+  integrity sha1-09qbpNCuC2cQSwUeJ+8GcAAEmNk=
+
 caniuse-lite@^1.0.30001688:
   version "1.0.30001699"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/caniuse-lite/-/caniuse-lite-1.0.30001699.tgz"
@@ -1064,7 +1183,14 @@ convert-source-map@^2.0.0:
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/convert-source-map/-/convert-source-map-2.0.0.tgz"
   integrity sha1-S1YPZJ/E6RjdCrdc9JYei8iC2Co=
 
-cross-spawn@^7.0.6:
+cross-env@^7.0.3:
+  version "7.0.3"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/cross-env/-/cross-env-7.0.3.tgz#865264b29677dc015ba8418918965dd232fc54cf"
+  integrity sha1-hlJkspZ33AFbqEGJGJZd0jL8VM8=
+  dependencies:
+    cross-spawn "^7.0.1"
+
+cross-spawn@^7.0.1, cross-spawn@^7.0.6:
   version "7.0.6"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/cross-spawn/-/cross-spawn-7.0.6.tgz"
   integrity sha1-ilj+ePANzXDDcEUXWd+/rwPo7p8=
@@ -1156,12 +1282,24 @@ define-properties@^1.2.1:
     has-property-descriptors "^1.0.0"
     object-keys "^1.1.1"
 
+detect-gpu@^5.0.56:
+  version "5.0.69"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/detect-gpu/-/detect-gpu-5.0.69.tgz#e278345a2ae162e4e44f8d5f80590511470303ef"
+  integrity sha1-4ng0WirhYuTkT41fgFkFEUcDA+8=
+  dependencies:
+    webgl-constants "^1.1.1"
+
 doctrine@^2.1.0:
   version "2.1.0"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/doctrine/-/doctrine-2.1.0.tgz"
   integrity sha1-XNAfwQFiG0LEzX9dGmYkNxbT850=
   dependencies:
     esutils "^2.0.2"
+
+draco3d@^1.4.1:
+  version "1.5.7"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/draco3d/-/draco3d-1.5.7.tgz#94f9bce293eb8920c159dc91a4ce9124a9e899e0"
+  integrity sha1-lPm84pPriSDBWdyRpM6RJKnomeA=
 
 dunder-proto@^1.0.0, dunder-proto@^1.0.1:
   version "1.0.1"
@@ -1493,6 +1631,11 @@ fastq@^1.6.0:
   dependencies:
     reusify "^1.0.4"
 
+fflate@^0.6.9:
+  version "0.6.10"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/fflate/-/fflate-0.6.10.tgz#5f40f9659205936a2d18abf88b2e7781662b6d43"
+  integrity sha1-X0D5ZZIFk2otGKv4iy53gWYrbUM=
+
 fflate@~0.8.2:
   version "0.8.2"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/fflate/-/fflate-0.8.2.tgz#fc8631f5347812ad6028bbe4a2308b2792aa1dea"
@@ -1642,6 +1785,11 @@ globalthis@^1.0.4:
     define-properties "^1.2.1"
     gopd "^1.0.1"
 
+glsl-noise@^0.0.0:
+  version "0.0.0"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/glsl-noise/-/glsl-noise-0.0.0.tgz#367745f3a33382c0eeec4cb54b7e99cfc1d7670b"
+  integrity sha1-NndF86MzgsDu7Ey1S36Zz8HXZws=
+
 gopd@^1.0.1, gopd@^1.2.0:
   version "1.2.0"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/gopd/-/gopd-1.2.0.tgz"
@@ -1695,6 +1843,11 @@ hasown@^2.0.2:
   dependencies:
     function-bind "^1.1.2"
 
+hls.js@^1.5.17:
+  version "1.5.20"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/hls.js/-/hls.js-1.5.20.tgz#7eb23bb5e2595311d4e2761038ca6882673de7e2"
+  integrity sha1-frI7teJZUxHU4nYQOMpogmc95+I=
+
 hoist-non-react-statics@^3.3.0:
   version "3.3.2"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/hoist-non-react-statics/-/hoist-non-react-statics-3.3.2.tgz"
@@ -1711,6 +1864,11 @@ ignore@^5.2.0, ignore@^5.3.1:
   version "5.3.2"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/ignore/-/ignore-5.3.2.tgz"
   integrity sha1-PNQOcp82Q/2HywTlC/DrcivFlvU=
+
+immediate@~3.0.5:
+  version "3.0.6"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/immediate/-/immediate-3.0.6.tgz#9db1dbd0faf8de6fbe0f5dd5e56bb606280de69b"
+  integrity sha1-nbHb0Pr43m++D13V5Wu2BigN5ps=
 
 import-fresh@^3.2.1:
   version "3.3.1"
@@ -1844,6 +2002,11 @@ is-number@^7.0.0:
   version "7.0.0"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/is-number/-/is-number-7.0.0.tgz"
   integrity sha1-dTU0W4lnNNX4DE0GxQlVUnoU8Ss=
+
+is-promise@^2.1.0:
+  version "2.2.2"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/is-promise/-/is-promise-2.2.2.tgz#39ab959ccbf9a774cf079f7b40c7a26f763135f1"
+  integrity sha1-OauVnMv5p3TPB597QMeib3YxNfE=
 
 is-regex@^1.2.1:
   version "1.2.1"
@@ -1987,6 +2150,13 @@ levn@^0.4.1:
     prelude-ls "^1.2.1"
     type-check "~0.4.0"
 
+lie@^3.0.2:
+  version "3.3.0"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/lie/-/lie-3.3.0.tgz#dcf82dee545f46074daf200c7c1c5a08e0f40f6a"
+  integrity sha1-3Pgt7lRfRgdNryAMfBxaCOD0D2o=
+  dependencies:
+    immediate "~3.0.5"
+
 locate-path@^6.0.0:
   version "6.0.0"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/locate-path/-/locate-path-6.0.0.tgz"
@@ -2004,7 +2174,7 @@ lodash@^4.17.21:
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/lodash/-/lodash-4.17.21.tgz"
   integrity sha1-Z5WRxWTDv/quhFTPCz3zcMPWkRw=
 
-loose-envify@^1.1.0:
+loose-envify@^1.1.0, loose-envify@^1.4.0:
   version "1.4.0"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/loose-envify/-/loose-envify-1.4.0.tgz#71ee51fa7be4caec1a63839f7e682d8132d30caf"
   integrity sha1-ce5R+nvkyuwaY4OffmgtgTLTDK8=
@@ -2018,6 +2188,11 @@ lru-cache@^5.1.1:
   dependencies:
     yallist "^3.0.2"
 
+maath@^0.10.8:
+  version "0.10.8"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/maath/-/maath-0.10.8.tgz#cf647544430141bf6982da6e878abb6c4b804e24"
+  integrity sha1-z2R1REMBQb9pgtpuh4q7bEuATiQ=
+
 math-intrinsics@^1.1.0:
   version "1.1.0"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/math-intrinsics/-/math-intrinsics-1.1.0.tgz"
@@ -2027,6 +2202,11 @@ merge2@^1.3.0:
   version "1.4.1"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/merge2/-/merge2-1.4.1.tgz"
   integrity sha1-Q2iJL4hekHRVpv19xVwMnUBJkK4=
+
+meshline@^3.3.1:
+  version "3.3.1"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/meshline/-/meshline-3.3.1.tgz#20decfd5cdd25c8469e862ddf0ab1ad167759734"
+  integrity sha1-IN7P1c3SXIRp6GLd8Ksa0Wd1lzQ=
 
 meshoptimizer@~0.18.1:
   version "0.18.1"
@@ -2079,6 +2259,11 @@ node-releases@^2.0.19:
   version "2.0.19"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/node-releases/-/node-releases-2.0.19.tgz"
   integrity sha1-nkRaUpUJUexNF32EOvNwtBHK8xQ=
+
+object-assign@^4.1.1:
+  version "4.1.1"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/object-assign/-/object-assign-4.1.1.tgz#2109adc7965887cfc05cbbd442cac8bfbb360863"
+  integrity sha1-IQmtx5ZYh8/AXLvUQsrIv7s2CGM=
 
 object-inspect@^1.13.3:
   version "1.13.4"
@@ -2226,10 +2411,32 @@ postcss@^8.5.1:
     picocolors "^1.1.1"
     source-map-js "^1.2.1"
 
+potpack@^1.0.1:
+  version "1.0.2"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/potpack/-/potpack-1.0.2.tgz#23b99e64eb74f5741ffe7656b5b5c4ddce8dfc14"
+  integrity sha1-I7meZOt09XQf/nZWtbXE3c6N/BQ=
+
 prelude-ls@^1.2.1:
   version "1.2.1"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/prelude-ls/-/prelude-ls-1.2.1.tgz"
   integrity sha1-3rxkidem5rDnYRiIzsiAM30xY5Y=
+
+promise-worker-transferable@^1.0.4:
+  version "1.0.4"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/promise-worker-transferable/-/promise-worker-transferable-1.0.4.tgz#2c72861ba053e5ae42b487b4a83b1ed3ae3786e8"
+  integrity sha1-LHKGG6BT5a5CtIe0qDse0643hug=
+  dependencies:
+    is-promise "^2.1.0"
+    lie "^3.0.2"
+
+prop-types@^15.6.0:
+  version "15.8.1"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/prop-types/-/prop-types-15.8.1.tgz#67d87bf1a694f48435cf332c24af10214a3140b5"
+  integrity sha1-Z9h78aaU9IQ1zzMsJK8QIUoxQLU=
+  dependencies:
+    loose-envify "^1.4.0"
+    object-assign "^4.1.1"
+    react-is "^16.13.1"
 
 punycode@^2.1.0:
   version "2.3.1"
@@ -2241,6 +2448,13 @@ queue-microtask@^1.2.2:
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/queue-microtask/-/queue-microtask-1.2.3.tgz"
   integrity sha1-SSkii7xyTfrEPg77BYyve2z7YkM=
 
+react-composer@^5.0.3:
+  version "5.0.3"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/react-composer/-/react-composer-5.0.3.tgz#7beb9513da5e8687f4f434ea1333ef36a4f3091b"
+  integrity sha1-e+uVE9pehof09DTqEzPvNqTzCRs=
+  dependencies:
+    prop-types "^15.6.0"
+
 react-dom@^18.3.1:
   version "18.3.1"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/react-dom/-/react-dom-18.3.1.tgz#c2265d79511b57d479b3dd3fdfa51536494c5cb4"
@@ -2249,7 +2463,7 @@ react-dom@^18.3.1:
     loose-envify "^1.1.0"
     scheduler "^0.23.2"
 
-react-is@^16.7.0:
+react-is@^16.13.1, react-is@^16.7.0:
   version "16.13.1"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/react-is/-/react-is-16.13.1.tgz"
   integrity sha1-eJcppNw23imZ3BVt1sHZwYzqVqQ=
@@ -2309,6 +2523,11 @@ regexp.prototype.flags@^1.5.3:
     get-proto "^1.0.1"
     gopd "^1.2.0"
     set-function-name "^2.0.2"
+
+require-from-string@^2.0.2:
+  version "2.0.2"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/require-from-string/-/require-from-string-2.0.2.tgz#89a7fdd938261267318eafe14f9c32e598c36909"
+  integrity sha1-iaf92TgmEmcxjq/hT5wy5ZjDaQk=
 
 resolve-from@^4.0.0:
   version "4.0.0"
@@ -2509,6 +2728,19 @@ source-map-js@^1.2.1:
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/source-map-js/-/source-map-js-1.2.1.tgz"
   integrity sha1-HOVlD93YerwJnto33P8CTCZnrkY=
 
+stats-gl@^2.2.8:
+  version "2.4.2"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/stats-gl/-/stats-gl-2.4.2.tgz#28a6c869fc3a36a8be608ef21df63c0aad99d1ba"
+  integrity sha1-KKbIafw6Nqi+YI7yHfY8Cq2Z0bo=
+  dependencies:
+    "@types/three" "*"
+    three "^0.170.0"
+
+stats.js@^0.17.0:
+  version "0.17.0"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/stats.js/-/stats.js-0.17.0.tgz#b1c3dc46d94498b578b7fd3985b81ace7131cc7d"
+  integrity sha1-scPcRtlEmLV4t/05hbgaznExzH0=
+
 string.prototype.trim@^1.2.10:
   version "1.2.10"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/string.prototype.trim/-/string.prototype.trim-1.2.10.tgz"
@@ -2588,6 +2820,28 @@ suspend-react@^0.1.3:
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/suspend-react/-/suspend-react-0.1.3.tgz#a52f49d21cfae9a2fb70bd0c68413d3f9d90768e"
   integrity sha1-pS9J0hz66aL7cL0MaEE9P52Qdo4=
 
+three-mesh-bvh@^0.7.8:
+  version "0.7.8"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/three-mesh-bvh/-/three-mesh-bvh-0.7.8.tgz#83156e4d3945734db076de1c94809331481b3fdd"
+  integrity sha1-gxVuTTlFc02wdt4clICTMUgbP90=
+
+three-stdlib@^2.35.6:
+  version "2.35.13"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/three-stdlib/-/three-stdlib-2.35.13.tgz#477fc5ffdef8a8923395ae2d7f26b0aeb6d60689"
+  integrity sha1-R3/F/974qJIzla4tfyawrrbWBok=
+  dependencies:
+    "@types/draco3d" "^1.4.0"
+    "@types/offscreencanvas" "^2019.6.4"
+    "@types/webxr" "^0.5.2"
+    draco3d "^1.4.1"
+    fflate "^0.6.9"
+    potpack "^1.0.1"
+
+three@^0.170.0:
+  version "0.170.0"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/three/-/three-0.170.0.tgz#6087f97aab79e9e9312f9c89fcef6808642dfbb7"
+  integrity sha1-YIf5eqt56ekxL5yJ/O9oCGQt+7c=
+
 three@^0.173.0:
   version "0.173.0"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/three/-/three-0.173.0.tgz#e82989961cd2db05768540458c81b29f565be921"
@@ -2599,6 +2853,26 @@ to-regex-range@^5.0.1:
   integrity sha1-FkjESq58jZiKMmAY7XL1tN0DkuQ=
   dependencies:
     is-number "^7.0.0"
+
+troika-three-text@^0.52.0:
+  version "0.52.3"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/troika-three-text/-/troika-three-text-0.52.3.tgz#38fe68a9642aba562830323dee6708710cf36a61"
+  integrity sha1-OP5oqWQqulYoMDI97mcIcQzzamE=
+  dependencies:
+    bidi-js "^1.0.2"
+    troika-three-utils "^0.52.0"
+    troika-worker-utils "^0.52.0"
+    webgl-sdf-generator "1.1.1"
+
+troika-three-utils@^0.52.0:
+  version "0.52.0"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/troika-three-utils/-/troika-three-utils-0.52.0.tgz#54f6fafcef58901bddd5749dee0ab0ddd09f1179"
+  integrity sha1-VPb6/O9YkBvd1XSd7gqw3dCfEXk=
+
+troika-worker-utils@^0.52.0:
+  version "0.52.0"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/troika-worker-utils/-/troika-worker-utils-0.52.0.tgz#ba5525fc444345006ebab0bc9cabdd66f1561e66"
+  integrity sha1-ulUl/ERDRQBuurC8nKvdZvFWHmY=
 
 ts-api-utils@^2.0.1:
   version "2.0.1"
@@ -2619,6 +2893,13 @@ tslib@2.6.2:
   version "2.6.2"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/tslib/-/tslib-2.6.2.tgz"
   integrity sha1-cDrClCXns3zW/UVukkBNRtHz5K4=
+
+tunnel-rat@^0.1.2:
+  version "0.1.2"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/tunnel-rat/-/tunnel-rat-0.1.2.tgz#1717efbc474ea2d8aa05a91622457a6e201c0aeb"
+  integrity sha1-FxfvvEdOotiqBakWIkV6biAcCus=
+  dependencies:
+    zustand "^4.3.2"
 
 type-check@^0.4.0, type-check@~0.4.0:
   version "0.4.0"
@@ -2711,6 +2992,16 @@ uri-js@^4.2.2:
   dependencies:
     punycode "^2.1.0"
 
+use-sync-external-store@^1.2.2:
+  version "1.4.0"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/use-sync-external-store/-/use-sync-external-store-1.4.0.tgz#adbc795d8eeb47029963016cefdf89dc799fcebc"
+  integrity sha1-rbx5XY7rRwKZYwFs79+J3Hmfzrw=
+
+utility-types@^3.11.0:
+  version "3.11.0"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/utility-types/-/utility-types-3.11.0.tgz#607c40edb4f258915e901ea7995607fdf319424c"
+  integrity sha1-YHxA7bTyWJFekB6nmVYH/fMZQkw=
+
 vite@^6.1.0:
   version "6.1.0"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/vite/-/vite-6.1.0.tgz"
@@ -2721,6 +3012,16 @@ vite@^6.1.0:
     rollup "^4.30.1"
   optionalDependencies:
     fsevents "~2.3.3"
+
+webgl-constants@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/webgl-constants/-/webgl-constants-1.1.1.tgz#f9633ee87fea56647a60b9ce735cbdfb891c6855"
+  integrity sha1-+WM+6H/qVmR6YLnOc1y9+4kcaFU=
+
+webgl-sdf-generator@1.1.1:
+  version "1.1.1"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/webgl-sdf-generator/-/webgl-sdf-generator-1.1.1.tgz#3e1b422b3d87cd3cc77f2602c9db63bc0f6accbd"
+  integrity sha1-PhtCKz2HzTzHfyYCydtjvA9qzL0=
 
 which-boxed-primitive@^1.1.0, which-boxed-primitive@^1.1.1:
   version "1.1.1"
@@ -2800,3 +3101,15 @@ zustand@^3.7.1:
   version "3.7.2"
   resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/zustand/-/zustand-3.7.2.tgz#7b44c4f4a5bfd7a8296a3957b13e1c346f42514d"
   integrity sha1-e0TE9KW/16gpajlXsT4cNG9CUU0=
+
+zustand@^4.3.2:
+  version "4.5.6"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/zustand/-/zustand-4.5.6.tgz#6857d52af44874a79fb3408c9473f78367255c96"
+  integrity sha1-aFfVKvRIdKefs0CMlHP3g2clXJY=
+  dependencies:
+    use-sync-external-store "^1.2.2"
+
+zustand@^5.0.1:
+  version "5.0.3"
+  resolved "https://registry.affirm-stage.com/artifactory/api/npm/npm/zustand/-/zustand-5.0.3.tgz#b323435b73d06b2512e93c77239634374b0e407f"
+  integrity sha1-syNDW3PQayUS6Tx3I5Y0N0sOQH8=
