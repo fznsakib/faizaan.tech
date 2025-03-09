@@ -65,8 +65,8 @@ function Head() {
       {obj && (
         <primitive
           object={obj}
-          scale={0.15}
-          position={[0, -1, 0]}
+          scale={0.25}
+          position={[0, -2.5, 0]}
           rotation={[Math.PI / 2, Math.PI, 0]}
         />
       )}

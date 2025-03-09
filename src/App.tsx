@@ -10,8 +10,26 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <Background />
+      <Styled.HeaderText>(faiz)aan sakib</Styled.HeaderText>
+      <Styled.SubtitleText bottom="52" left="2" width="20">
+        senior
+      </Styled.SubtitleText>
+      <Styled.SubtitleText bottom="42" left="2" width="20">
+        software
+      </Styled.SubtitleText>
+      <Styled.SubtitleText bottom="32" left="2" width="20">
+        engineer
+      </Styled.SubtitleText>
+      <Styled.SubtitleText bottom="22" left="2">
+        fullstack
+      </Styled.SubtitleText>
+      <Styled.SubtitleText bottom="12" left="2">
+        london
+      </Styled.SubtitleText>
+      <Styled.SubtitleText bottom="2" left="2">
+        affirm
+      </Styled.SubtitleText>
       <Styled.AppContainer>
-        <Styled.HeaderText>(faiz)aan sakib</Styled.HeaderText>
         <Canvas
           style={{
             position: "fixed",
@@ -30,6 +48,7 @@ function App() {
             decay={2}
           />
           <pointLight position={[-5, -5, -5]} intensity={5} />
+
           <Head />
         </Canvas>
       </Styled.AppContainer>
