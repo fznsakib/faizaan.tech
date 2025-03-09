@@ -39,6 +39,21 @@ function App() {
           link={"https://www.linkedin.com/in/faizaan-sakib/"}
           initialPixelSize={16}
         />
+        <PixelIcon
+          imagePath="src/assets/gmail.png"
+          link={"https://www.linkedin.com/in/faizaan-sakib/"}
+          initialPixelSize={16}
+        />
+        <PixelIcon
+          imagePath="src/assets/github.png"
+          link={"https://www.linkedin.com/in/faizaan-sakib/"}
+          initialPixelSize={16}
+        />
+        <PixelIcon
+          imagePath="src/assets/letterboxd.png"
+          link={"https://www.linkedin.com/in/faizaan-sakib/"}
+          initialPixelSize={16}
+        />
       </Styled.SocialIconsContainer>
 
       {/* three.js canvas */}

@@ -156,5 +156,5 @@ export const SocialIconsContainer = styled.div`
   right: 30px;
   z-index: 20;
   display: flex;
-  gap: 15px;
+  gap: 40px;
 `;
