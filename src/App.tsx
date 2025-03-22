@@ -37,22 +37,32 @@ function App() {
         <PixelIcon
           imagePath="src/assets/linkedin.png"
           link={"https://www.linkedin.com/in/faizaan-sakib/"}
-          initialPixelSize={16}
+          initialPixelSize={12}
+          size={80}
         />
         <PixelIcon
           imagePath="src/assets/gmail.png"
-          link={"https://www.linkedin.com/in/faizaan-sakib/"}
-          initialPixelSize={16}
+          link={"mailto:fznsakib@gmail.com"}
+          initialPixelSize={12}
+          size={80}
         />
         <PixelIcon
           imagePath="src/assets/github.png"
-          link={"https://www.linkedin.com/in/faizaan-sakib/"}
-          initialPixelSize={16}
+          link={"https://github.com/fznsakib"}
+          initialPixelSize={12}
+          size={80}
         />
         <PixelIcon
           imagePath="src/assets/letterboxd.png"
-          link={"https://www.linkedin.com/in/faizaan-sakib/"}
-          initialPixelSize={16}
+          link={"https://letterboxd.com/fznsakib/"}
+          initialPixelSize={12}
+          size={80}
+        />
+        <PixelIcon
+          imagePath="src/assets/strava.png"
+          link={"https://strava.app.link/VhdUXhuiWRb"}
+          initialPixelSize={12}
+          size={80}
         />
       </Styled.SocialIconsContainer>
 
