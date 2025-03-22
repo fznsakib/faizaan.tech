@@ -48,19 +48,11 @@ const PixelIcon: React.FC<PixelIconProps> = ({
     // Calculate the current pixel size based on hover state and animation step
     let pixelSize = initialPixelSize;
 
-    if (isHovering) {
-      // Calculate decreasing pixel size as steps progress
-      pixelSize = Math.max(
-        1,
-        Math.floor(initialPixelSize * (1 - currentStep / steps))
-      );
-    } else if (isAnimatingOut) {
-      // When animating out, increase pixel size back to initial
-      pixelSize = Math.max(
-        1,
-        Math.floor(initialPixelSize * (currentStep / steps))
-      );
-    }
+    const multiplier = isAnimatingOut ? 2 : 1;
+    pixelSize = Math.max(
+      1,
+      Math.floor(initialPixelSize * (multiplier * (1 - currentStep / steps)))
+    );
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
