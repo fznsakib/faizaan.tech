@@ -66,6 +66,7 @@ const PixelIcon: React.FC<PixelIconProps> = ({
 
     if (pixelSize <= 1) {
       // If pixel size is 1 or less, render at full resolution
+      ctx.imageSmoothingEnabled = true;
       ctx.drawImage(imageRef.current, 0, 0, canvas.width, canvas.height);
     } else {
       // Create a temporary canvas for pixelation
