@@ -6,7 +6,6 @@ export const PixelIconContainer = styled.a`
   transition: transform 0.2s ease;
   overflow: hidden;
   border-radius: 12px;
-  /* background-color: rgba(255, 255, 255); */
   background-clip: padding-box;
 
   &:hover {
@@ -16,6 +15,7 @@ export const PixelIconContainer = styled.a`
 
 export const PixelCanvas = styled.canvas`
   display: block;
+  cursor: pointer;
   width: 100%;
   height: 100%;
 `;
