@@ -149,3 +149,12 @@ export const SubtitleText = styled.h2<{
   animation: fontWeightAndSpacingAnimation 1s infinite alternate,
     letterSpacingAnimation 1.3s infinite alternate;
 `;
+
+export const SocialIconsContainer = styled.div`
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 20;
+  display: flex;
+  gap: 40px;
+`;
