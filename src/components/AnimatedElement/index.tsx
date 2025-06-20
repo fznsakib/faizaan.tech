@@ -1,49 +1,54 @@
-import { useRef, useEffect } from 'react';
-import { useAudio } from '../../context/AudioContext';
-import * as Styled from './AnimatedElement.styled';
+import { useRef, useEffect } from "react";
+
+import * as Styled from "./AnimatedElement.styled";
+import { useAudio } from "../../context/AudioContext";
 
 // const SCALE_MULTIPLIER = 2;
 const SCALE_MULTIPLIER = 5;
 
 interface AnimatedElementProps {
   position: { bottom: string; left: string };
-  frequencyType: 'low' | 'mid' | 'high';
+  frequencyType: "low" | "mid" | "high";
 }
 
-const AnimatedElement: React.FC<AnimatedElementProps> = ({ position, frequencyType }) => {
+const AnimatedElement: React.FC<AnimatedElementProps> = ({
+  position,
+  frequencyType,
+}) => {
   const { audioData } = useAudio();
   const elementRef = useRef<HTMLDivElement>(null);
-  
+
   useEffect(() => {
     if (!elementRef.current) return;
-    
+
     let frequencyData: number[] = [];
     switch (frequencyType) {
-      case 'low':
+      case "low":
         frequencyData = audioData.lowFrequency;
         break;
-      case 'mid':
+      case "mid":
         frequencyData = audioData.midFrequency;
         break;
-      case 'high':
+      case "high":
         frequencyData = audioData.highFrequency;
         break;
     }
-    
+
     if (!frequencyData || frequencyData.length === 0) return;
-    
-    const average = frequencyData.reduce((sum, val) => sum + val, 0) / frequencyData.length;
+
+    const average =
+      frequencyData.reduce((sum, val) => sum + val, 0) / frequencyData.length;
     const normalizedAverage = average / 255;
-    
+
     // apply animation based on the frequency
     const scale = 1 + normalizedAverage * SCALE_MULTIPLIER;
     elementRef.current.style.transform = `scale(${scale})`;
   }, [audioData, frequencyType]);
-  
+
   return (
-    <Styled.AnimatedDiv 
+    <Styled.AnimatedDiv
       ref={elementRef}
-      style={{ 
+      style={{
         bottom: `${position.bottom}vh`,
         left: `${position.left}vw`,
       }}
@@ -51,4 +56,4 @@ const AnimatedElement: React.FC<AnimatedElementProps> = ({ position, frequencyTy
   );
 };
 
-export default AnimatedElement; 
+export default AnimatedElement;

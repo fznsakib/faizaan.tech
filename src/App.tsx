@@ -2,13 +2,12 @@ import { Canvas } from "@react-three/fiber";
 import { ThemeProvider } from "styled-components";
 
 import * as Styled from "./App.styled";
-
+import AnimatedSubtitle from "./components/AnimatedSubtitle";
 import Background from "./components/Background";
 import GlassPanel from "./components/GlassPanel";
 import Head from "./components/Head";
 import MusicPlayer from "./components/MusicPlayer";
 import PixelIcon from "./components/PixelIcon";
-import AnimatedElement from "./components/AnimatedElement";
 import { AudioProvider } from "./context/AudioContext";
 import { theme } from "./styles/theme";
 
@@ -19,24 +18,24 @@ function App() {
         <Background />
         <GlassPanel />
         <Styled.HeaderText>(faiz)aan sakib</Styled.HeaderText>
-        <Styled.SubtitleText bottom="52" left="2" width="20">
+        <AnimatedSubtitle bottom="52" left="2" width="20" frequencyType="low">
           senior
-        </Styled.SubtitleText>
-        <Styled.SubtitleText bottom="42" left="2" width="20">
+        </AnimatedSubtitle>
+        <AnimatedSubtitle bottom="42" left="2" width="20" frequencyType="low">
           software
-        </Styled.SubtitleText>
-        <Styled.SubtitleText bottom="32" left="2" width="20">
+        </AnimatedSubtitle>
+        <AnimatedSubtitle bottom="32" left="2" width="20" frequencyType="mid">
           engineer
-        </Styled.SubtitleText>
-        <Styled.SubtitleText bottom="22" left="2">
+        </AnimatedSubtitle>
+        <AnimatedSubtitle bottom="22" left="2" frequencyType="mid">
           fullstack
-        </Styled.SubtitleText>
-        <Styled.SubtitleText bottom="12" left="2">
+        </AnimatedSubtitle>
+        <AnimatedSubtitle bottom="12" left="2" frequencyType="high">
           london
-        </Styled.SubtitleText>
-        <Styled.SubtitleText bottom="2" left="2">
+        </AnimatedSubtitle>
+        <AnimatedSubtitle bottom="2" left="2" frequencyType="high">
           affirm
-        </Styled.SubtitleText>
+        </AnimatedSubtitle>
 
         <Styled.SocialIconsContainer>
           <PixelIcon
@@ -72,11 +71,19 @@ function App() {
         </Styled.SocialIconsContainer>
 
         {/* Music visualization elements */}
-        <AnimatedElement position={{ bottom: "50", left: "80" }} frequencyType="low" />
-        <AnimatedElement position={{ bottom: "45", left: "85" }} frequencyType="mid" />
-        <AnimatedElement position={{ bottom: "30", left: "90" }} frequencyType="high" />
+        {/* <AnimatedElement
+          position={{ bottom: "50", left: "80" }}
+          frequencyType="low"
+        />
+        <AnimatedElement
+          position={{ bottom: "45", left: "85" }}
+          frequencyType="mid"
+        />
+        <AnimatedElement
+          position={{ bottom: "30", left: "90" }}
+          frequencyType="high"
+        /> */}
 
-        {/* Add MusicPlayer component */}
         <MusicPlayer />
 
         {/* three.js canvas */}
