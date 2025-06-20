@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { MusicAnalyser } from "./MusicAnalyser";
-import audioFile from "../../assets/audio/empty-lightning.mp3";
+import audioFile from "../../assets/audio/expression-on-your-face.mp3";
 import { useAudio } from "../../context/AudioContext";
 
 const MusicPlayer = () => {
@@ -17,7 +17,7 @@ const MusicPlayer = () => {
     const attemptInitialization = async () => {
       try {
         await initializeAudio();
-      } catch (error) {
+      } catch {
         console.log(
           "Audio context initialization deferred until user interaction"
         );
@@ -119,19 +119,31 @@ const MusicPlayer = () => {
     const analyzer = analyzerRef.current;
     if (!analyzer) return;
 
+    let lastFrequencyBins: Record<string, number[]> = {};
+    let lastBpm = 0;
+
     const analyzeFrame = () => {
       if (!analyzer) return;
 
       const frequencyData = analyzer.getFrequencyData();
       const bpm = analyzer.detectBPM();
 
-      setAudioData((prev) => ({
-        ...prev,
-        bpm,
-        lowFrequency: frequencyData.lowFrequency,
-        midFrequency: frequencyData.midFrequency,
-        highFrequency: frequencyData.highFrequency,
-      }));
+      // Only update state if data has actually changed
+      const frequencyBinsChanged =
+        JSON.stringify(frequencyData.frequencyBins) !==
+        JSON.stringify(lastFrequencyBins);
+      const bpmChanged = bpm !== lastBpm;
+
+      if (frequencyBinsChanged || bpmChanged) {
+        setAudioData((prev) => ({
+          ...prev,
+          bpm,
+          frequencyBins: frequencyData.frequencyBins,
+        }));
+
+        lastFrequencyBins = frequencyData.frequencyBins;
+        lastBpm = bpm;
+      }
 
       animationFrameRef.current = requestAnimationFrame(analyzeFrame);
     };

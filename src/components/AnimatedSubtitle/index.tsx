@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useMemo, useCallback } from "react";
 
 import * as Styled from "../../App.styled";
 import { useAudio } from "../../context/AudioContext";
@@ -8,7 +8,7 @@ interface AnimatedSubtitleProps {
   left: string;
   width?: string;
   size?: "lg" | "md";
-  frequencyType: "low" | "mid" | "high";
+  frequencyBin: string; // Generic frequency bin name
   children: React.ReactNode;
 }
 
@@ -17,39 +17,21 @@ const AnimatedSubtitle: React.FC<AnimatedSubtitleProps> = ({
   left,
   width,
   size,
-  frequencyType,
+  frequencyBin,
   children,
 }) => {
   const { audioData } = useAudio();
   const ref = useRef<HTMLHeadingElement>(null);
-  const [lastValue, setLastValue] = useState(0);
+  const lastValueRef = useRef(0);
 
-  useEffect(() => {
+  // Memoize the frequency data to prevent unnecessary re-renders
+  const frequencyData = useMemo(() => {
+    return audioData.frequencyBins[frequencyBin] || [];
+  }, [audioData.frequencyBins, frequencyBin]);
+
+  // Memoize the animation calculation
+  const updateAnimation = useCallback((smoothedValue: number) => {
     if (!ref.current) return;
-
-    let frequencyData: number[] = [];
-    switch (frequencyType) {
-      case "low":
-        frequencyData = audioData.lowFrequency;
-        break;
-      case "mid":
-        frequencyData = audioData.midFrequency;
-        break;
-      case "high":
-        frequencyData = audioData.highFrequency;
-        break;
-    }
-    if (!frequencyData || frequencyData.length === 0) return;
-
-    // Use maximum value for more dynamic response instead of average
-    const maxValue = Math.max(...frequencyData);
-    const normalizedValue = maxValue / 255;
-
-    // Increased smoothing to reduce erratic behavior
-    const smoothingFactor = 0.15; // Reduced from 0.3 for more stability
-    const smoothedValue =
-      lastValue * (1 - smoothingFactor) + normalizedValue * smoothingFactor;
-    setLastValue(smoothedValue);
 
     // Simplified and more controlled animations
     // Letter spacing: -0.3em to 0.8em (reduced range for stability)
@@ -68,7 +50,24 @@ const AnimatedSubtitle: React.FC<AnimatedSubtitleProps> = ({
     // Controlled opacity: 0.8 to 1.0 (subtle variation)
     const opacityValue = 0.6 + smoothedValue * 0.4;
     ref.current.style.opacity = `${opacityValue}`;
-  }, [audioData, frequencyType, lastValue]);
+  }, []);
+
+  useEffect(() => {
+    if (frequencyData.length === 0) return;
+
+    // Use maximum value for more dynamic response instead of average
+    const maxValue = Math.max(...frequencyData);
+    const normalizedValue = maxValue / 255;
+
+    // Increased smoothing to reduce erratic behavior
+    const smoothingFactor = 0.15; // Reduced from 0.3 for more stability
+    const smoothedValue =
+      lastValueRef.current * (1 - smoothingFactor) +
+      normalizedValue * smoothingFactor;
+    lastValueRef.current = smoothedValue;
+
+    updateAnimation(smoothedValue);
+  }, [frequencyData, updateAnimation]);
 
   return (
     <Styled.SubtitleText

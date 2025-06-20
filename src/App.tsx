@@ -18,22 +18,32 @@ function App() {
         <Background />
         <GlassPanel />
         <Styled.HeaderText>(faiz)aan sakib</Styled.HeaderText>
-        <AnimatedSubtitle bottom="52" left="2" width="20" frequencyType="low">
+        <AnimatedSubtitle bottom="52" left="2" width="20" frequencyBin="senior">
           senior
         </AnimatedSubtitle>
-        <AnimatedSubtitle bottom="42" left="2" width="20" frequencyType="low">
+        <AnimatedSubtitle
+          bottom="42"
+          left="2"
+          width="20"
+          frequencyBin="software"
+        >
           software
         </AnimatedSubtitle>
-        <AnimatedSubtitle bottom="32" left="2" width="20" frequencyType="mid">
+        <AnimatedSubtitle
+          bottom="32"
+          left="2"
+          width="20"
+          frequencyBin="engineer"
+        >
           engineer
         </AnimatedSubtitle>
-        <AnimatedSubtitle bottom="22" left="2" frequencyType="mid">
+        <AnimatedSubtitle bottom="22" left="2" frequencyBin="fullstack">
           fullstack
         </AnimatedSubtitle>
-        <AnimatedSubtitle bottom="12" left="2" frequencyType="high">
+        <AnimatedSubtitle bottom="12" left="2" frequencyBin="london">
           london
         </AnimatedSubtitle>
-        <AnimatedSubtitle bottom="2" left="2" frequencyType="high">
+        <AnimatedSubtitle bottom="2" left="2" frequencyBin="affirm">
           affirm
         </AnimatedSubtitle>
 
@@ -69,20 +79,6 @@ function App() {
             size={80}
           />
         </Styled.SocialIconsContainer>
-
-        {/* Music visualization elements */}
-        {/* <AnimatedElement
-          position={{ bottom: "50", left: "80" }}
-          frequencyType="low"
-        />
-        <AnimatedElement
-          position={{ bottom: "45", left: "85" }}
-          frequencyType="mid"
-        />
-        <AnimatedElement
-          position={{ bottom: "30", left: "90" }}
-          frequencyType="high"
-        /> */}
 
         <MusicPlayer />
 

@@ -23,7 +23,7 @@ export class MusicAnalyser {
   }
 
   /**
-   * Get frequency data for low, mid, and high ranges
+   * Get frequency data for named frequency bins
    */
   getFrequencyData() {
     this.analyser.getByteFrequencyData(this.dataArray);
@@ -32,42 +32,41 @@ export class MusicAnalyser {
     const sampleRate = this.audioContext.sampleRate;
     const nyquist = sampleRate / 2; // Maximum frequency we can detect
 
-    // Define proper frequency bands in Hz
-    const lowFreqMax = 250; // 0-250 Hz (bass)
-    const midFreqMax = 2000; // 250-2000 Hz (midrange)
-    // High: 2000+ Hz (treble)
+    // Define frequency bands with descriptive names
+    const frequencyRanges = {
+      senior: { min: 0, max: 100 }, // sub-bass
+      software: { min: 100, max: 250 }, // bass
+      engineer: { min: 250, max: 500 }, // low-mid
+      fullstack: { min: 500, max: 1000 }, // mid
+      london: { min: 1000, max: 2000 }, // high-mid
+      affirm: { min: 2000, max: 20000 }, // treble
+    };
 
-    // Convert Hz to frequency bin indices
-    const lowEnd = Math.floor((lowFreqMax / nyquist) * this.bufferLength);
-    const midEnd = Math.floor((midFreqMax / nyquist) * this.bufferLength);
+    // Convert Hz ranges to frequency bin indices
+    const binIndices = Object.entries(frequencyRanges).map(([name, range]) => ({
+      name,
+      start: Math.floor((range.min / nyquist) * this.bufferLength),
+      end: Math.floor((range.max / nyquist) * this.bufferLength),
+    }));
 
     // Ensure we don't exceed buffer length
-    const safeLowEnd = Math.min(lowEnd, this.bufferLength);
-    const safeMidEnd = Math.min(midEnd, this.bufferLength);
+    const safeBinIndices = binIndices.map((bin) => ({
+      name: bin.name,
+      start: Math.min(bin.start, this.bufferLength),
+      end: Math.min(bin.end, this.bufferLength),
+    }));
 
-    const lowFrequency = Array.from(this.dataArray.slice(0, safeLowEnd));
-    const midFrequency = Array.from(
-      this.dataArray.slice(safeLowEnd, safeMidEnd)
-    );
-    const highFrequency = Array.from(this.dataArray.slice(safeMidEnd));
+    // Extract frequency data for each bin
+    const frequencyBins: Record<string, number[]> = {};
 
-    // normalize and average the data for easier consumption
-    const normaliseLow = this.normaliseData(lowFrequency);
-    const normaliseMid = this.normaliseData(midFrequency);
-    const normaliseHigh = this.normaliseData(highFrequency);
-
-    console.log("Frequency ranges:", {
-      low: `0-${lowFreqMax}Hz (${safeLowEnd} bins)`,
-      mid: `${lowFreqMax}-${midFreqMax}Hz (${safeMidEnd - safeLowEnd} bins)`,
-      high: `${midFreqMax}+Hz (${this.bufferLength - safeMidEnd} bins)`,
-      values: { low: normaliseLow, mid: normaliseMid, high: normaliseHigh },
+    safeBinIndices.forEach((bin) => {
+      const frequencyData = Array.from(
+        this.dataArray.slice(bin.start, bin.end)
+      );
+      frequencyBins[bin.name] = this.normaliseData(frequencyData);
     });
 
-    return {
-      lowFrequency: normaliseLow,
-      midFrequency: normaliseMid,
-      highFrequency: normaliseHigh,
-    };
+    return { frequencyBins };
   }
 
   /**
