@@ -98,56 +98,7 @@ export const SubtitleText = styled.h2<{
   margin: 0;
   font-family: "Doto", sans-serif;
   /* font-weight: 400; */
-  animation: fontWeightAndSpacingAnimation 1s infinite alternate;
-
-  @keyframes fontWeightAndSpacingAnimation {
-    0%,
-    19.99% {
-      font-weight: 500;
-    }
-    20%,
-    39.99% {
-      font-weight: 100;
-    }
-    40%,
-    59.99% {
-      font-weight: 300;
-    }
-    60%,
-    79.99% {
-      font-weight: 900;
-    }
-    80%,
-    100% {
-      font-weight: 800;
-    }
-  }
-
-  @keyframes letterSpacingAnimation {
-    0% {
-      letter-spacing: ${() =>
-        Math.max(-0.8, Math.min(0.12, Math.random() * 0.2 - 0.08))}em;
-    }
-    25% {
-      letter-spacing: ${() =>
-        Math.max(-0.8, Math.min(0.12, Math.random() * 0.2 - 0.08))}em;
-    }
-    50% {
-      letter-spacing: ${() =>
-        Math.max(-0.8, Math.min(0.12, Math.random() * 0.2 - 0.08))}em;
-    }
-    75% {
-      letter-spacing: ${() =>
-        Math.max(-0.8, Math.min(0.12, Math.random() * 0.2 - 0.08))}em;
-    }
-    100% {
-      letter-spacing: ${() =>
-        Math.max(-0.8, Math.min(0.12, Math.random() * 0.2 - 0.08))}em;
-    }
-  }
-
-  animation: fontWeightAndSpacingAnimation 1s infinite alternate,
-    letterSpacingAnimation 1.3s infinite alternate;
+  transition: letter-spacing 0.5s ease, font-weight 0.1s ease;
 `;
 
 export const SocialIconsContainer = styled.div`
