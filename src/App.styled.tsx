@@ -29,57 +29,7 @@ export const HeaderText = styled.h1`
   z-index: 1;
   font-weight: bold;
   font-family: "Golos Text", sans-serif;
-  /* animation: fontCycle 2s linear infinite; */
-
-  @keyframes fontCycle {
-    0%,
-    19.99% {
-      font-family: "Helvetica Neue", sans-serif;
-      font-size: 12rem;
-      font-weight: 100;
-      letter-spacing: 0;
-      transform: skew(0deg);
-    }
-    20%,
-    39.99% {
-      font-family: "Georgia", serif;
-      font-size: 8rem;
-      font-weight: 300;
-      letter-spacing: 0.5rem;
-      transform: skew(5deg);
-    }
-    40%,
-    59.99% {
-      font-family: "Courier New", monospace;
-      font-size: 11rem;
-      font-weight: 600;
-      letter-spacing: -0.3rem;
-      transform: skew(-5deg);
-    }
-    60%,
-    79.99% {
-      font-family: "Arial Black", sans-serif;
-      font-size: 10rem;
-      font-weight: 800;
-      letter-spacing: 0.8rem;
-      transform: skew(10deg);
-    }
-    80%,
-    99.99% {
-      font-family: "Impact", sans-serif;
-      font-size: 7rem;
-      font-weight: 900;
-      letter-spacing: -0.1rem;
-      transform: skew(-10deg);
-    }
-    100% {
-      font-family: "Helvetica Neue", sans-serif;
-      font-size: 12rem;
-      font-weight: 100;
-      letter-spacing: 0;
-      transform: skew(0deg);
-    }
-  }
+  white-space: nowrap;
 `;
 
 export const SubtitleText = styled.h2<{
