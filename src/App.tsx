@@ -18,7 +18,7 @@ function App() {
       <ThemeProvider theme={theme}>
         <Background />
         <GlassPanel />
-        <AnimatedHeader frequencyBins={["london"]}>
+        <AnimatedHeader frequencyBins={["software"]}>
           (faiz)aan sakib
         </AnimatedHeader>
         <AnimatedSubtitle bottom="52" left="2" width="20" frequencyBin="senior">
