@@ -49,7 +49,7 @@ const GlassPanel: React.FC = () => {
   >([]);
 
   useEffect(() => {
-    const generatePanels = (numPanels = 3) => {
+    const generatePanels = (numPanels = 10) => {
       const newPanels = Array.from({ length: numPanels }, (_, i) => ({
         id: i,
         clipPath: generateRandomPolygon(clampedRandom(3, 8)),
@@ -65,7 +65,7 @@ const GlassPanel: React.FC = () => {
       setPanels(newPanels);
     };
 
-    generatePanels(5);
+    generatePanels(10);
 
     const intervalId = setInterval(
       () => generatePanels(clampedRandom(3, 5)),

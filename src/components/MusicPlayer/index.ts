@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { MusicAnalyser } from "./MusicAnalyser";
-import audioFile from "../../assets/audio/expression-on-your-face.mp3";
+import audioFile from "../../assets/audio/empty-lightning.mp3";
 import { useAudio } from "../../context/AudioContext";
 
 const MusicPlayer = () => {
