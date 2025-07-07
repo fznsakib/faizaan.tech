@@ -2,6 +2,7 @@ import { Canvas } from "@react-three/fiber";
 import { ThemeProvider } from "styled-components";
 
 import * as Styled from "./App.styled";
+import AnimatedHeader from "./components/AnimatedHeader";
 import AnimatedSubtitle from "./components/AnimatedSubtitle";
 import Background from "./components/Background";
 import GlassPanel from "./components/GlassPanel";
@@ -17,7 +18,9 @@ function App() {
       <ThemeProvider theme={theme}>
         <Background />
         <GlassPanel />
-        <Styled.HeaderText>(faiz)aan sakib</Styled.HeaderText>
+        <AnimatedHeader frequencyBins={["software"]}>
+          (faiz)aan sakib
+        </AnimatedHeader>
         <AnimatedSubtitle bottom="52" left="2" width="20" frequencyBin="senior">
           senior
         </AnimatedSubtitle>
