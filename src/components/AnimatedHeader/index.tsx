@@ -8,6 +8,7 @@ interface AnimatedHeaderProps {
   children: React.ReactNode;
 }
 
+const CHANGE_THRESHOLD = 0.03;
 const FORCE_CYCLE_DURATION = 2000;
 
 const fontFamilies = [
@@ -95,8 +96,8 @@ const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
       // Make it much more responsive - lower threshold and shorter time delay
       // Only change font if there's a significant change in the audio data and enough time has passed
       if (
-        Math.abs(smoothedValue - lastValueRef.current) > 0.05 &&
-        now - lastFontChangeRef.current > 200
+        Math.abs(smoothedValue - lastValueRef.current) > CHANGE_THRESHOLD &&
+        now - lastFontChangeRef.current > 100
       ) {
         fontIndexRef.current = Math.floor(Math.random() * fontFamilies.length);
         lastFontChangeRef.current = now;
