@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useMemo, useCallback } from "react";
 
 import * as Styled from "../../App.styled";
 import { useAudio } from "../../context/AudioContext";
+import { calculateCombinedRMS } from "../../utils/audio";
 
 interface AnimatedHeaderProps {
   frequencyBins: string[]; // Array of frequency bin names to respond to
@@ -45,9 +46,9 @@ const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
   // Keep track of when we last changed the font
   const lastFontChangeRef = useRef(Date.now());
 
-  const frequencyData = useMemo(() => {
-    // Combine the frequency bins into a single array
-    return frequencyBins.flatMap((bin) => audioData.frequencyBins[bin] || []);
+  // Calculate RMS intensity for the specified frequency bins
+  const rmsIntensity = useMemo(() => {
+    return calculateCombinedRMS(audioData.frequencyBins, frequencyBins);
   }, [audioData.frequencyBins, frequencyBins]);
 
   // Helper function to update the font style with a given index
@@ -110,17 +111,11 @@ const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
   );
 
   useEffect(() => {
-    if (frequencyData.length === 0) {
-      return;
-    }
-
-    // Use maximum value for more dynamic response
-    const maxValue = Math.max(...frequencyData);
-    const normalizedValue = maxValue / 255;
+    // RMS intensity is already normalized to 0-1 range
+    const normalizedValue = rmsIntensity;
 
     // Less smoothing for more responsive behavior
-    // const smoothingFactor = 0.9; // Increased from 0.15 for more responsiveness
-    const smoothingFactor = 0.6; // Increased from 0.15 for more responsiveness
+    const smoothingFactor = 0.9; // Higher smoothing for more responsiveness
     const smoothedValue =
       lastValueRef.current * (1 - smoothingFactor) +
       normalizedValue * smoothingFactor;
@@ -139,7 +134,7 @@ const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
     } else {
       updateFont(smoothedValue);
     }
-  }, [frequencyData, updateFont, applyFontStyle, triggerConsecutiveChanges]);
+  }, [rmsIntensity, updateFont, applyFontStyle, triggerConsecutiveChanges]);
 
   // cycle if no audio data
   useEffect(() => {

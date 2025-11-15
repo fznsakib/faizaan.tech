@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { MusicAnalyser } from "./MusicAnalyser";
 import { SONGS, SONG_INDEX } from "./songs";
 import { useAudio } from "../../context/AudioContext";
+import { calculateCombinedRMS } from "../../utils/audio";
 import { BASE_NOD_INTENSITY } from "../Head";
 
 const MusicPlayer = () => {
@@ -27,19 +28,11 @@ const MusicPlayer = () => {
       const frequencyData = analyzer.getFrequencyData();
 
       // Calculate bass intensity from bass frequencies (senior + software bins)
-      const seniorBass = frequencyData.frequencyBins["senior"] || [];
-      const softwareBass = frequencyData.frequencyBins["software"] || [];
-      const allBass = [...seniorBass, ...softwareBass];
-
-      // Calculate RMS (root mean square) of bass frequencies
-      let bassRMS = 0;
-      if (allBass.length > 0) {
-        const sumSquares = allBass.reduce((sum, val) => sum + val * val, 0);
-        bassRMS = Math.sqrt(sumSquares / allBass.length);
-      }
-
-      // Normalize to 0-1 range (assuming max value is ~255 from byte frequency data)
-      const normalizedBass = Math.min(bassRMS / 255, 1);
+      // Calculate RMS (root mean square) of bass frequencies using utility
+      const normalizedBass = calculateCombinedRMS(frequencyData.frequencyBins, [
+        "senior",
+        "software",
+      ]);
 
       // Apply exponential smoothing to avoid jitter (smoothing factor 0.15 = very smooth)
       const smoothingFactor = 0.15;
