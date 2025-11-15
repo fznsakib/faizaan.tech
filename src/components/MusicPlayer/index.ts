@@ -1,74 +1,91 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 import { MusicAnalyser } from "./MusicAnalyser";
-import audioFile from "../../assets/audio/empty-lightning.mp3";
+import { SONGS, SONG_INDEX } from "./songs";
 import { useAudio } from "../../context/AudioContext";
+import { BASE_NOD_INTENSITY } from "../Head";
 
 const MusicPlayer = () => {
-  const { setAudioData, audioContext, isAudioInitialized, initializeAudio } =
+  const { setAudioData, audioContext, isAudioInitialized, shouldStartMusic } =
     useAudio();
+
   const audioSourceRef = useRef<AudioBufferSourceNode | null>(null);
   const analyzerRef = useRef<MusicAnalyser | null>(null);
   const animationFrameRef = useRef<number | null>(null);
-  const [playAttempted, setPlayAttempted] = useState(false);
+  const hasStarted = useRef(false);
+  const smoothedBassIntensity = useRef(BASE_NOD_INTENSITY); // Start at minimum (10%)
 
-  // attempt to initialize audio on component mount
-  useEffect(() => {
-    const attemptInitialization = async () => {
-      try {
-        await initializeAudio();
-      } catch {
-        console.log(
-          "Audio context initialization deferred until user interaction"
-        );
+  const startAnalyzing = useCallback(() => {
+    const analyzer = analyzerRef.current;
+    if (!analyzer) return;
+
+    let lastFrequencyBins: Record<string, number[]> = {};
+
+    const analyzeFrame = () => {
+      if (!analyzer) return;
+
+      const frequencyData = analyzer.getFrequencyData();
+
+      // Calculate bass intensity from bass frequencies (senior + software bins)
+      const seniorBass = frequencyData.frequencyBins["senior"] || [];
+      const softwareBass = frequencyData.frequencyBins["software"] || [];
+      const allBass = [...seniorBass, ...softwareBass];
+
+      // Calculate RMS (root mean square) of bass frequencies
+      let bassRMS = 0;
+      if (allBass.length > 0) {
+        const sumSquares = allBass.reduce((sum, val) => sum + val * val, 0);
+        bassRMS = Math.sqrt(sumSquares / allBass.length);
       }
+
+      // Normalize to 0-1 range (assuming max value is ~255 from byte frequency data)
+      const normalizedBass = Math.min(bassRMS / 255, 1);
+
+      // Apply exponential smoothing to avoid jitter (smoothing factor 0.15 = very smooth)
+      const smoothingFactor = 0.15;
+      smoothedBassIntensity.current =
+        smoothedBassIntensity.current * (1 - smoothingFactor) +
+        normalizedBass * smoothingFactor;
+
+      // Only update state if data has actually changed
+      const frequencyBinsChanged =
+        JSON.stringify(frequencyData.frequencyBins) !==
+        JSON.stringify(lastFrequencyBins);
+
+      if (frequencyBinsChanged) {
+        setAudioData((prev) => ({
+          ...prev,
+          // Keep the static BPM, don't overwrite with detected BPM
+          frequencyBins: frequencyData.frequencyBins,
+          bassIntensity: smoothedBassIntensity.current,
+        }));
+
+        lastFrequencyBins = frequencyData.frequencyBins;
+      }
+
+      animationFrameRef.current = requestAnimationFrame(analyzeFrame);
     };
 
-    attemptInitialization();
-  }, [initializeAudio]);
+    animationFrameRef.current = requestAnimationFrame(analyzeFrame);
+  }, [setAudioData]);
 
-  // TODO: Add a button for mobile devices that might need explicit user interaction
+  // Load and play audio when instructed
   useEffect(() => {
-    const triggerButton = document.createElement("button");
-    triggerButton.textContent = "Click to Play Music";
-    triggerButton.style.position = "fixed";
-    triggerButton.style.bottom = "20px";
-    triggerButton.style.right = "20px";
-    triggerButton.style.zIndex = "1000";
-    triggerButton.style.padding = "10px";
-    triggerButton.style.backgroundColor = "rgba(0,0,0,0.5)";
-    triggerButton.style.color = "white";
-    triggerButton.style.border = "none";
-    triggerButton.style.borderRadius = "5px";
-    triggerButton.style.cursor = "pointer";
-    triggerButton.style.display = "none"; // Hidden initially
+    if (
+      !audioContext ||
+      !isAudioInitialized ||
+      !shouldStartMusic ||
+      hasStarted.current
+    ) {
+      return;
+    }
 
-    // Show the button if audio hasn't started after 2 seconds
-    const showButtonTimeout = setTimeout(() => {
-      if (!playAttempted) {
-        triggerButton.style.display = "block";
-      }
-    }, 2000);
-
-    triggerButton.addEventListener("click", async () => {
-      await initializeAudio();
-      triggerButton.style.display = "none";
-      setPlayAttempted(true);
-    });
-
-    document.body.appendChild(triggerButton);
-
-    return () => {
-      clearTimeout(showButtonTimeout);
-      document.body.removeChild(triggerButton);
-    };
-  }, [initializeAudio, playAttempted]);
-
-  useEffect(() => {
-    if (!audioContext || !isAudioInitialized) return;
+    hasStarted.current = true;
 
     const loadAudio = async () => {
       try {
+        console.log("Loading audio...");
+        const audioFile = SONGS[SONG_INDEX].file;
         const response = await fetch(audioFile);
         const arrayBuffer = await response.arrayBuffer();
 
@@ -81,16 +98,13 @@ const MusicPlayer = () => {
         analyzerRef.current = analyzer;
         audioSourceRef.current = source;
 
-        // start playing
+        // set audio to beginning
         source.start(0);
         startAnalyzing();
 
-        setPlayAttempted(true);
-        setAudioData((prev) => ({ ...prev, isPlaying: true }));
-
         // handle end of track
         source.onended = () => {
-          setAudioData((prev) => ({ ...prev, isPlaying: false }));
+          setAudioData((prev) => ({ ...prev, bpm: 0, isPlaying: false }));
           if (animationFrameRef.current) {
             cancelAnimationFrame(animationFrameRef.current);
             animationFrameRef.current = null;
@@ -98,6 +112,7 @@ const MusicPlayer = () => {
         };
       } catch (error) {
         console.error("Error loading audio:", error);
+        hasStarted.current = false; // Allow retry
       }
     };
 
@@ -105,51 +120,25 @@ const MusicPlayer = () => {
 
     return () => {
       if (audioSourceRef.current) {
-        audioSourceRef.current.stop();
-        audioSourceRef.current.disconnect();
+        try {
+          audioSourceRef.current.stop();
+          audioSourceRef.current.disconnect();
+        } catch {
+          // Already stopped
+        }
       }
 
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [audioContext, setAudioData, isAudioInitialized]);
-
-  const startAnalyzing = () => {
-    const analyzer = analyzerRef.current;
-    if (!analyzer) return;
-
-    let lastFrequencyBins: Record<string, number[]> = {};
-    let lastBpm = 0;
-
-    const analyzeFrame = () => {
-      if (!analyzer) return;
-
-      const frequencyData = analyzer.getFrequencyData();
-      const bpm = analyzer.detectBPM();
-
-      // Only update state if data has actually changed
-      const frequencyBinsChanged =
-        JSON.stringify(frequencyData.frequencyBins) !==
-        JSON.stringify(lastFrequencyBins);
-      const bpmChanged = bpm !== lastBpm;
-
-      if (frequencyBinsChanged || bpmChanged) {
-        setAudioData((prev) => ({
-          ...prev,
-          bpm,
-          frequencyBins: frequencyData.frequencyBins,
-        }));
-
-        lastFrequencyBins = frequencyData.frequencyBins;
-        lastBpm = bpm;
-      }
-
-      animationFrameRef.current = requestAnimationFrame(analyzeFrame);
-    };
-
-    animationFrameRef.current = requestAnimationFrame(analyzeFrame);
-  };
+  }, [
+    audioContext,
+    setAudioData,
+    isAudioInitialized,
+    shouldStartMusic,
+    startAnalyzing,
+  ]);
 
   return null;
 };

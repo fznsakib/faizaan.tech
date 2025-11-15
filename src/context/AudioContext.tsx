@@ -6,6 +6,7 @@ interface AudioData {
   bpm: number;
   frequencyBins: Record<string, number[]>; // Generic frequency bins with string keys
   isPlaying: boolean;
+  bassIntensity: number; // 0-1 scale for bass loudness
 }
 
 interface AudioContextType {
@@ -15,12 +16,15 @@ interface AudioContextType {
   audioAnalyser: AnalyserNode | null;
   initializeAudio: () => Promise<void>;
   isAudioInitialized: boolean;
+  shouldStartMusic: boolean;
+  startMusic: (bpm: number) => void;
 }
 
 const defaultAudioData: AudioData = {
   bpm: 0,
   frequencyBins: {},
   isPlaying: false,
+  bassIntensity: 0,
 };
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
@@ -34,6 +38,7 @@ export const AudioProvider = ({ children }: AudioProviderProps) => {
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   const [audioAnalyser, setAudioAnalyser] = useState<AnalyserNode | null>(null);
   const [isAudioInitialized, setIsAudioInitialized] = useState(false);
+  const [shouldStartMusic, setShouldStartMusic] = useState(false);
 
   const initializeAudio = async () => {
     if (audioContext) {
@@ -54,26 +59,26 @@ export const AudioProvider = ({ children }: AudioProviderProps) => {
     setIsAudioInitialized(true);
   };
 
-  // setup event listeners for user interaction
+  const startMusic = async (bpm: number) => {
+    console.log("startMusic called with BPM:", bpm);
+
+    // Initialize audio if not already initialized
+    await initializeAudio();
+
+    // Set the BPM and isPlaying state
+    setAudioData((prev) => ({
+      ...prev,
+      bpm,
+      isPlaying: true,
+    }));
+
+    // Trigger the music player to start
+    setShouldStartMusic(true);
+  };
+
+  // Cleanup on unmount
   useEffect(() => {
-    const handleUserInteraction = () => {
-      initializeAudio();
-
-      // remove event listeners after first interaction
-      window.removeEventListener("click", handleUserInteraction);
-      window.removeEventListener("touchstart", handleUserInteraction);
-      window.removeEventListener("keydown", handleUserInteraction);
-    };
-
-    window.addEventListener("click", handleUserInteraction);
-    window.addEventListener("touchstart", handleUserInteraction);
-    window.addEventListener("keydown", handleUserInteraction);
-
     return () => {
-      window.removeEventListener("click", handleUserInteraction);
-      window.removeEventListener("touchstart", handleUserInteraction);
-      window.removeEventListener("keydown", handleUserInteraction);
-
       if (audioContext && audioContext.state !== "closed") {
         audioContext.close();
       }
@@ -89,6 +94,8 @@ export const AudioProvider = ({ children }: AudioProviderProps) => {
         audioAnalyser,
         initializeAudio,
         isAudioInitialized,
+        shouldStartMusic,
+        startMusic,
       }}
     >
       {children}

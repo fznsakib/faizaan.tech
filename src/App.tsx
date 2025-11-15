@@ -9,6 +9,7 @@ import GlassPanel from "./components/GlassPanel";
 import Head from "./components/Head";
 import MusicPlayer from "./components/MusicPlayer";
 import PixelIcon from "./components/PixelIcon";
+import { PlayButton } from "./components/PlayButton";
 import { AudioProvider } from "./context/AudioContext";
 import { theme } from "./styles/theme";
 
@@ -18,7 +19,7 @@ function App() {
       <ThemeProvider theme={theme}>
         <Background />
         <GlassPanel />
-        <AnimatedHeader frequencyBins={["software"]}>
+        <AnimatedHeader frequencyBins={["london", "affirm"]}>
           (faiz)aan sakib
         </AnimatedHeader>
         <AnimatedSubtitle bottom="52" left="2" width="20" frequencyBin="senior">
@@ -84,6 +85,7 @@ function App() {
         </Styled.SocialIconsContainer>
 
         <MusicPlayer />
+        <PlayButton />
 
         {/* three.js canvas */}
         <Styled.AppContainer>
