@@ -10,6 +10,7 @@ interface AnimatedHeaderProps {
 
 const CHANGE_THRESHOLD = 0.03;
 const FORCE_CYCLE_DURATION = 2000;
+const RANDOM_CHANGE_CHANCE = 0.15;
 
 const fontFamilies = [
   '"Didot", serif',
@@ -58,16 +59,12 @@ const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
     ref.current.style.fontSize = `${fontSizes[index]}rem`;
     ref.current.style.letterSpacing = `${letterSpacings[index]}rem`;
     ref.current.style.transform = `skew(${skewValues[index]}deg)`;
-
-    console.log(`Font changed to: ${fontFamilies[index]}`, index);
   }, []);
 
   // Helper function to potentially trigger consecutive font changes
   const triggerConsecutiveChanges = useCallback(() => {
-    // 40% chance of triggering consecutive changes
-    if (Math.random() < 0.25) {
-      console.log("Triggering consecutive font changes");
-
+    // 25% chance of triggering consecutive changes
+    if (Math.random() < RANDOM_CHANGE_CHANCE) {
       // Schedule 1-3 additional rapid changes
       const numChanges = Math.floor(Math.random() * 3) + 1;
 
@@ -122,7 +119,8 @@ const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
     const normalizedValue = maxValue / 255;
 
     // Less smoothing for more responsive behavior
-    const smoothingFactor = 0.9; // Increased from 0.15 for more responsiveness
+    // const smoothingFactor = 0.9; // Increased from 0.15 for more responsiveness
+    const smoothingFactor = 0.6; // Increased from 0.15 for more responsiveness
     const smoothedValue =
       lastValueRef.current * (1 - smoothingFactor) +
       normalizedValue * smoothingFactor;
@@ -137,7 +135,6 @@ const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
         const i = fontIndexRef.current;
         applyFontStyle(i);
         triggerConsecutiveChanges();
-        console.log(`Forced font change to: ${fontFamilies[i]}`, i);
       }
     } else {
       updateFont(smoothedValue);
@@ -170,7 +167,8 @@ const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
     <Styled.HeaderText
       ref={ref}
       style={{
-        transition: "letterSpacing 0.3s ease, transform 0.3s ease",
+        transition:
+          "letterSpacing 0.3s ease, transform 0.3s ease, fontSize 0.3s ease, letterSpacing 0.3s ease, skew 0.3s ease",
       }}
     >
       {children}
