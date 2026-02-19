@@ -48,11 +48,13 @@ export const GlassShape = styled.div<{
   $scale: string;
   $animationDuration: string;
   $opacity: number;
+  $bounceOvershoot: number;
+  $transitionDuration: number;
 }>`
   position: absolute;
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(32px) saturate(1.2);
+  -webkit-backdrop-filter: blur(32px) saturate(1.2);
   overflow: hidden;
 
   border-radius: ${({ $borderRadius }) => $borderRadius};
@@ -106,7 +108,12 @@ export const GlassShape = styled.div<{
   animation-duration: ${({ $animationDuration }) => $animationDuration};
 
   opacity: ${({ $opacity }) => $opacity};
-  transition: opacity 0.8s ease-out;
+  transition:
+    top ${({ $transitionDuration }) => $transitionDuration}s cubic-bezier(0.34, ${({ $bounceOvershoot }) => $bounceOvershoot}, 0.64, 1),
+    left ${({ $transitionDuration }) => $transitionDuration}s cubic-bezier(0.34, ${({ $bounceOvershoot }) => $bounceOvershoot}, 0.64, 1),
+    width ${({ $transitionDuration }) => $transitionDuration}s cubic-bezier(0.34, ${({ $bounceOvershoot }) => $bounceOvershoot}, 0.64, 1),
+    height ${({ $transitionDuration }) => $transitionDuration}s cubic-bezier(0.34, ${({ $bounceOvershoot }) => $bounceOvershoot}, 0.64, 1),
+    border-radius ${({ $transitionDuration }) => $transitionDuration}s cubic-bezier(0.34, ${({ $bounceOvershoot }) => $bounceOvershoot}, 0.64, 1);
 
   transform-style: preserve-3d;
   perspective: 1000px;
