@@ -125,7 +125,11 @@ export class MusicEngine {
           }),
         ]);
         const buffer = await ctx.decodeAudioData(data);
-        if (track.loading !== loading) return; // switched away while loading: drop it
+        if (track.loading !== loading) return;
+        if (this.tracks[this.current] !== track) {
+          track.loading = null; // switched away while loading: drop the decoded PCM
+          return;
+        }
         track.buffer = buffer;
         track.map = map;
         if (this.tracks[this.current] === track) this.onCurrentReady();
@@ -323,8 +327,10 @@ export class MusicEngine {
     const previous = this.tracks[this.current];
     this.current = (this.current + 1) % this.tracks.length;
     const track = this.tracks[this.current];
-    if (previous !== track) {
-      previous.buffer = null; // decoded PCM is 45–72 MB per track: keep only the active one
+    if (previous !== track && previous.buffer) {
+      // Decoded PCM is 45–72 MB per track: keep only the active one. An in-flight load keeps its
+      // promise so returning to the track reuses it instead of starting another decode.
+      previous.buffer = null;
       previous.loading = null;
     }
     this.pausedAt = 0;

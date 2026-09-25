@@ -254,6 +254,41 @@ describe("track switching", () => {
     expect(ctx().sources).toHaveLength(sources);
   });
 
+  it("caps rapid next() clicks at one in-flight load per track", async () => {
+    let fetches = 0;
+    const { engine } = setup({
+      fetch: () => {
+        fetches++;
+        return fetches === 1 ? Promise.resolve(new ArrayBuffer(8)) : new Promise<ArrayBuffer>(() => {});
+      },
+    });
+    await engine.preload();
+    engine.unlock();
+    engine.play(0);
+    for (let i = 0; i < 6; i++) engine.next();
+    expect(fetches).toBeLessThanOrEqual(3);
+  });
+
+  it("reuses an in-flight load when returning to a track", async () => {
+    const pending: { url: string; resolve: (buffer: ArrayBuffer) => void }[] = [];
+    const { engine, ctx } = setup({
+      fetch: (url) => new Promise((resolve) => pending.push({ url, resolve })),
+    });
+    const first = engine.preload();
+    pending[0].resolve(new ArrayBuffer(8));
+    await first;
+    engine.unlock();
+    engine.play(0);
+    engine.next();
+    engine.next();
+    engine.next();
+    expect(pending.map((p) => p.url)).toEqual(["/a.mp3", "/b.mp3", "/a.mp3"]);
+    pending[1].resolve(new ArrayBuffer(8));
+    await engine.preload();
+    expect(engine.getSnapshot()).toMatchObject({ track: "b", status: "ready", isPlaying: true });
+    expect(ctx().lastSource.started?.offset).toBe(0);
+  });
+
   it("ignores a skipped track that finishes loading late", async () => {
     const pending: { url: string; resolve: (buffer: ArrayBuffer) => void }[] = [];
     const { engine, ctx } = setup({
