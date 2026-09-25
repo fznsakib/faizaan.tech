@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "beatmap": "node --disable-warning=ExperimentalWarning scripts/beatmap.ts"
   },
   "dependencies": {
     "@react-three/drei": "^9.121.5",
