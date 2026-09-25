@@ -166,6 +166,7 @@ export class MusicEngine {
     const track = this.tracks[this.current];
     if (!track.buffer) {
       this.wantsPlay = true;
+      this.set({ isPlaying: true }); // "playing or starting": the transport label and toggle agree
       void this.preload(track.source.id);
       return;
     }
@@ -182,7 +183,7 @@ export class MusicEngine {
   }
 
   toggle(): void {
-    if (this.state.isPlaying || this.wantsPlay) this.pause();
+    if (this.state.isPlaying) this.pause();
     else this.play();
   }
 
@@ -200,7 +201,7 @@ export class MusicEngine {
 
   /** Switch to the next track (looping); keeps playing if it was playing. */
   next(): void {
-    this.advance(this.state.isPlaying || this.wantsPlay);
+    this.advance(this.state.isPlaying);
   }
 
   setMuted(muted: boolean): void {
@@ -333,7 +334,7 @@ export class MusicEngine {
       track: track.source.id,
       title: track.source.title,
       bpm: track.map?.bpm ?? null,
-      isPlaying: false,
+      isPlaying: resume,
       status: track.buffer ? "ready" : "loading",
     });
     if (resume) this.play(0);

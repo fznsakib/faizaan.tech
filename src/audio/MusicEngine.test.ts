@@ -138,6 +138,39 @@ describe("transport", () => {
     expect(engine.getSnapshot().isPlaying).toBe(true);
   });
 
+  it("reports playing while the first track is still decoding", async () => {
+    const { engine } = setup({ fetch: () => new Promise<ArrayBuffer>(() => {}) });
+    void engine.preload();
+    engine.unlock();
+    engine.play(0);
+    expect(engine.getSnapshot().isPlaying).toBe(true);
+    expect(engine.update(16).isPlaying).toBe(false);
+  });
+
+  it("toggle matches the label while a switched-to track is loading", async () => {
+    const pending: ((buffer: ArrayBuffer) => void)[] = [];
+    let fetches = 0;
+    const { engine, ctx } = setup({
+      fetch: () => {
+        fetches++;
+        return fetches === 1
+          ? Promise.resolve(new ArrayBuffer(8))
+          : new Promise<ArrayBuffer>((resolve) => pending.push(resolve));
+      },
+    });
+    await engine.preload();
+    engine.unlock();
+    engine.play(0);
+    engine.next();
+    expect(engine.getSnapshot()).toMatchObject({ track: "b", isPlaying: true });
+    engine.toggle();
+    expect(engine.getSnapshot().isPlaying).toBe(false);
+    pending[0](new ArrayBuffer(8));
+    await engine.preload();
+    expect(engine.getSnapshot().isPlaying).toBe(false);
+    expect(ctx().sources).toHaveLength(1);
+  });
+
   it("keeps exactly one live source when play is called twice", async () => {
     const { engine, ctx } = await playing();
     engine.play(0);
@@ -201,7 +234,7 @@ describe("track switching", () => {
   it("advances to the next track when one ends and loops back", async () => {
     const { engine, ctx } = await playing();
     ctx().lastSource.finish();
-    expect(engine.getSnapshot()).toMatchObject({ track: "b", status: "loading", isPlaying: false });
+    expect(engine.getSnapshot()).toMatchObject({ track: "b", status: "loading", isPlaying: true });
     await engine.preload();
     expect(engine.getSnapshot()).toMatchObject({ track: "b", title: "B", bpm: 150, status: "ready", isPlaying: true });
     expect(ctx().lastSource.started?.offset).toBe(0);

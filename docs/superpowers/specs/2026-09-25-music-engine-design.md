@@ -75,7 +75,7 @@ src/components/
 - `unlock()`: synchronous `resume()`; call it inside a user-gesture handler.
 - `play(from?)`, `pause()`, `toggle()`, `seek(t)`, `next()`, `setMuted(b)`.
 - `update(nowMs)` and `frame`.
-- `subscribe(fn)` / `getSnapshot()` → `EngineState { status: 'idle'|'loading'|'ready'|'error'; unlocked; track: string|null; title: string|null; bpm: number|null; isPlaying; muted }`. The snapshot object changes identity only when a field changes.
+- `subscribe(fn)` / `getSnapshot()` → `EngineState { status: 'idle'|'loading'|'ready'|'error'; unlocked; track: string|null; title: string|null; bpm: number|null; isPlaying /* playing or starting */; muted }`. The snapshot object changes identity only when a field changes.
 
 Audio graph: `source → bus (GainNode) → analyser` and `bus → mute (GainNode) → destination`.
 

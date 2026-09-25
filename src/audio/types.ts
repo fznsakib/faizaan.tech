@@ -68,6 +68,7 @@ export interface EngineState {
   track: string | null;
   title: string | null;
   bpm: number | null;
+  /** Playing or starting (a play is pending while the track decodes). */
   isPlaying: boolean;
   muted: boolean;
 }
