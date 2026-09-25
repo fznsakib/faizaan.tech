@@ -58,6 +58,7 @@ src/audio/
   MusicEngine.ts        transport + clock + live band tap + coarse-state pub/sub
   tracks.ts             track registry (id, title, mp3 url, lazy beat-map loader)
   engine.ts             the singleton `engine` with tracks registered
+  ticker.ts             the single rAF loop: engine.update(now), visualLead estimate, frame subscribers
   react.ts              useMusicState(), useMusicFrame(cb)
   beatmaps/
     empty-lightning.json, etaki.json   generated, committed
@@ -74,7 +75,7 @@ src/components/
 - `unlock()`: synchronous `resume()`; call it inside a user-gesture handler.
 - `play(from?)`, `pause()`, `toggle()`, `seek(t)`, `next()`, `setMuted(b)`.
 - `update(nowMs)` and `frame`.
-- `subscribe(fn)` / `getSnapshot()` → `EngineState { status: 'idle'|'loading'|'ready'|'error'; unlocked; track: string|null; isPlaying; muted }`. The snapshot object changes identity only when a field changes.
+- `subscribe(fn)` / `getSnapshot()` → `EngineState { status: 'idle'|'loading'|'ready'|'error'; unlocked; track: string|null; title: string|null; bpm: number|null; isPlaying; muted }`. The snapshot object changes identity only when a field changes.
 
 Audio graph: `source → bus (GainNode) → analyser` and `bus → mute (GainNode) → destination`.
 
@@ -100,7 +101,7 @@ interface BeatMap {
   confidence: number;        // 0..1; committed maps = 1
   curveFps: 10;
   energy: number[];          // 0..255 loudness, p2–p98 normalised
-  section: number[];         // 0..255 slow intensity (4-bar moving average of energy)
+  section: number[];         // 0..255 slow intensity (4-bar centred moving average of energy, renormalised p5→0, p95→1; span floor 0.1)
   barLevels: number[];       // per bar index ≥ 0: 0 calm, 1 intense (hysteresis: up > 0.6, down < 0.45 on bar-mean section)
   onsets: { kick: number[]; snare: number[]; hat: number[] }; // flat [t0, s0, t1, s1, …], t seconds, s 0..1
 }
@@ -133,7 +134,7 @@ interface MusicFrame {
 }
 ```
 
-`update(nowMs)` is idempotent for the same `nowMs`, so the r3f `useFrame` and the DOM ticker can both call it.
+`update(nowMs)` is idempotent for the same `nowMs`. One ticker (`src/audio/ticker.ts`, a rAF loop started in `main.tsx` before React renders, so it runs before r3f's loop each frame) is the only caller; it also estimates `visualLead` and notifies `useMusicFrame` subscribers. r3f `useFrame` and every other consumer only **read** `engine.frame` — a second `update` in the same frame would consume the `beatCrossed`/`isDownbeat` edges.
 
 **Clock:**
 - `audible = ts.contextTime + (nowMs − ts.performanceTime)/1000` from `getOutputTimestamp()`. Fallback: `currentTime − baseLatency − outputLatency`.
@@ -219,7 +220,7 @@ Vitest (node environment) is added as `yarn test`.
 
 ## Handoff to sub-project 2
 
-Consumers read `engine.frame` after `engine.update(now)`: in r3f `useFrame`, or through `useMusicFrame(cb)` for DOM. Choreography should gate phase-locked motion on `beatConfidence` and use `sectionChanged` for drop flips. `timeToNextBeat` and `beatPhase` allow anticipation.
+Consumers read `engine.frame` (r3f `useFrame`) or subscribe with `useMusicFrame(cb)` (DOM); they never call `engine.update` themselves. Choreography should gate phase-locked motion on `beatConfidence` and use `sectionChanged` for drop flips. `timeToNextBeat` and `beatPhase` allow anticipation.
 
 ## Open items (owner)
 
