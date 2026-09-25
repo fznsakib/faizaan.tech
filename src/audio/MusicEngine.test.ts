@@ -339,6 +339,27 @@ describe("frames", () => {
     expect(engine.update(10).time).toBeCloseTo(2.05 - 0.005 - 0.02 - 0.05);
   });
 
+  it("never steps song time backwards within a playback run", async () => {
+    const { engine, ctx } = await playing();
+    let edges = 0;
+    [0.54, 0.551, 0.5485, 0.557].forEach((contextTime, i) => {
+      audibleAt(ctx(), contextTime, 1000 + i);
+      if (engine.update(1000 + i).beatCrossed) edges++;
+    });
+    expect(edges).toBe(1);
+    expect(engine.frame.time).toBeCloseTo(0.507);
+  });
+
+  it("lets time move back again after a seek", async () => {
+    const { engine, ctx } = await playing();
+    audibleAt(ctx(), 5.05, 1000);
+    expect(engine.update(1000).time).toBeCloseTo(5.0);
+    ctx().currentTime = 5.0;
+    engine.seek(1);
+    audibleAt(ctx(), 5.1, 2000);
+    expect(engine.update(2000).time).toBeCloseTo(1.05);
+  });
+
   it("is idempotent for the same timestamp", async () => {
     const { engine, ctx } = await playing();
     audibleAt(ctx(), 1.0, 1000);

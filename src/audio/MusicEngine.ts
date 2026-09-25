@@ -68,6 +68,8 @@ export class MusicEngine {
   private wantsPlay = false;
   private cursors: FrameCursors = createCursors();
   private lastNow = Number.NaN;
+  /** Song time never steps backwards within one playback run (jittery output timestamps would re-fire beat edges). */
+  private timeFloor = -Infinity;
 
   constructor(tracks: TrackSource[], deps: Partial<EngineDeps> = {}) {
     if (tracks.length === 0) throw new Error("MusicEngine needs at least one track");
@@ -224,9 +226,14 @@ export class MusicEngine {
     if (nowMs === this.lastNow) return this.frame;
     this.lastNow = nowMs;
     const playing = this.source !== null && this.ctx !== null;
-    const time = playing
-      ? this.songTimeAtContext(this.audibleContextTime(nowMs) + this.visualLead + this.userOffset)
-      : this.pausedAt;
+    let time = this.pausedAt;
+    if (playing) {
+      time = Math.max(
+        this.timeFloor,
+        this.songTimeAtContext(this.audibleContextTime(nowMs) + this.visualLead + this.userOffset)
+      );
+      this.timeFloor = time;
+    }
     const map = this.tracks[this.current].map;
     if (map) writeFrame(this.frame, map, time, playing, this.cursors);
     else clearFrame(this.frame, time, playing);
@@ -306,6 +313,7 @@ export class MusicEngine {
     this.pausedAt = from;
     this.wantsPlay = false;
     this.cursors = createCursors();
+    this.timeFloor = -Infinity;
     this.set({ isPlaying: true });
   }
 
