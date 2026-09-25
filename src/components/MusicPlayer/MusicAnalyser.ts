@@ -1,12 +1,10 @@
 export class MusicAnalyser {
-  private audioContext: AudioContext;
   private analyser: AnalyserNode;
   private dataArray: Uint8Array;
   private bufferLength: number;
   private bpmDetector: BPMDetector;
 
   constructor(audioContext: AudioContext, audioSource: AudioNode) {
-    this.audioContext = audioContext;
     this.analyser = audioContext.createAnalyser();
     this.analyser.fftSize = 2048;
     this.bufferLength = this.analyser.frequencyBinCount;

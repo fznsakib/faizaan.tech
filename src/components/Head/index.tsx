@@ -4,6 +4,8 @@ import { Box3, MeshStandardMaterial, Vector3 } from "three";
 import { Mesh } from "three";
 import { OBJLoader } from "three/examples/jsm/Addons.js";
 
+import headModelUrl from "../../assets/head.obj?url";
+
 import type { Group } from "three";
 
 function Head() {
@@ -15,7 +17,7 @@ function Head() {
     const loader = new OBJLoader();
 
     loader.load(
-      "/src/assets/head.obj",
+      headModelUrl,
       (object) => {
         const box = new Box3().setFromObject(object);
         const center = box.getCenter(new Vector3());

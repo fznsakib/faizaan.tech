@@ -2,13 +2,17 @@ import { Canvas } from "@react-three/fiber";
 import { ThemeProvider } from "styled-components";
 
 import * as Styled from "./App.styled";
-
+import githubIcon from "./assets/github.png";
+import gmailIcon from "./assets/gmail.png";
+import letterboxdIcon from "./assets/letterboxd.png";
+import linkedinIcon from "./assets/linkedin.png";
+import stravaIcon from "./assets/strava.png";
+import AnimatedElement from "./components/AnimatedElement";
 import Background from "./components/Background";
 import GlassPanel from "./components/GlassPanel";
 import Head from "./components/Head";
 import MusicPlayer from "./components/MusicPlayer";
 import PixelIcon from "./components/PixelIcon";
-import AnimatedElement from "./components/AnimatedElement";
 import { AudioProvider } from "./context/AudioContext";
 import { theme } from "./styles/theme";
 
@@ -40,31 +44,31 @@ function App() {
 
         <Styled.SocialIconsContainer>
           <PixelIcon
-            imagePath="src/assets/linkedin.png"
+            imagePath={linkedinIcon}
             link={"https://www.linkedin.com/in/faizaan-sakib/"}
             initialPixelSize={12}
             size={80}
           />
           <PixelIcon
-            imagePath="src/assets/gmail.png"
+            imagePath={gmailIcon}
             link={"mailto:fznsakib@gmail.com"}
             initialPixelSize={12}
             size={80}
           />
           <PixelIcon
-            imagePath="src/assets/github.png"
+            imagePath={githubIcon}
             link={"https://github.com/fznsakib"}
             initialPixelSize={12}
             size={80}
           />
           <PixelIcon
-            imagePath="src/assets/letterboxd.png"
+            imagePath={letterboxdIcon}
             link={"https://letterboxd.com/fznsakib/"}
             initialPixelSize={12}
             size={80}
           />
           <PixelIcon
-            imagePath="src/assets/strava.png"
+            imagePath={stravaIcon}
             link={"https://strava.app.link/VhdUXhuiWRb"}
             initialPixelSize={12}
             size={80}
