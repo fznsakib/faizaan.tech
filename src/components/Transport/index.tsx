@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 
+import { transportKeyAction } from "./keys";
 import * as Styled from "./Transport.styled";
 import { engine } from "../../audio/engine";
 import { useMusicState } from "../../audio/react";
@@ -13,15 +14,20 @@ const Transport: React.FC = () => {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
-      if (!engine.getSnapshot().unlocked) return;
       const target = event.target instanceof Element ? event.target : null;
-      if (target?.closest(TYPING)) return;
-      if (event.key === " ") {
-        if (target?.closest(CONTROLS)) return; // a focused button handles its own Space
+      const action = transportKeyAction({
+        key: event.key,
+        repeat: event.repeat,
+        defaultPrevented: event.defaultPrevented,
+        modifier: event.metaKey || event.ctrlKey || event.altKey,
+        unlocked: engine.getSnapshot().unlocked,
+        onTypingField: Boolean(target?.closest(TYPING)),
+        onControl: Boolean(target?.closest(CONTROLS)),
+      });
+      if (action === "toggle") {
         event.preventDefault();
         engine.toggle();
-      } else if (event.key === "m" || event.key === "M") {
+      } else if (action === "mute") {
         engine.setMuted(!engine.getSnapshot().muted);
       }
     };
