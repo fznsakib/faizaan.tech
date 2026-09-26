@@ -6,6 +6,7 @@ import { Box3, Group, MathUtils, Mesh, MeshStandardMaterial, Vector3 } from "thr
 
 import headModelUrl from "../../assets/head.glb?url";
 import { engine } from "../../audio/engine";
+import { CAMERA_Z, fitCamera } from "../../choreography/fit";
 import { bob, nodDrive, Spring } from "../../choreography/nod";
 import { choreographyProbe } from "../../choreography/probe";
 import { prefersReducedMotion } from "../../hooks/reducedMotion";
@@ -13,7 +14,6 @@ import { prefersReducedMotion } from "../../hooks/reducedMotion";
 import type { DirectionalLight, Object3D } from "three";
 
 const D = MathUtils.degToRad;
-const CAMERA_Z = 5;
 const BASE_EMISSIVE = 0.04;
 const BASE_RIM = 1.5;
 const MOUSE_YAW = D(22);
@@ -67,7 +67,7 @@ function Head() {
 
   useEffect(() => () => material.dispose(), [material]);
 
-  useFrame(({ pointer, clock, camera }, delta) => {
+  useFrame(({ pointer, clock, camera, size }, delta) => {
     const head = rig.current;
     if (!head) return;
     const frame = engine.frame;
@@ -85,7 +85,8 @@ function Head() {
     let squash = 0;
     let emissive = BASE_EMISSIVE;
     let rimIntensity = BASE_RIM;
-    let cameraZ = CAMERA_Z;
+    const fit = fitCamera(size.width, size.height); // CAMERA_Z on desktop; further back on phones
+    let cameraZ = fit;
 
     if (frame.isPlaying && frame.bpm > 0 && !reduced) {
       const drive = nodDrive(frame);
@@ -99,7 +100,7 @@ function Head() {
         dt
       );
       yaw = D(1.5) * Math.sin(2 * Math.PI * frame.barPhase - 0.6) * confidence;
-      cameraZ = CAMERA_Z - 0.35 * frame.section;
+      cameraZ = fit - 0.35 * frame.section * (fit / CAMERA_Z);
     } else {
       const t = clock.elapsedTime;
       const breathe = reduced ? 0 : 1;

@@ -3,6 +3,7 @@ import { lazy, Suspense } from "react";
 import { ThemeProvider } from "styled-components";
 
 import * as Styled from "./App.styled";
+import { fitCamera } from "./choreography/fit";
 import Background from "./components/Background";
 import GlassPanel from "./components/GlassPanel";
 import Head from "./components/Head";
@@ -30,6 +31,7 @@ function App() {
       <Styled.AppContainer>
         <Canvas
           dpr={[1, 1.75]}
+          camera={{ position: [0, 0, fitCamera(window.innerWidth, window.innerHeight)] }}
           style={{
             position: "fixed",
             top: 0,
