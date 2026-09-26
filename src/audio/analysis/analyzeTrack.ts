@@ -36,7 +36,7 @@ interface Grid {
 
 const BANDS = Object.keys(BAND_RANGES) as AnalysisBand[];
 
-/** Offline beat analysis: band spectral flux → ACF tempo → grid fit → downbeat vote. */
+/** Offline beat analysis: band spectral flux → ACF tempo → grid fit (checking 3:2 relatives) → downbeat vote. */
 export function analyzeTrack(pcm: Float32Array, sampleRate: number): Analysis {
   const hop = Math.round(sampleRate / 100);
   const fps = sampleRate / hop;
@@ -52,7 +52,7 @@ export function analyzeTrack(pcm: Float32Array, sampleRate: number): Analysis {
   for (let i = 0; i < onset.length; i++) {
     onset[i] = env.full[i] + env.kick[i] + 0.5 * env.snare[i];
   }
-  const grid = fitGrid(onset, fps, duration, estimateTempo(onset, fps));
+  const grid = fitBeat(onset, fps, duration, estimateTempo(onset, fps));
   return {
     sampleRate,
     duration,
@@ -196,6 +196,33 @@ function fitGrid(onset: Float32Array, fps: number, duration: number, center: num
     const wrapped = ((phase % period) + period) % period;
     const score = gridScore(onset, fps, best.bpm, wrapped, 0, duration);
     if (score > best.score) best = { ...best, phase: wrapped, score };
+  }
+  return best;
+}
+
+/** An alternative beat must beat the ACF's by this factor: the ACF + prior is right far more often than not. */
+const SWITCH_MARGIN = 1.1;
+
+/**
+ * Fit the ACF tempo t, then check the 3:2 relatives 1.5t and t/1.5. A dotted (3+3+2) groove can lock the ACF onto
+ * 2/3 of the beat with a grid that fits as well as the true one (etaki 25–55 s: 100 vs 150 BPM, 8.5 vs 8.4× mean).
+ * What tells them apart is the off-beats: the true beat's midpoints are its 8ths and carry onsets, a 3:2 grid's
+ * midpoints fall on 16ths. So each grid is scored on its beats plus its midpoints.
+ */
+function fitBeat(onset: Float32Array, fps: number, duration: number, tempo: number): Grid {
+  const strength = (grid: Grid) =>
+    grid.score + gridScore(onset, fps, grid.bpm, grid.phase + 30 / grid.bpm, 0, duration);
+  const acf = fitGrid(onset, fps, duration, tempo);
+  let best = acf;
+  let bestStrength = strength(acf) * SWITCH_MARGIN;
+  for (const bpm of [tempo * 1.5, tempo / 1.5]) {
+    if (bpm < 60 || bpm > 200) continue;
+    const alternative = fitGrid(onset, fps, duration, bpm);
+    const alternativeStrength = strength(alternative);
+    if (alternativeStrength > bestStrength) {
+      best = alternative;
+      bestStrength = alternativeStrength;
+    }
   }
   return best;
 }
