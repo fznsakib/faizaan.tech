@@ -18,6 +18,8 @@ const BASE_EMISSIVE = 0.04;
 const BASE_RIM = 1.5;
 const MOUSE_YAW = D(22);
 const MOUSE_PITCH = D(10);
+/** Stand-in for energy when DJ hits drive the head without the song. */
+const JAM_ENERGY = 0.6;
 
 /** Orient and scale the scan, and move its origin to the neck so pitch reads as a nod, not a spin. */
 function prepareModel(scene: Object3D, material: MeshStandardMaterial) {
@@ -97,17 +99,22 @@ function Head() {
         dt
       );
       yaw = D(1.5) * Math.sin(2 * Math.PI * frame.barPhase - 0.6) * confidence;
-      squash = 0.012 * frame.kick;
-      emissive = BASE_EMISSIVE + 0.2 * frame.kick * frame.energy;
-      rimIntensity = BASE_RIM + 10 * frame.snare;
       cameraZ = CAMERA_Z - 0.35 * frame.section;
     } else {
       const t = clock.elapsedTime;
       const breathe = reduced ? 0 : 1;
-      pitch = springs.pitch.step(D(0.8) * Math.sin((2 * Math.PI * t) / 4.5) * breathe, dt);
+      const jamNod = (frame.jamming && !reduced ? D(6) : 0) * frame.kick; // DJ kicks nod the head without music
+      pitch = springs.pitch.step(D(0.8) * Math.sin((2 * Math.PI * t) / 4.5) * breathe + jamNod, dt);
       lift = springs.lift.step(0, dt);
       roll = springs.roll.step(0, dt);
       yaw = D(2) * Math.sin(t * 0.37) * Math.sin(t * 0.23) * breathe;
+    }
+
+    if ((frame.isPlaying || frame.jamming) && !reduced) {
+      const drive = frame.isPlaying ? frame.energy : JAM_ENERGY;
+      squash = 0.012 * frame.kick;
+      emissive = BASE_EMISSIVE + 0.2 * frame.kick * drive;
+      rimIntensity = BASE_RIM + 10 * frame.snare;
     }
 
     head.rotation.set(mouse.current.pitch + pitch, mouse.current.yaw + yaw, roll);

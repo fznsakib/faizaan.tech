@@ -6,6 +6,7 @@ import { forgetStyles, setStyle } from "../../choreography/dom";
 import {
   createFlipState,
   headerVariation,
+  jamHeaderVariation,
   KickHistory,
   letterFlipped,
   SHOCKWAVE_SPEED,
@@ -57,10 +58,13 @@ const NameHeader: React.FC = () => {
     };
   }, []);
 
-  useMusicFrame((frame) => {
-    const active = frame.isPlaying && !prefersReducedMotion();
-    state.kicks.push(frame.time, active ? frame.kick : 0);
-    updateFlip(state.flip, active ? frame.sectionLevel : 0, frame.sectionChanged, frame.time);
+  useMusicFrame((frame, now) => {
+    const reduced = prefersReducedMotion();
+    const active = (frame.isPlaying || frame.jamming) && !reduced;
+    // Real time, not song time: song time is frozen while paused-and-jamming.
+    const seconds = now / 1000;
+    state.kicks.push(seconds, active ? frame.kick : 0);
+    updateFlip(state.flip, frame.isPlaying && !reduced ? frame.sectionLevel : 0, frame.sectionChanged, frame.time);
     const headX = window.innerWidth / 2;
     letters.current.forEach((span, i) => {
       if (!active) {
@@ -71,14 +75,18 @@ const NameHeader: React.FC = () => {
         return;
       }
       const distance = Math.abs((centres.current[i] ?? headX) - headX);
-      const kick = state.kicks.at(frame.time - distance / SHOCKWAVE_SPEED);
+      const kick = state.kicks.at(seconds - distance / SHOCKWAVE_SPEED);
       const flipped = letterFlipped(state.flip, frame.time, distance);
       setStyle(span, "fontFamily", flipped ? DROP_FONT : "");
       setStyle(span, "fontSize", flipped ? "0.8em" : "");
       setStyle(
         span,
         "fontVariationSettings",
-        flipped ? '"wght" 900, "ROND" 100' : headerVariation(frame.section, frame.energy, kick)
+        flipped
+          ? '"wght" 900, "ROND" 100'
+          : frame.isPlaying
+            ? headerVariation(frame.section, frame.energy, kick)
+            : jamHeaderVariation(kick)
       );
       setStyle(span, "transform", `translateY(${(-0.05 * kick).toFixed(3)}em) scaleY(${(1 + 0.06 * kick).toFixed(3)})`);
     });

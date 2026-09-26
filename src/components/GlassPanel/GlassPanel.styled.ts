@@ -35,7 +35,6 @@ export const GlassShape = styled.div`
   animation-name: ${float};
   animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
-  transition: opacity 0.8s ease-out;
   transform-style: preserve-3d;
   perspective: 1000px;
 

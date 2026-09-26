@@ -5,6 +5,7 @@ import {
   eqVariation,
   eqWeight,
   headerVariation,
+  jamHeaderVariation,
   headerWeight,
   idleScanWeight,
   KickHistory,
@@ -143,6 +144,12 @@ describe("font variation strings", () => {
     }
     expect(weights.size).toBeLessThanOrEqual(9);
     expect(ronds.size).toBeLessThanOrEqual(5);
+  });
+
+  it("jams the header between 700 and 900 in steps of 50", () => {
+    expect(jamHeaderVariation(0)).toBe('"wght" 700');
+    expect(jamHeaderVariation(0.3)).toBe('"wght" 750');
+    expect(jamHeaderVariation(1)).toBe('"wght" 900');
   });
 
   it("limits the header to 7 weights between 600 and 900", () => {

@@ -30,9 +30,9 @@ const SubtitleStack: React.FC = () => {
       let settings: string;
       if (reduced) {
         settings = '"wght" 500, "ROND" 0';
-      } else if (frame.isPlaying) {
+      } else if (frame.isPlaying || frame.jamming) {
         levels[band] = vuStep(levels[band], frame.bands[band] ?? 0, dt);
-        settings = eqVariation(levels[band], frame.section);
+        settings = eqVariation(levels[band], frame.isPlaying ? frame.section : 0);
       } else {
         levels[band] = 0;
         settings = `"wght" ${quantise(idleScanWeight(now / 1000, i), 10)}, "ROND" 0`;

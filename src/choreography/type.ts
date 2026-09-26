@@ -123,3 +123,8 @@ export function letterFlipped(state: FlipState, time: number, distance: number):
   const reached = time - state.changedAt >= distance / SHOCKWAVE_SPEED;
   return state.level === 1 ? reached : !reached;
 }
+
+/** `font-variation-settings` for a header letter while jamming without the song (idle weight 700 + kick). */
+export function jamHeaderVariation(kick: number): string {
+  return `"wght" ${quantise(700 + 200 * kick, HEADER_WEIGHT_STEP)}`;
+}
