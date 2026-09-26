@@ -420,3 +420,94 @@ describe("state subscription", () => {
     expect(listener).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("DJ mode hits", () => {
+  async function ready() {
+    const s = setup();
+    await s.engine.preload();
+    s.engine.unlock();
+    return s;
+  }
+
+  it("snaps a hit to the nearest 16th as heard while that moment is still ahead", async () => {
+    const { engine, ctx } = await playing();
+    audibleAt(ctx(), 1.0, 1000); // heard song time 0.95; currentTime 1.03
+    engine.hit("kick", 1000);
+    expect(engine.songTimeAtContext(ctx().oscillators[0].startAt!)).toBeCloseTo(1.0);
+  });
+
+  it("plays at once when the heard 16th is already past — never a whole 16th late", async () => {
+    const { engine, ctx } = await playing();
+    audibleAt(ctx(), 1.05, 1000); // heard song time 1.0 (on the grid); currentTime 1.08
+    engine.hit("kick", 1000);
+    expect(ctx().oscillators[0].startAt! - ctx().currentTime).toBeLessThan(0.01);
+  });
+
+  it("plays one voice when presses in the same 16th target the same moment", async () => {
+    const { engine, ctx } = await playing();
+    audibleAt(ctx(), 1.0, 1000);
+    engine.hit("kick", 1000);
+    audibleAt(ctx(), 1.005, 1005);
+    engine.hit("kick", 1005);
+    engine.hit("snare", 1005);
+    expect(ctx().oscillators.filter((o) => o.type === "sine")).toHaveLength(1);
+    expect(ctx().oscillators.filter((o) => o.type === "triangle")).toHaveLength(1);
+  });
+
+  it("plays immediately when nothing is playing", async () => {
+    const { engine, ctx } = await ready();
+    ctx().currentTime = 3;
+    engine.hit("hat");
+    expect(ctx().sources[0].started?.when).toBeCloseTo(3.005);
+  });
+
+  it("routes voices through a 0.7 sampler gain into the bus", async () => {
+    const { engine, ctx } = await ready();
+    engine.hit("kick");
+    const [bus, , sampler] = ctx().gains;
+    expect(sampler.gain.value).toBeCloseTo(0.7);
+    expect(sampler.connections).toContain(bus);
+  });
+
+  it("soft-clips the mix between the bus and the mute gain", async () => {
+    const { ctx } = await ready();
+    const [bus, mute, , clipIn] = ctx().gains;
+    const [shaper] = ctx().shapers;
+    expect(bus.connections).toContain(clipIn);
+    expect(bus.connections).not.toContain(mute);
+    expect(clipIn.gain.value).toBeCloseTo(0.5);
+    expect(clipIn.connections).toContain(shaper);
+    expect(shaper.connections).toContain(mute);
+    expect(shaper.curve?.length).toBeGreaterThan(1000);
+  });
+
+  it("merges hits into the frame and flags jamming while paused", async () => {
+    const { engine, ctx } = await ready();
+    ctx().currentTime = 3;
+    engine.hit("kick");
+    audibleAt(ctx(), 3.005, 1000);
+    const frame = engine.update(1000);
+    expect(frame.kick).toBeCloseTo(1);
+    expect(frame.isPlaying).toBe(false);
+    expect(frame.jamming).toBe(true);
+    expect(Math.max(...frame.bands)).toBeGreaterThan(0);
+    audibleAt(ctx(), 5.1, 3000);
+    const later = engine.update(3000);
+    expect(later.jamming).toBe(false);
+    expect(Math.max(...later.bands)).toBe(0);
+  });
+
+  it("flags stabHit on exactly one frame", async () => {
+    const { engine, ctx } = await ready();
+    ctx().currentTime = 3;
+    engine.hit("stab");
+    audibleAt(ctx(), 3.0, 1000);
+    expect(engine.update(1000).stabHit).toBe(false);
+    audibleAt(ctx(), 3.01, 1016);
+    const frame = engine.update(1016);
+    expect(frame.stabHit).toBe(true);
+    expect(frame.stab).toBeCloseTo(Math.exp(-0.005 / 0.3));
+    audibleAt(ctx(), 3.02, 1032);
+    expect(engine.update(1032).stabHit).toBe(false);
+  });
+});

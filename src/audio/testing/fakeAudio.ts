@@ -2,7 +2,7 @@
 
 export class FakeParam {
   value: number;
-  readonly events: { type: "set" | "ramp" | "cancel"; value: number; time: number }[] = [];
+  readonly events: { type: "set" | "ramp" | "exp" | "cancel"; value: number; time: number }[] = [];
 
   constructor(value: number) {
     this.value = value;
@@ -16,6 +16,12 @@ export class FakeParam {
 
   linearRampToValueAtTime(value: number, time: number) {
     this.events.push({ type: "ramp", value, time });
+    this.value = value;
+    return this;
+  }
+
+  exponentialRampToValueAtTime(value: number, time: number) {
+    this.events.push({ type: "exp", value, time });
     this.value = value;
     return this;
   }
@@ -62,19 +68,47 @@ export class FakeSource extends FakeNode {
   onended: (() => void) | null = null;
   started: { when: number; offset: number } | null = null;
   stopped = false;
+  stopAt: number | null = null;
 
   start(when = 0, offset = 0) {
     this.started = { when, offset };
   }
 
-  stop() {
+  stop(when?: number) {
     this.stopped = true;
+    this.stopAt = when ?? null;
   }
 
   /** Simulate the track reaching its end. */
   finish() {
     this.onended?.();
   }
+}
+
+export class FakeOscillator extends FakeNode {
+  type = "sine";
+  readonly frequency = new FakeParam(440);
+  startAt: number | null = null;
+  stopAt: number | null = null;
+
+  start(when = 0) {
+    this.startAt = when;
+  }
+
+  stop(when = 0) {
+    this.stopAt = when;
+  }
+}
+
+export class FakeFilter extends FakeNode {
+  type = "lowpass";
+  readonly frequency = new FakeParam(350);
+  readonly Q = new FakeParam(1);
+}
+
+export class FakeWaveShaper extends FakeNode {
+  curve: Float32Array | null = null;
+  oversample = "none";
 }
 
 export class FakeAudioContext {
@@ -86,6 +120,9 @@ export class FakeAudioContext {
   readonly destination = new FakeNode();
   readonly gains: FakeGain[] = [];
   readonly sources: FakeSource[] = [];
+  readonly oscillators: FakeOscillator[] = [];
+  readonly filters: FakeFilter[] = [];
+  readonly shapers: FakeWaveShaper[] = [];
   outputTimestamp = { contextTime: 0, performanceTime: 0 };
   bufferDuration = 120;
   decodeCalls = 0;
@@ -113,6 +150,29 @@ export class FakeAudioContext {
     const source = new FakeSource();
     this.sources.push(source);
     return source;
+  }
+
+  createOscillator() {
+    const oscillator = new FakeOscillator();
+    this.oscillators.push(oscillator);
+    return oscillator;
+  }
+
+  createWaveShaper() {
+    const shaper = new FakeWaveShaper();
+    this.shapers.push(shaper);
+    return shaper;
+  }
+
+  createBiquadFilter() {
+    const filter = new FakeFilter();
+    this.filters.push(filter);
+    return filter;
+  }
+
+  createBuffer(_channels: number, length: number, sampleRate: number) {
+    const data = new Float32Array(length);
+    return { length, sampleRate, duration: length / sampleRate, getChannelData: () => data };
   }
 
   decodeAudioData() {

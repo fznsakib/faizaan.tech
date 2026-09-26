@@ -1,3 +1,5 @@
+import type { Voice } from "../../audio/types";
+
 export type TransportKeyAction = "toggle" | "mute" | null;
 
 export interface TransportKey {
@@ -22,4 +24,26 @@ export function transportKeyAction(input: TransportKey): TransportKeyAction {
   if (input.key === " ") return input.onControl ? null : "toggle";
   if (input.key === "m" || input.key === "M") return "mute";
   return null;
+}
+
+const DJ_KEYS = new Map<string, Voice>([
+  ["a", "kick"],
+  ["s", "snare"],
+  ["d", "hat"],
+  ["f", "stab"],
+]);
+
+/** Which DJ-mode voice a window keydown plays (A S D F), if any. */
+export function djKeyVoice(input: Omit<TransportKey, "onControl"> & { onControl?: boolean }): Voice | null {
+  if (input.repeat || input.defaultPrevented || input.modifier || !input.unlocked) return null;
+  if (input.onTypingField) return null;
+  return DJ_KEYS.get(input.key.toLowerCase()) ?? null;
+}
+
+/**
+ * Whether Enter on a focused pad button should hit. The pad handles Enter itself (and prevents the button's
+ * implicit click, which Chromium repeats while Enter is held); Space still activates once via click on keyup.
+ */
+export function padKeyHits(key: string, repeat: boolean): boolean {
+  return key === "Enter" && !repeat;
 }
