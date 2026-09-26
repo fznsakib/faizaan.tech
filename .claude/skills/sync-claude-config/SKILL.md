@@ -14,29 +14,30 @@ Run this after significant refactors to keep configuration files accurate.
 Read these files and extract current values:
 
 | File | Values to Extract |
-|------|------------------|
-| `src/context/AudioContext.tsx` | `AudioData` interface fields, default values |
-| `src/components/MusicPlayer/MusicAnalyser.ts` | `frequencyRanges` object, FFT params, normalization logic |
-| `src/components/MusicPlayer/index.ts` | Bass intensity calculation, smoothing factor |
-| `src/components/MusicPlayer/songs.ts` | `SONGS` array, `SONG_INDEX` |
-| `src/components/Head/index.tsx` | Material config, nod params, mouse influence values, transform |
-| `src/components/AnimatedSubtitle/index.tsx` | Smoothing factor, animation ranges |
-| `src/components/AnimatedHeader/index.tsx` | Timing params (threshold, cycle duration, random chance), smoothing factor |
+|------|--------------------|
+| `src/audio/types.ts` | `MusicFrame`/`BeatMap`/`EngineState` field names |
+| `src/audio/MusicEngine.ts` | Band analysis params (`writeBands`), DJ-mode constants (`hit`), engine internals |
+| `src/audio/frame.ts` | Onset decay constants, frame construction |
+| `src/choreography/nod.ts` | Spring/rebound/lift/accent constants |
+| `src/choreography/type.ts` | Shockwave speed, EQ ballistics, quantisation steps |
+| `src/choreography/faces.ts` | `CYCLE_FONTS`, `HISTORY` |
+| `src/choreography/shards.ts` | Shard counts, recut cadence |
+| `src/components/Head/index.tsx` | Material config, mouse influence, lighting, nod amplitude |
 | `src/App.tsx` | Component list, z-index values, lighting setup |
-| `src/styles/theme.ts` | Theme structure |
-| `src/styles/colors.ts` | Color values |
+| `src/styles/theme.ts` / `src/styles/colors.ts` | Theme structure |
 
 ### 2. Compare against config files
 
 Check each config file for drift:
 
-- `./CLAUDE.md` — frequency bins table, z-index table, key files table, dev commands
-- `.claude/skills/create-animation/SKILL.md` — bin names, smoothing example, z-index order
-- `.claude/skills/tune-animation/SKILL.md` — smoothing factors, intensity params, bin table, value ranges
-- `.claude/skills/audio-analysis/SKILL.md` — frequency ranges, FFT params, normalization, BPM params, song list
-- `.claude/skills/3d-model/SKILL.md` — material config, lighting values, transform, mouse values
+- `./CLAUDE.md` — audio pipeline description, MusicFrame table, z-index table, key files table, dev commands
+- `.claude/skills/create-animation/SKILL.md` — pattern references, z-index order
+- `.claude/skills/tune-animation/SKILL.md` — choreography constants, value ranges
+- `.claude/skills/audio-analysis/SKILL.md` — beat-map pipeline, live-band params, DJ-mode hit flow
+- `.claude/skills/3d-model/SKILL.md` — material config, lighting values, nod/mouse math
 - `.claude/agents/frontend-dev.md` — component list, z-index values
-- `.claude/agents/creative-dev.md` — bin names, key file paths, param values
+- `.claude/agents/creative-dev.md` — audio pipeline description, key file paths, param values
+- `.claude/agents/code-reviewer.md` — review criteria, z-index table
 
 ### 3. Report drift
 
@@ -44,8 +45,8 @@ List any differences found, grouped by config file.
 
 ### 4. Update config files
 
-Apply corrections to all affected files to match current source.
+Apply corrections to all affected files to match current source. Where a documented file/component no longer exists, rewrite that section to describe its replacement rather than deleting context.
 
 ### 5. Verify
 
-Run `yarn lint && yarn build` to confirm no source files were accidentally modified.
+Run `yarn lint && yarn build && yarn test` to confirm no source files were accidentally modified.

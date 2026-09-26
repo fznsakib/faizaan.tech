@@ -15,40 +15,41 @@ You are a read-only code reviewer for faizaan.tech, an audiovisual portfolio sit
 
 ### Performance
 
-- Animation state must use `useRef`, never `useState`
-- Per-frame updates must use direct DOM manipulation (`ref.current.style.*`)
-- Frequency data should be memoized with `useMemo`
-- Update functions should be wrapped in `useCallback`
+- Animation state must use `useRef`/`useMemo`, never `useState`
+- Per-frame DOM writes go through `setStyle` (`src/choreography/dom.ts`), which dedupes redundant writes — never raw `ref.current.style.*` in a frame loop
+- Per-effect math (curves, envelopes, quantisation) belongs in `src/choreography/*`, not inline in components
 - No object allocations inside animation loops or `useFrame`
-- No CSS transitions on properties animated per-frame
-- Three.js: use `useFrame`, never raw `requestAnimationFrame`
+- No CSS transitions on properties written per-frame
+- Three.js: use `useFrame`, never raw `requestAnimationFrame`; `Head` reads `engine.frame` directly rather than via a hook
 
 ### Code Style
 
-- Import order: React/libraries → local styled imports → context/hooks → types
+- Import order: React/libraries → local styled imports → audio/choreography hooks → types
 - Type-only imports use `import type { ... }`
 - Component directory structure: `index.tsx` + `*.styled.ts`
 - Styled-components: transient props use `$` prefix
 - No unused imports or variables
 
-### Audio Integration
+### Music Integration
 
-- Frequency bin names must match: `senior`, `software`, `engineer`, `fullstack`, `london`, `affirm`
-- Smoothing factors should be reasonable (0.1-0.9)
-- Values should be normalized to expected ranges (frequency 0-255, normalized 0-1)
-- Bass intensity uses RMS of senior+software bins
+- Per-frame data comes from `useMusicFrame` (never re-renders); coarse state from `useMusicState` (`useSyncExternalStore`)
+- `MusicFrame` fields (`kick`, `snare`, `hat`, `energy`, `section`, `bands`, `stab`, `jamming`, `beatConfidence`, …) are mutated in place each tick — never store a reference to `frame` across ticks
+- Values are already normalized (0..1); no raw byte-frequency data to rescale
+- New choreography math should be pure functions with a Vitest sibling test, not embedded in a component
+- Reduced motion (`prefersReducedMotion()`) should be checked inside the frame callback, not just once at mount
 
 ### Architecture
 
-- Z-index layering must be respected (Background:0 → GlassPanel:1 → Canvas:10 → Social:20 → PlayButton:1000)
+- Z-index layering must be respected: Background (-5) → GlassPanel (5) → Header/Subtitle (1) → Canvas (10) → Social/Transport (20) → MusicDebug (90) → Splash (100)
 - No circular dependencies
-- Audio data flows one way: MusicAnalyser → AudioProvider → components via useAudio()
-- New components should follow the AnimatedSubtitle pattern
+- Data flows one way: `MusicEngine` → `src/audio/ticker.ts`'s rAF loop → `useMusicFrame`/`useMusicState` → components; r3f components read `engine.frame` directly inside `useFrame`
+- New reactive components should follow the `SubtitleStack`/`GlassPanel` pattern (thin component, math in `src/choreography/`)
 
 ### Common Pitfalls
 
 - Using `useState` for animation values (causes re-renders every frame)
+- Writing DOM styles directly instead of through `setStyle` (loses the dedupe, and easy to fight with a stale cached value elsewhere)
 - Adding CSS transitions on animated properties (fights with direct DOM updates)
 - Creating new Three.js objects (Vector3, Material) inside `useFrame`
-- Forgetting to normalize frequency data (raw values are 0-255)
-- Using wrong frequency bin names (they're themed, not descriptive)
+- Putting per-effect math inline in a component instead of `src/choreography/*` (untestable, and easy to duplicate)
+- Forgetting `frame` is mutated in place — storing it in a ref/closure across ticks reads stale-looking-but-actually-live data

@@ -27,28 +27,30 @@ export const HeaderText = styled.h1`
   text-align: center;
   font-size: 12rem;
   z-index: 1;
-  font-weight: bold;
+  font-weight: 700;
   font-family: "Golos Text", sans-serif;
   white-space: nowrap;
 `;
 
-export const SubtitleText = styled.h2<{
-  bottom: string;
-  left: string;
-  width?: string;
-  size?: "lg" | "md";
-}>`
+/** One character of the name; width is locked at runtime so weight changes never reflow neighbours. */
+export const Letter = styled.span`
+  display: inline-block;
+  white-space: pre;
+  text-align: center;
+  font-variation-settings: "wght" 700;
+`;
+
+export const SubtitleText = styled.h2<{ $bottom: number; $left: number; $width?: number }>`
   position: fixed;
-  left: ${(props) => props.left}%;
-  bottom: ${(props) => props.bottom}%;
-  width: ${(props) => props.width}%;
-  font-size: ${(props) => (props.size === "md" ? "5em" : "6em")};
+  left: ${({ $left }) => $left}%;
+  bottom: ${({ $bottom }) => $bottom}%;
+  width: ${({ $width }) => ($width === undefined ? "auto" : `${$width}%`)};
+  font-size: 6em;
   line-height: 1;
   text-align: left;
   margin: 0;
   font-family: "Doto", sans-serif;
-  /* font-weight: 400; */
-  transition: letter-spacing 0.5s ease, font-weight 0.1s ease;
+  font-variation-settings: "wght" 500, "ROND" 0;
 `;
 
 export const SocialIconsContainer = styled.div`
