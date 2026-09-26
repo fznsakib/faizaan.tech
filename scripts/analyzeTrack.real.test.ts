@@ -37,3 +37,14 @@ describe.skipIf(process.platform !== "darwin")("beat maps for the bundled tracks
     }, 180_000);
   }
 });
+
+describe.skipIf(process.platform !== "darwin")("30 s clips", () => {
+  it("does not lock a confident 3:2 tempo error (etaki from 25 s)", () => {
+    const { pcm, sampleRate } = decodeWithAfconvert(path("src/assets/audio/etaki.mp3"));
+    const clip = pcm.slice(25 * sampleRate, 55 * sampleRate);
+    const analysis = analyzeTrack(clip, sampleRate);
+    const confidence = gridConfidence(analysis);
+    const octave = [150, 75].some((bpm) => Math.abs(analysis.bpm - bpm) <= 0.5);
+    expect(octave || confidence <= 0.5, `bpm ${analysis.bpm} at confidence ${confidence}`).toBe(true);
+  }, 180_000);
+});

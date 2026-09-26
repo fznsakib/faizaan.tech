@@ -1,5 +1,7 @@
 # Record Crate + "Now Spinning" — Design (v2 sub-project 4 of 4)
 
+> Update 2026-09-26: the live "now spinning" sleeve (Last.fm, iTunes previews, ?spin, runtime analysis) was removed at the owner's request; the crate holds bundled songs only.
+
 Date: 2026-09-26 · Branch: `fznsakib/v2-crate` (off `fznsakib/v2-music` @ `cdae6de`, containing sub-projects 1–3). Owner approved all actions.
 
 ## Intent

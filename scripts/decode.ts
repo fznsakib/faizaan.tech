@@ -3,13 +3,13 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-export interface DecodedAudio {
+export interface DecodedPcm {
   pcm: Float32Array;
   sampleRate: number;
 }
 
 /** Parse a 16-bit PCM WAV, downmixing to mono. */
-export function parseWav(buffer: Buffer): DecodedAudio {
+export function parseWav(buffer: Buffer): DecodedPcm {
   let offset = 12;
   let sampleRate = 0;
   let channels = 1;
@@ -41,7 +41,7 @@ export function parseWav(buffer: Buffer): DecodedAudio {
  * Decode an audio file to mono PCM with macOS afconvert. afconvert matches Chrome's
  * decodeAudioData sample-for-sample (gapless trimming included), so beat maps line up with playback.
  */
-export function decodeWithAfconvert(file: string): DecodedAudio {
+export function decodeWithAfconvert(file: string): DecodedPcm {
   if (process.platform !== "darwin") {
     throw new Error("Beat-map decoding needs macOS afconvert (it matches Chrome's decodeAudioData exactly).");
   }

@@ -525,116 +525,37 @@ describe("DJ mode hits", () => {
 });
 
 describe("crate", () => {
-  const preview = (overrides: Partial<TrackSource> = {}): TrackSource => ({
-    id: "p",
-    title: "P",
-    url: "/p.m4a",
-    loop: true,
-    loadBeatMap: async () => ({ ...baseMap, id: "p", bpm: 100 }),
-    ...overrides,
-  });
-
-  it("lists tracks and adds a new one at the front without switching", async () => {
-    const { engine, ctx } = await playing();
-    const listener = vi.fn();
-    engine.subscribe(listener);
-    const sources = ctx().sources.length;
-    engine.addTrack(preview());
-    expect(engine.getSnapshot().tracks.map((t) => t.id)).toEqual(["p", "a", "b"]);
-    expect(engine.getSnapshot()).toMatchObject({ track: "a", isPlaying: true });
-    expect(ctx().sources).toHaveLength(sources);
-    expect(listener).toHaveBeenCalled();
-    engine.addTrack(preview());
-    expect(engine.getSnapshot().tracks).toHaveLength(3);
-  });
-
   it("selects a track by id and keeps playing", async () => {
     const { engine, ctx } = await playing();
-    engine.addTrack(preview());
-    engine.select("p");
+    engine.select("b");
     await engine.preload();
-    expect(engine.getSnapshot()).toMatchObject({ track: "p", title: "P", bpm: 100, isPlaying: true });
+    expect(engine.getSnapshot()).toMatchObject({ track: "b", title: "B", bpm: 150, isPlaying: true });
     expect(ctx().lastSource.started?.offset).toBe(0);
   });
 
-  it("plays the picked track when paused, including the current one", async () => {
+  it("plays the picked track when paused, including reselecting the current one", async () => {
     const { engine, ctx } = await playing();
     engine.pause();
-    engine.addTrack(preview());
-    engine.select("p");
+    engine.select("b");
     await engine.preload();
-    expect(engine.getSnapshot()).toMatchObject({ track: "p", isPlaying: true });
+    expect(engine.getSnapshot()).toMatchObject({ track: "b", isPlaying: true });
     expect(ctx().lastSource.started?.offset).toBe(0);
     engine.pause();
-    engine.select("p");
-    expect(engine.getSnapshot()).toMatchObject({ track: "p", isPlaying: true });
-  });
-
-  it("passes the decoded audio to the beat-map loader", async () => {
-    const loader = vi.fn(async () => baseMap);
-    const engine = new MusicEngine([{ id: "x", title: "X", url: "/x.mp3", loadBeatMap: loader }], {
-      createContext: () => new FakeAudioContext() as unknown as AudioContext,
-      fetchArrayBuffer: async () => new ArrayBuffer(8),
-    });
-    await engine.preload();
-    expect(loader).toHaveBeenCalledWith({ duration: 120 });
+    engine.select("b");
+    expect(engine.getSnapshot()).toMatchObject({ track: "b", isPlaying: true });
   });
 
   it("plays a track whose beat map fails to load, with zero confidence", async () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
-    const { engine, ctx } = await playing();
-    engine.addTrack(preview({ loadBeatMap: async () => Promise.reject(new Error("worker timed out")) }));
-    engine.select("p");
+    const ctx = new FakeAudioContext();
+    const engine = new MusicEngine(
+      [{ id: "x", title: "X", url: "/x.mp3", loadBeatMap: async () => Promise.reject(new Error("decode failed")) }],
+      { createContext: () => ctx as unknown as AudioContext, fetchArrayBuffer: async () => new ArrayBuffer(8) }
+    );
     await engine.preload();
-    audibleAt(ctx(), 1.0, 1000);
+    engine.unlock();
+    engine.play(0);
+    audibleAt(ctx, 1.0, 1000);
     expect(engine.update(1000)).toMatchObject({ isPlaying: true, beatConfidence: 0 });
-  });
-
-  it("drops a runtime track that fails to load and falls back to a bundled one", async () => {
-    const info = vi.spyOn(console, "info").mockImplementation(() => {});
-    const error = vi.spyOn(console, "error").mockImplementation(() => {});
-    const { engine } = await playing({
-      fetch: (url) => (url === "/p.m4a" ? Promise.reject(new Error("blocked")) : Promise.resolve(new ArrayBuffer(8))),
-    });
-    engine.addTrack(preview());
-    engine.select("p");
-    await flush();
-    await engine.preload();
-    expect(engine.getSnapshot().status).not.toBe("error");
-    expect(engine.getSnapshot().tracks.map((t) => t.id)).toEqual(["a", "b"]);
-    expect(engine.getSnapshot()).toMatchObject({ track: "a", isPlaying: true });
-    expect(info).toHaveBeenCalledTimes(1);
-    expect(error).not.toHaveBeenCalled();
-  });
-
-  it("loops a looping track instead of advancing", async () => {
-    const { engine, ctx } = await playing();
-    engine.addTrack(preview());
-    engine.select("p");
-    await engine.preload();
-    const sources = ctx().sources.length;
-    ctx().lastSource.finish();
-    expect(engine.getSnapshot()).toMatchObject({ track: "p", isPlaying: true });
-    expect(ctx().sources).toHaveLength(sources + 1);
-    expect(ctx().lastSource.started?.offset).toBe(0);
-  });
-
-  it("skips looping tracks when the playlist advances on its own", async () => {
-    const { engine, ctx } = await playing();
-    engine.addTrack(preview());
-    ctx().lastSource.finish();
-    await engine.preload();
-    expect(engine.getSnapshot().track).toBe("b");
-    ctx().lastSource.finish();
-    await engine.preload();
-    expect(engine.getSnapshot().track).toBe("a");
-  });
-
-  it("next() still reaches looping tracks", async () => {
-    const { engine } = await playing();
-    engine.addTrack(preview());
-    engine.next();
-    engine.next();
-    expect(engine.getSnapshot().track).toBe("p");
   });
 });

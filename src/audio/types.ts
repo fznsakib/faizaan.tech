@@ -83,37 +83,16 @@ export interface EngineState {
   tracks: readonly TrackInfo[];
 }
 
-/** What the engine needs from decoded audio (an AudioBuffer satisfies it; no DOM types for Node-side code). */
-export interface DecodedAudio {
-  readonly numberOfChannels: number;
-  readonly sampleRate: number;
-  readonly length: number;
-  getChannelData(channel: number): Float32Array;
-}
-
-export interface TrackCredit {
-  label: string;
-  url: string;
-}
-
 export interface TrackSource {
   id: string;
   title: string;
   url: string;
-  /** Beat map for the decoded audio: bundled tracks import JSON; previews analyse `buffer`. */
-  loadBeatMap: (buffer: DecodedAudio) => Promise<BeatMap | null>;
-  /** Loop instead of advancing, and skip this track when the playlist advances on its own (30 s previews). */
-  loop?: boolean;
-  /** Sleeve image URL. */
-  artwork?: string;
-  /** Attribution shown with the sleeve. */
-  credit?: TrackCredit;
+  /** Beat map for this track: bundled tracks import the committed JSON. */
+  loadBeatMap: () => Promise<BeatMap | null>;
 }
 
 /** A crate entry as React sees it. */
 export interface TrackInfo {
   id: string;
   title: string;
-  artwork?: string;
-  credit?: TrackCredit;
 }

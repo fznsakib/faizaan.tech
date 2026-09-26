@@ -8,14 +8,6 @@ export const Crate = styled.div`
   align-items: flex-start;
 `;
 
-export const Record = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-  max-width: 7rem;
-`;
-
 export const Sleeve = styled.button<{ $current: boolean }>`
   all: unset;
   cursor: pointer;
@@ -35,27 +27,9 @@ export const Sleeve = styled.button<{ $current: boolean }>`
   }
 `;
 
-export const Art = styled.img`
-  width: 100%;
-  height: 100%;
-  image-rendering: pixelated;
-`;
-
 export const Initials = styled.span`
   font-family: "Doto", monospace;
   font-weight: 900;
   font-size: 1.1rem;
   color: rgba(255, 255, 255, 0.9);
-`;
-
-export const Credit = styled.a`
-  font-family: "Doto", monospace;
-  font-size: 0.7rem;
-  line-height: 1.2;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.7);
-
-  &:hover {
-    color: #ffffff;
-  }
 `;
