@@ -302,11 +302,16 @@ export const Stack = styled.div`
   display: flex;
   flex-direction: column;
   width: 318px;
+  /* docked at bottom 76 px, the cap keeps the top below the name header's letters (~236 px); the playlist gives */
+  max-height: max(290px, calc(100dvh - 312px));
 
-  /* centred at mid-height, this cap keeps the open drawer clear of the link dock (bottom 16 + 48 px) */
+  /* centred at mid-height, this cap keeps the open drawer clear of the link dock (bottom 16 + 48 px); the playlist
+     gives first, then the drawer scrolls (landscape phones) */
   ${DRAWER} & {
     width: var(--drawer-width);
     max-height: calc(100dvh - 144px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 `;
 
@@ -1040,7 +1045,9 @@ export const List = styled.ul`
   margin: 3px;
   padding: 2px 0;
   list-style: none;
+  flex: 0 1 auto;
   height: 100px; /* six whole rows; the seventh scrolls in */
+  min-height: 36px;
   overflow-y: auto;
   overscroll-behavior: contain;
   background: var(--pl-bg);
@@ -1089,7 +1096,6 @@ export const List = styled.ul`
 
   /* the drawer's give: the list shrinks (to two rows) before the drawer would reach the link dock */
   ${DRAWER} & {
-    flex: 0 1 auto;
     height: auto;
     min-height: 92px;
     max-height: 268px;

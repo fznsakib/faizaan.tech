@@ -130,6 +130,7 @@ const Player: React.FC = () => {
             aria-expanded={drawerOpen}
             aria-controls={DRAWER_ID}
             aria-label="Music player"
+            onMouseDown={keepFocus}
             onClick={() => setDrawerOpen((open) => !open)}
           >
             <MarkIcon />
@@ -139,7 +140,12 @@ const Player: React.FC = () => {
         )}
         <Styled.Stack ref={panel} id={DRAWER_ID}>
           <Styled.Window>
-            <Styled.TitleBar onDoubleClick={() => !drawer && setShaded((s) => !s)}>
+            <Styled.TitleBar
+              onDoubleClick={(event) => {
+                // the title bar's own buttons take fast clicks as clicks, not as a windowshade toggle
+                if (!drawer && !(event.target as Element).closest("button")) setShaded((s) => !s);
+              }}
+            >
               <Styled.Mark aria-hidden="true">
                 <MarkIcon />
               </Styled.Mark>
@@ -165,7 +171,12 @@ const Player: React.FC = () => {
                 <SkinIcon />
               </Styled.TitleButton>
               {drawer ? (
-                <Styled.TitleButton type="button" aria-label="Close player" onClick={closeDrawer}>
+                <Styled.TitleButton
+                  type="button"
+                  aria-label="Close player"
+                  onMouseDown={keepFocus}
+                  onClick={closeDrawer}
+                >
                   <CloseIcon />
                 </Styled.TitleButton>
               ) : (
@@ -330,8 +341,8 @@ const Player: React.FC = () => {
             <Playlist id={PLAYLIST_ID} tracks={tracks} current={currentId} onPlay={play} />
           )}
         </Styled.Stack>
-        <Styled.VisuallyHidden aria-live="polite">
-          Now playing: {track.title} by {track.artist}
+        <Styled.VisuallyHidden aria-live="polite" aria-atomic="true">
+          {`Now playing: ${track.title} by ${track.artist}`}
         </Styled.VisuallyHidden>
       </Styled.Shell>
       {padOpen && (
