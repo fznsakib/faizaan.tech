@@ -429,11 +429,18 @@ describe("DJ mode hits", () => {
     return s;
   }
 
-  it("quantises hits to the next 16th of the playing track", async () => {
+  it("snaps a hit to the nearest 16th as heard while that moment is still ahead", async () => {
     const { engine, ctx } = await playing();
-    ctx().currentTime = 1.07;
-    engine.hit("kick");
-    expect(engine.songTimeAtContext(ctx().oscillators[0].startAt!)).toBeCloseTo(1.125);
+    audibleAt(ctx(), 1.0, 1000); // heard song time 0.95; currentTime 1.03
+    engine.hit("kick", 1000);
+    expect(engine.songTimeAtContext(ctx().oscillators[0].startAt!)).toBeCloseTo(1.0);
+  });
+
+  it("plays at once when the heard 16th is already past — never a whole 16th late", async () => {
+    const { engine, ctx } = await playing();
+    audibleAt(ctx(), 1.05, 1000); // heard song time 1.0 (on the grid); currentTime 1.08
+    engine.hit("kick", 1000);
+    expect(ctx().oscillators[0].startAt! - ctx().currentTime).toBeLessThan(0.01);
   });
 
   it("plays immediately when nothing is playing", async () => {

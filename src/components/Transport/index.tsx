@@ -29,7 +29,7 @@ const Transport: React.FC = () => {
         onControl: Boolean(target?.closest(CONTROLS)),
       };
       const voice = djKeyVoice(input);
-      if (voice) engine.hit(voice);
+      if (voice) engine.hit(voice, event.timeStamp);
       const action = transportKeyAction(input);
       if (action === "toggle") {
         event.preventDefault();

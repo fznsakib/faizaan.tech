@@ -20,7 +20,7 @@ const DjPad: React.FC = () => (
         aria-label={`${pad.label} (${pad.key.toUpperCase()})`}
         onPointerDown={(event) => {
           event.preventDefault(); // no focus, and pointer presses play here rather than on click
-          engine.hit(pad.voice);
+          engine.hit(pad.voice, event.timeStamp);
         }}
         onClick={(event) => {
           if (event.detail === 0) engine.hit(pad.voice); // keyboard activation only

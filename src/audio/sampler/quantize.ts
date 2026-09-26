@@ -1,5 +1,5 @@
-/** Song time of the next 16th-note grid point at least `lead` seconds after `songTime`. */
-export function nextSixteenth(songTime: number, beat0: number, bpm: number, lead = 0.01): number {
+/** Song time of the 16th-note grid point closest to `songTime`. */
+export function nearestSixteenth(songTime: number, beat0: number, bpm: number): number {
   const step = 60 / bpm / 4;
-  return beat0 + Math.ceil((songTime + lead - beat0) / step - 1e-9) * step;
+  return beat0 + Math.round((songTime - beat0) / step) * step;
 }

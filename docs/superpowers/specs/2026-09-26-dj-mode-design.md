@@ -17,7 +17,7 @@ Why (proposal, approved 2026-09-25): it's the most interactive thing on the page
 | Decision | Chosen | Rejected (why) |
 |---|---|---|
 | Sounds | Synthesized voices (Web Audio oscillators + noise) | Sample files (asset weight, licensing, decode latency) |
-| Timing | Quantise forward to the next 16th of the beat grid while a mapped track plays; immediate (+5 ms) otherwise | Unquantised (sloppy against the song); quantise to beats (up to 530 ms lag) |
+| Timing | While a mapped track plays: snap to the 16th **nearest to the heard position** (audible time + userOffset, from the key/pointer event's timestamp); if that moment is already past, play at once (`currentTime + 0.005`) — never a whole 16th late. Otherwise immediate. *(Revised after review: quantising forward from `currentTime` landed on-time presses a 16th late.)* | Unquantised (sloppy); forward-to-next-16th from the scheduling clock (lands on-time presses 133 ms late) |
 | Visual link | Hits become engine envelopes merged into `MusicFrame.kick/snare/hat` (max), plus `stab` / `stabHit` | A parallel visual path per component (duplicate logic) |
 | Idle activity | `frame.jamming` = a user hit within the last 2 s while not playing; envelope-driven visuals treat `isPlaying \|\| jamming` as active (the nod phase-lock stays playing-only) | Starting a metronome clock when jamming without music (surprising) |
 | Input | A S D F keys (window, ignores repeats/modifiers/typing/locked) + a "jam" pad toggled from the transport (pointerdown, for touch) | 2×2 invisible tap grid (undiscoverable, conflicts with links) |

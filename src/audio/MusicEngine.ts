@@ -1,6 +1,6 @@
 import { BAND_COUNT, clearFrame, createCursors, createFrame, writeFrame } from "./frame";
 import { HitLog, JAM_WINDOW } from "./sampler/hits";
-import { nextSixteenth } from "./sampler/quantize";
+import { nearestSixteenth } from "./sampler/quantize";
 import { createNoiseBuffer, playVoice } from "./sampler/voices";
 
 import type { FrameCursors } from "./frame";
@@ -234,8 +234,12 @@ export class MusicEngine {
     this.set({ muted });
   }
 
-  /** Play a DJ-mode voice for a user gesture: on the next 16th of the playing track, otherwise now. */
-  hit(voice: Voice): void {
+  /**
+   * Play a DJ-mode voice for a user gesture at `nowMs` (the event's timeStamp). While a mapped track plays it
+   * snaps to the 16th nearest to what the visitor *hears* (the scheduling clock runs ~30 ms ahead of that);
+   * if that moment is already past, it plays at once rather than a whole 16th late.
+   */
+  hit(voice: Voice, nowMs: number = performance.now()): void {
     this.unlock();
     const ctx = this.ctx;
     if (!ctx || !this.sampler) return;
@@ -243,7 +247,9 @@ export class MusicEngine {
     const map = this.tracks[this.current].map;
     let when = ctx.currentTime + 0.005;
     if (this.source && map && ctx.state === "running") {
-      when = this.contextTimeAtSong(nextSixteenth(this.songTimeAtContext(ctx.currentTime), map.beat0, map.bpm));
+      const heard = this.songTimeAtContext(this.audibleContextTime(nowMs) + this.userOffset);
+      const target = this.contextTimeAtSong(nearestSixteenth(heard, map.beat0, map.bpm));
+      if (target >= ctx.currentTime + 0.01) when = target;
     }
     playVoice(ctx, this.sampler, voice, when, this.noise);
     this.hits.record(voice, when);
