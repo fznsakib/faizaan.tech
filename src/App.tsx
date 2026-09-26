@@ -80,6 +80,7 @@ function App() {
       {/* three.js canvas */}
       <Styled.AppContainer>
         <Canvas
+          dpr={[1, 1.75]}
           style={{
             position: "fixed",
             top: 0,
@@ -89,7 +90,7 @@ function App() {
             zIndex: 10,
           }}
         >
-          <ambientLight intensity={5} />
+          <ambientLight intensity={0.3} />
           <pointLight
             position={[10, 10, 10]}
             intensity={20}
@@ -98,7 +99,9 @@ function App() {
           />
           <pointLight position={[-5, -5, -5]} intensity={5} />
 
-          <Head />
+          <Suspense fallback={null}>
+            <Head />
+          </Suspense>
         </Canvas>
       </Styled.AppContainer>
 
