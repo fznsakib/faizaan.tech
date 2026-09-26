@@ -21,11 +21,23 @@ export const FilterDefs = styled.svg`
   height: 0;
 `;
 
-/** One piece of glass. Its backdrop-filter (refraction or frost) is set inline, per piece. */
-export const Pane = styled.div`
+/**
+ * One piece: moved, tilted and squashed as a whole by a per-frame transform pivoting on the body's centre. A
+ * transform is not a backdrop root, so the glass inside still sees the page.
+ */
+export const Piece = styled.div`
   position: absolute;
   left: 0;
   top: 0;
+`;
+
+/**
+ * The glass: clipped to the outline (on itself, never an ancestor), with its backdrop-filter (refraction or frost)
+ * set inline.
+ */
+export const Pane = styled.div`
+  position: absolute;
+  inset: 0;
   overflow: hidden;
   background: linear-gradient(
     145deg,
@@ -33,33 +45,14 @@ export const Pane = styled.div`
     rgba(255, 255, 255, 0.02) 42%,
     rgba(255, 255, 255, 0.05) 100%
   );
-  box-shadow:
-    0 28px 50px -22px rgba(3, 18, 14, 0.55),
-    0 3px 10px -4px rgba(3, 18, 14, 0.3),
-    inset 0 1px 1px rgba(255, 255, 255, 0.55),
-    inset 0 -1px 1px rgba(255, 255, 255, 0.14),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
-    inset 0 22px 32px -26px rgba(255, 255, 255, 0.4),
-    inset 0 -22px 32px -24px rgba(0, 0, 0, 0.3);
 `;
 
-/** Bright bevelled edge: a gradient ring, lit from the upper right like the head. */
-export const Rim = styled.div`
+/** Bevel shading and the bright edge, stroked along the outline and lit from the upper right like the head. */
+export const RimArt = styled.svg`
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1.5px;
-  background: linear-gradient(
-    215deg,
-    rgba(255, 255, 255, 0.85) 0%,
-    rgba(255, 255, 255, 0.12) 32%,
-    rgba(255, 255, 255, 0.05) 60%,
-    rgba(255, 255, 255, 0.45) 100%
-  );
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
+  left: 0;
+  top: 0;
+  fill: none;
 `;
 
 /**
@@ -82,17 +75,10 @@ export const Sheen = styled.div`
   );
 `;
 
-/** Diagonal flare that flashes on beats and DJ stabs; its own layer, for the same reason as Sheen. */
+/** Diagonal flare, tinted per piece, that flashes on beats, DJ stabs and wall hits; its own layer, like Sheen. */
 export const Glint = styled.div`
   position: absolute;
   inset: 0;
   opacity: 0;
   will-change: opacity;
-  background: linear-gradient(
-    118deg,
-    rgba(255, 255, 255, 0) 30%,
-    rgba(255, 255, 255, 0.55) 47%,
-    rgba(255, 255, 255, 0.12) 55%,
-    rgba(255, 255, 255, 0) 68%
-  );
 `;

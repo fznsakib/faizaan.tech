@@ -5,27 +5,44 @@ import {
   collideWalls,
   createBodies,
   dragTo,
-  glassHalfSize,
+  glassExtent,
   glassMap,
   glassPose,
+  glassScale,
   glassSheen,
   hitGlass,
   initialState,
+  outlinePath,
   release,
   releaseVelocity,
   stepGlass,
   supportsRefraction,
 } from "./glass";
 
-import type { GlassBody, GlassInput, GlassState } from "./glass";
+import type { GlassBody, GlassInput, GlassState, Point } from "./glass";
+
+/** mulberry32: a small seeded PRNG so body layouts are reproducible. */
+const seeded = (seed: number) => () => {
+  seed = (seed + 0x6d2b79f5) | 0;
+  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
 
 const px = (map: ReturnType<typeof glassMap>, x: number, y: number) => {
   const i = (y * map.width + x) * 4;
   return { r: map.data[i], g: map.data[i + 1], a: map.data[i + 3] };
 };
 
+/** An axis-aligned ellipse outline filling a width x height box: symmetric, so the map must be too. */
+const ellipse = (width: number, height: number, n = 96): Point[] =>
+  Array.from({ length: n }, (_, i) => {
+    const angle = (2 * Math.PI * i) / n;
+    return { x: width / 2 + (width / 2) * Math.cos(angle), y: height / 2 + (height / 2) * Math.sin(angle) };
+  });
+
 describe("glassMap", () => {
-  const map = glassMap(200, 120, 40, 24);
+  const map = glassMap(ellipse(200, 120), 200, 120, 24);
 
   it("is RGBA of the requested size, opaque", () => {
     expect(map.data.length).toBe(200 * 120 * 4);
@@ -48,15 +65,33 @@ describe("glassMap", () => {
       expect(px(map, x, 60).r + px(map, 199 - x, 60).r).toBeLessThanOrEqual(256);
     }
   });
-});
 
-/** mulberry32: a small seeded PRNG so body layouts are reproducible. */
-const seeded = (seed: number) => () => {
-  seed = (seed + 0x6d2b79f5) | 0;
-  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-};
+  it("follows a weird outline: neutral in the middle, pushing inward along its normal at the rim", () => {
+    for (const seed of [1, 2, 3]) {
+      for (const body of createBodies(seeded(seed))) {
+        const left = -Math.min(...body.outline.map((point) => point.x));
+        const top = -Math.min(...body.outline.map((point) => point.y));
+        const local = body.outline.map((point) => ({ x: point.x + left, y: point.y + top }));
+        const map = glassMap(local, Math.ceil(body.w), Math.ceil(body.h), 20);
+        const centre = px(map, Math.floor(left), Math.floor(top));
+        expect(centre).toMatchObject({ r: 128, g: 128 });
+        const n = local.length;
+        for (let i = 0; i < n; i += 8) {
+          const [before, at, after] = [local[(i - 1 + n) % n], local[i], local[(i + 1) % n]];
+          // inward normal of a counter-clockwise outline (y down): the tangent turned toward the inside
+          const tx = after.x - before.x;
+          const ty = after.y - before.y;
+          const length = Math.hypot(tx, ty);
+          const inward = { x: -ty / length, y: tx / length };
+          const sample = px(map, Math.floor(at.x + 3 * inward.x), Math.floor(at.y + 3 * inward.y));
+          const push = { x: (sample.r - 128) / 127, y: (sample.g - 128) / 127 };
+          expect(Math.hypot(push.x, push.y)).toBeGreaterThan(0.6);
+          expect((push.x * inward.x + push.y * inward.y) / Math.hypot(push.x, push.y)).toBeGreaterThan(0.8);
+        }
+      }
+    }
+  });
+});
 
 const input = (over: Partial<GlassInput> = {}): GlassInput => ({
   t: 0,
@@ -87,6 +122,67 @@ describe("createBodies", () => {
     }
     expect(createBodies(seeded(1))).not.toEqual(createBodies(seeded(2)));
   });
+
+  const segmentsCross = (a: Point, b: Point, c: Point, d: Point) => {
+    const side = (p: Point, q: Point, r: Point) => Math.sign((q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x));
+    return side(a, b, c) * side(a, b, d) < 0 && side(c, d, a) * side(c, d, b) < 0;
+  };
+  const area = (outline: Point[]) =>
+    outline.reduce((sum, p, i) => {
+      const q = outline[(i + 1) % outline.length];
+      return sum + (p.x * q.y - q.x * p.y) / 2;
+    }, 0);
+
+  it("draws smooth, simple, substantial outlines", () => {
+    everyBody((body) => {
+      const { outline } = body;
+      const n = outline.length;
+      expect(n).toBeGreaterThanOrEqual(48);
+      for (let i = 0; i < n; i++) {
+        for (let j = i + 2; j < n; j++) {
+          if (i === 0 && j === n - 1) continue;
+          expect(segmentsCross(outline[i], outline[i + 1], outline[j], outline[(j + 1) % n])).toBe(false);
+        }
+        // smooth: consecutive edges turn by less than 20 degrees
+        const [a, b, c] = [outline[i], outline[(i + 1) % n], outline[(i + 2) % n]];
+        const turn = Math.atan2((b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x), (b.x - a.x) * (c.x - b.x) + (b.y - a.y) * (c.y - b.y));
+        expect(Math.abs(turn)).toBeLessThan((20 * Math.PI) / 180);
+      }
+      // counter-clockwise on screen (y down), and fills a good part of its bounding box
+      expect(area(outline)).toBeGreaterThan(0.5 * body.w * body.h);
+    });
+  });
+
+  it("is never a circle, ellipse or rounded rectangle: every outline is lopsided", () => {
+    everyBody((body) => {
+      const { outline } = body;
+      const n = outline.length;
+      let lopsided = 0;
+      for (let i = 0; i < n / 2; i++) {
+        const near = Math.hypot(outline[i].x, outline[i].y);
+        const far = Math.hypot(outline[i + n / 2].x, outline[i + n / 2].y);
+        lopsided = Math.max(lopsided, Math.abs(near - far) / ((near + far) / 2));
+      }
+      expect(lopsided).toBeGreaterThan(0.05);
+    });
+  });
+
+  it("gives every piece on a page its own shape", () => {
+    for (const seed of SEEDS) {
+      const outlines = createBodies(seeded(seed)).map((body) => JSON.stringify(body.outline));
+      expect(new Set(outlines).size).toBe(outlines.length);
+    }
+  });
+});
+
+describe("outlinePath", () => {
+  it("traces the outline as a closed, smooth SVG path in the pane's pixels", () => {
+    const body = createBodies(seeded(4))[0];
+    const d = outlinePath(body.outline, 0.5, 10, 20);
+    expect(d.startsWith(`M${(body.outline[0].x * 0.5 + 10).toFixed(1)},${(body.outline[0].y * 0.5 + 20).toFixed(1)}`)).toBe(true);
+    expect(d.endsWith("Z")).toBe(true);
+    expect(d.match(/C/g)?.length).toBe(body.outline.length);
+  });
 });
 
 const W = 1440;
@@ -112,10 +208,14 @@ const simulate = (
   return current;
 };
 
+/** Every vertex of the drawn outline lies inside the viewport. */
 const inside = (body: GlassBody, state: GlassState, width = W, height = H) => {
-  const { hw, hh } = glassHalfSize(body, width, height);
+  const e = glassExtent(body, width, height);
   return (
-    state.x >= hw - 1e-6 && state.x <= width - hw + 1e-6 && state.y >= hh - 1e-6 && state.y <= height - hh + 1e-6
+    state.x - e.left >= -1e-6 &&
+    state.x + e.right <= width + 1e-6 &&
+    state.y - e.top >= -1e-6 &&
+    state.y + e.bottom <= height + 1e-6
   );
 };
 
@@ -321,19 +421,19 @@ describe("applyFriction", () => {
 
 describe("collideWalls", () => {
   const body = createBodies(seeded(3))[1];
-  const { hw, hh } = glassHalfSize(body, W, H);
+  const e = glassExtent(body, W, H);
   const base = initialState(body, 0, W, H, false);
 
   it("reflects and damps the normal velocity, clamps inside, and records the hit", () => {
-    const hit = collideWalls({ ...base, x: hw - 30, vx: -1000, vy: 200 }, hw, hh, W, H, 7);
-    expect(hit.x).toBe(hw);
+    const hit = collideWalls({ ...base, x: e.left - 30, vx: -1000, vy: 200 }, e, W, H, 7);
+    expect(hit.x).toBe(e.left);
     expect(hit.vx).toBeCloseTo(800, 6);
     expect(hit.vy).toBe(200);
     expect(hit.impact).toBeGreaterThan(0);
     expect(hit.impactAt).toBe(7);
     expect(hit.impactAxis).toBe("x");
-    const floor = collideWalls({ ...base, y: H - hh + 5, vx: 0, vy: 1600 }, hw, hh, W, H, 8);
-    expect(floor.y).toBe(H - hh);
+    const floor = collideWalls({ ...base, y: H - e.bottom + 5, vx: 0, vy: 1600 }, e, W, H, 8);
+    expect(floor.y).toBe(H - e.bottom);
     expect(floor.vy).toBeCloseTo(-1280, 6);
     expect(floor.impactAxis).toBe("y");
     expect(floor.impact).toBeGreaterThan(hit.impact);
@@ -341,8 +441,24 @@ describe("collideWalls", () => {
 
   it("leaves a body inside the walls alone, and a slow touch doesn't ping", () => {
     const free = { ...base, vx: 300, vy: -300 };
-    expect(collideWalls(free, hw, hh, W, H, 1)).toEqual(free);
-    expect(collideWalls({ ...base, x: hw - 1, vx: -20 }, hw, hh, W, H, 1).impact).toBe(0);
+    expect(collideWalls(free, e, W, H, 1)).toEqual(free);
+    expect(collideWalls({ ...base, x: e.left - 1, vx: -20 }, e, W, H, 1).impact).toBe(0);
+  });
+
+  it("bounces a lumpy piece when its own bump touches the wall, never letting it poke out", () => {
+    everyBody((piece) => {
+      const reach = glassExtent(piece, W, H);
+      const size = glassScale(piece, W, H);
+      const hit = collideWalls({ ...initialState(piece, 0, W, H, false), x: W, vx: 900 }, reach, W, H, 3);
+      expect(hit.x).toBeCloseTo(W - reach.right, 6);
+      expect(hit.vx).toBeLessThan(0);
+      // what touches is the outline's own rightmost bump (plus a little room for its spin), not a symmetric box
+      const rightmost = Math.max(...piece.outline.map((point) => point.x)) * size;
+      const radius = Math.max(...piece.outline.map((point) => Math.hypot(point.x, point.y))) * size;
+      expect(hit.x + rightmost).toBeLessThanOrEqual(W + 1e-6);
+      expect(reach.right).toBeGreaterThanOrEqual(rightmost - 1e-6);
+      expect(reach.right).toBeLessThanOrEqual(rightmost + 0.1 * radius);
+    });
   });
 });
 
@@ -395,11 +511,11 @@ describe("throwing", () => {
 
 describe("dragging", () => {
   const body = createBodies(seeded(5))[0];
-  const { hw, hh } = glassHalfSize(body, W, H);
+  const e = glassExtent(body, W, H);
   const start = initialState(body, 0, W, H, false);
 
   it("follows the pointer immediately, keeping the grab offset", () => {
-    const held = dragTo(start, { x: 800, y: 500 }, { x: 12, y: -7 }, hw, hh, W, H);
+    const held = dragTo(start, { x: 800, y: 500 }, { x: 12, y: -7 }, e, W, H);
     expect(held.mode).toBe("held");
     expect(held.x).toBe(788);
     expect(held.y).toBe(507);
@@ -409,9 +525,9 @@ describe("dragging", () => {
   });
 
   it("stops at the walls", () => {
-    const held = dragTo(start, { x: -300, y: 5000 }, { x: 0, y: 0 }, hw, hh, W, H);
-    expect(held.x).toBe(hw);
-    expect(held.y).toBe(H - hh);
+    const held = dragTo(start, { x: -300, y: 5000 }, { x: 0, y: 0 }, e, W, H);
+    expect(held.x).toBe(e.left);
+    expect(held.y).toBe(H - e.bottom);
   });
 });
 
@@ -419,12 +535,19 @@ describe("hitGlass", () => {
   const bodies = createBodies(seeded(9));
   const states = bodies.map((body) => initialState(body, 0, W, H, false));
 
-  it("finds the topmost piece under the pointer, by its drawn size", () => {
+  it("finds the topmost piece under the pointer, by its actual outline", () => {
     const i = hitGlass(bodies, states, { x: states[2].x, y: states[2].y }, W, H);
     expect(i).toBe(2);
-    const { hw } = glassHalfSize(bodies[2], W, H);
-    expect(hitGlass(bodies, states, { x: states[2].x + hw - 1, y: states[2].y }, W, H)).toBe(2);
     expect(hitGlass(bodies, states, { x: -50, y: -50 }, W, H)).toBe(-1);
+    // just inside and just outside the outline's rightmost point
+    const size = glassScale(bodies[2], W, H);
+    const tip = bodies[2].outline.reduce((a, b) => (b.x > a.x ? b : a));
+    const alone = states.map((state, k) => (k === 2 ? state : { ...state, x: -9999 }));
+    expect(hitGlass(bodies, alone, { x: states[2].x + tip.x * size - 2, y: states[2].y + tip.y * size }, W, H)).toBe(2);
+    expect(hitGlass(bodies, alone, { x: states[2].x + tip.x * size + 2, y: states[2].y + tip.y * size }, W, H)).toBe(-1);
+    // the corners of its bounding box are empty glass-free space
+    const e = glassExtent(bodies[2], W, H);
+    expect(hitGlass(bodies, alone, { x: states[2].x + e.right - 1, y: states[2].y + e.bottom - 1 }, W, H)).toBe(-1);
     const stacked = states.map((state) => ({ ...state, x: 700, y: 450 }));
     expect(hitGlass(bodies, stacked, { x: 700, y: 450 }, W, H)).toBe(bodies.length - 1);
   });
@@ -433,10 +556,10 @@ describe("hitGlass", () => {
 describe("wall ping", () => {
   it("flashes and squashes on impact, scaled by speed, then settles", () => {
     everyBody((body) => {
-      const { hw, hh } = glassHalfSize(body, W, H);
+      const e = glassExtent(body, W, H);
       const base = initialState(body, 0, W, H, false);
-      const soft = collideWalls({ ...base, x: hw - 1, vx: -400 }, hw, hh, W, H, 10);
-      const hard = collideWalls({ ...base, x: hw - 1, vx: -3000 }, hw, hh, W, H, 10);
+      const soft = collideWalls({ ...base, x: e.left - 1, vx: -400 }, e, W, H, 10);
+      const hard = collideWalls({ ...base, x: e.left - 1, vx: -3000 }, e, W, H, 10);
       const quiet = glassPose(body, input({ t: 10.02, stab: 0, isPlaying: false }), base);
       const softPose = glassPose(body, input({ t: 10.02, stab: 0, isPlaying: false }), soft);
       const hardPose = glassPose(body, input({ t: 10.02, stab: 0, isPlaying: false }), hard);

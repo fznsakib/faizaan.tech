@@ -15,43 +15,76 @@ const bend = (s: number) => {
   return Math.min(1, (0.6 * x) / Math.sqrt(Math.max(1e-6, 1 - x * x)));
 };
 
+export interface Point {
+  x: number;
+  y: number;
+}
+
 /**
- * feDisplacementMap source for a rounded slab of thick glass: flat (128, 128) in the middle, and toward the rim
- * each pixel samples from further inward, along minus the outward normal of the rounded rectangle.
- * R/G = x/y sampling offset (128 = none), B = 128, A = 255.
+ * feDisplacementMap source for a slab of thick glass with this outline (a closed polygon in the map's pixels):
+ * flat (128, 128) in the middle, and within `bevel` px of the edge each pixel samples from further inward, along
+ * the outline's inward normal (from the nearest point on the outline). Outside the outline it keeps the rim's full
+ * bend, so the clip edge never shows a seam. R/G = x/y sampling offset (128 = none), B = 128, A = 255.
  */
-export function glassMap(width: number, height: number, radius: number, bevel: number): GlassMap {
+export function glassMap(outline: readonly Point[], width: number, height: number, bevel: number): GlassMap {
   const data = new Uint8ClampedArray(width * height * 4);
-  const r = clamp(radius, 0, Math.min(width, height) / 2);
-  const innerX = width / 2 - r;
-  const innerY = height / 2 - r;
+  const n = outline.length;
+  const ax = new Float64Array(n);
+  const ay = new Float64Array(n);
+  const ex = new Float64Array(n);
+  const ey = new Float64Array(n);
+  const el = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    const a = outline[i];
+    const b = outline[(i + 1) % n];
+    ax[i] = a.x;
+    ay[i] = a.y;
+    ex[i] = b.x - a.x;
+    ey[i] = b.y - a.y;
+    el[i] = ex[i] * ex[i] + ey[i] * ey[i] || 1;
+  }
+  const near = new Int32Array(n);
+  const crossings: number[] = [];
   for (let y = 0; y < height; y++) {
-    const py = y + 0.5 - height / 2;
-    const qy = Math.abs(py) - innerY;
+    const py = y + 0.5;
+    // this row's crossings of the outline (for inside/outside), and the only edges that can be within `bevel`
+    crossings.length = 0;
+    let count = 0;
+    for (let i = 0; i < n; i++) {
+      const by = ay[i] + ey[i];
+      if (ay[i] > py !== by > py) crossings.push(ax[i] + (ex[i] * (py - ay[i])) / ey[i]);
+      if (Math.min(ay[i], by) - bevel <= py && py <= Math.max(ay[i], by) + bevel) near[count++] = i;
+    }
+    crossings.sort((a, b) => a - b);
+    let crossed = 0;
     for (let x = 0; x < width; x++) {
-      const px = x + 0.5 - width / 2;
-      const qx = Math.abs(px) - innerX;
-      // signed distance to the rounded rectangle (negative inside) and its gradient, the outward normal
-      const ox = Math.max(qx, 0);
-      const oy = Math.max(qy, 0);
-      const outside = Math.hypot(ox, oy);
-      const sd = outside + Math.min(Math.max(qx, qy), 0) - r;
-      let nx: number;
-      let ny: number;
-      if (outside > 0) {
-        nx = ox / outside;
-        ny = oy / outside;
-      } else if (qx > qy) {
-        nx = 1;
-        ny = 0;
-      } else {
-        nx = 0;
-        ny = 1;
+      const px = x + 0.5;
+      while (crossed < crossings.length && crossings[crossed] < px) crossed++;
+      const inside = crossed % 2 === 1;
+      let best = bevel * bevel;
+      let qx = px;
+      let qy = py;
+      for (let k = 0; k < count; k++) {
+        const i = near[k];
+        const t = clamp(((px - ax[i]) * ex[i] + (py - ay[i]) * ey[i]) / el[i], 0, 1);
+        const cx = ax[i] + t * ex[i];
+        const cy = ay[i] + t * ey[i];
+        const d2 = (px - cx) * (px - cx) + (py - cy) * (py - cy);
+        if (d2 < best) {
+          best = d2;
+          qx = cx;
+          qy = cy;
+        }
       }
-      const m = bend(clamp(-sd / bevel, 0, 1));
+      const d = Math.sqrt(best);
+      // inward: away from the nearest edge point when inside, toward it when outside; flat beyond the bevel
+      const sign = inside ? 1 : -1;
+      const m = inside ? bend(clamp(d / bevel, 0, 1)) : 1;
+      const dx = qx !== px || qy !== py ? (sign * (px - qx)) / d : 0;
+      const dy = qx !== px || qy !== py ? (sign * (py - qy)) / d : 0;
       const i = (y * width + x) * 4;
-      data[i] = Math.round(128 - 127 * Math.sign(px) * nx * m);
-      data[i + 1] = Math.round(128 - 127 * Math.sign(py) * ny * m);
+      data[i] = Math.round(128 + 127 * dx * m);
+      data[i + 1] = Math.round(128 + 127 * dy * m);
       data[i + 2] = 128;
       data[i + 3] = 255;
     }
@@ -93,24 +126,36 @@ const MAX_THROW = 4500;
 const RESTITUTION = 0.8;
 const PING_MIN = 90;
 const PING_FULL = 1800;
-/** The ping after a wall hit: decay (s), wobble (Hz), and squash depth along the hit axis. */
+/** The ping after a wall hit: decay (s), bounce rate (Hz), and squash depth across the hit axis. */
 const PING_DECAY = 0.3;
 const PING_HZ = 6;
 const PING_SQUASH = 0.14;
 /** How far back (s) the release velocity looks at pointer samples. */
 const RELEASE_WINDOW = 0.08;
 
+export interface Extent {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
 export interface GlassBody {
   id: number;
   /** Anchor (its first home), as viewport fractions. */
   ax: number;
   ay: number;
-  /** Size (px) at a 1440 px-wide viewport. */
+  /** Bounding-box size (px) at a 1440 px-wide viewport. */
   w: number;
   h: number;
-  radius: number;
+  /** Closed, smooth, simple outline around the body's centre (px at 1440 wide), counter-clockwise on screen. */
+  outline: Point[];
+  /** How far the outline reaches from the centre each way (px at 1440 wide), with room for its spin. */
+  extent: Extent;
   /** 0..1: how thick the glass is; thicker bends more. */
   depth: number;
+  /** Glint colour (hue, deg). */
+  hue: number;
   /** Drift around home: radii as viewport fractions, periods in seconds. */
   orbit: { rx: number; ry: number; px: number; py: number; phase: number };
 }
@@ -184,39 +229,118 @@ export interface GlassPose {
 }
 
 /**
- * The pieces, placed around the page's furniture: a pill over the name, a lens beside the head, a slab over the
- * subtitle EQ and a tile on the right. Anchors and drift keep every centre below the transport strip (top 12%)
- * and above the social icons (bottom 15%).
+ * Where the pieces live and how big they are: over the name, beside the head, over the subtitle EQ and on the
+ * right. Anchors and drift keep every centre below the transport strip (top 12%) and above the icons (bottom 15%).
+ * Radius is the size of the piece's radial profile (px at 1440 wide).
  */
 const TEMPLATES = [
-  { ax: 0.3, ay: 0.24, w: 360, h: 140, radius: 70, depth: 0.7, rx: 0.07, ry: 0.06 },
-  { ax: 0.72, ay: 0.42, w: 230, h: 230, radius: 115, depth: 1, rx: 0.07, ry: 0.08 },
-  { ax: 0.17, ay: 0.68, w: 190, h: 290, radius: 48, depth: 0.55, rx: 0.05, ry: 0.06 },
-  { ax: 0.84, ay: 0.64, w: 170, h: 170, radius: 46, depth: 0.8, rx: 0.035, ry: 0.06 },
+  { ax: 0.3, ay: 0.24, radius: 105, depth: 0.7, rx: 0.07, ry: 0.06 },
+  { ax: 0.72, ay: 0.42, radius: 112, depth: 1, rx: 0.07, ry: 0.08 },
+  { ax: 0.17, ay: 0.68, radius: 115, depth: 0.55, rx: 0.05, ry: 0.06 },
+  { ax: 0.84, ay: 0.64, radius: 82, depth: 0.8, rx: 0.035, ry: 0.06 },
 ];
 
-/** The glass pieces: fixed shapes, with anchors, sizes and orbits jittered by `random`. */
+/**
+ * Shape families, each a radial profile r(θ) = 1 + Σ aₖ·sin(kθ + φₖ) for k = 2…5 (amplitudes are maxima; each
+ * piece rolls 55–100% of them), stretched by an aspect ratio and sheared. Odd harmonics make every piece lopsided;
+ * strong low ones bite a soft concave notch. Σ aₖ ≤ 0.6 keeps r ≥ 0.4, so no piece gets spindly.
+ */
+const SHAPES = [
+  { name: "pebble", aspect: [1.15, 1.5], amps: [0.09, 0.12, 0.04, 0.02], skew: 0.15 },
+  { name: "blob", aspect: [0.95, 1.2], amps: [0.16, 0.15, 0.08, 0.05], skew: 0.2 },
+  { name: "pill", aspect: [2, 2.6], amps: [0.05, 0.17, 0.06, 0.04], skew: 0.25 },
+  { name: "lens", aspect: [1, 1.25], amps: [0.06, 0.1, 0.12, 0.09], skew: 0.15 },
+  { name: "shard", aspect: [1.3, 1.7], amps: [0.22, 0.2, 0.07, 0.03], skew: 0.3 },
+];
+const OUTLINE_POINTS = 160;
+
+const between = (random: () => number, lo: number, hi: number) => lo + random() * (hi - lo);
+
+/** A smooth, lopsided outline around the origin, counter-clockwise on screen (y down). */
+function makeOutline(random: () => number, radius: number, shape: (typeof SHAPES)[number]): Point[] {
+  const amps = shape.amps.map((max) => max * between(random, 0.55, 1));
+  const phases = amps.map(() => random() * TAU);
+  const aspect = between(random, shape.aspect[0], shape.aspect[1]);
+  const [sx, sy] = [Math.sqrt(aspect), 1 / Math.sqrt(aspect)];
+  const skew = between(random, -shape.skew, shape.skew);
+  const turn = between(random, -0.5, 0.5);
+  const [cos, sin] = [Math.cos(turn), Math.sin(turn)];
+  return Array.from({ length: OUTLINE_POINTS }, (_, i) => {
+    const angle = (TAU * i) / OUTLINE_POINTS;
+    const r = radius * (1 + amps.reduce((sum, a, k) => sum + a * Math.sin((k + 2) * angle + phases[k]), 0));
+    const x = r * Math.cos(angle) * sx + skew * r * Math.sin(angle) * sy;
+    const y = r * Math.sin(angle) * sy;
+    return { x: x * cos - y * sin, y: x * sin + y * cos };
+  });
+}
+
+/** How far an outline reaches each way from its centre, over its whole in-plane spin. */
+function reach(outline: readonly Point[]): Extent {
+  const extent = { left: 0, right: 0, top: 0, bottom: 0 };
+  for (const degrees of [-SPIN, -SPIN / 2, 0, SPIN / 2, SPIN]) {
+    const [cos, sin] = [Math.cos((degrees * Math.PI) / 180), Math.sin((degrees * Math.PI) / 180)];
+    for (const { x, y } of outline) {
+      const [rx, ry] = [x * cos - y * sin, x * sin + y * cos];
+      extent.left = Math.max(extent.left, -rx);
+      extent.right = Math.max(extent.right, rx);
+      extent.top = Math.max(extent.top, -ry);
+      extent.bottom = Math.max(extent.bottom, ry);
+    }
+  }
+  return extent;
+}
+
+/** The glass pieces for one page load: each a different weird shape, with sizes, orbits and glint colour rolled by `random`. */
 export function createBodies(random: () => number = Math.random): GlassBody[] {
   const jitter = (amount: number) => (random() * 2 - 1) * amount;
+  // a different shape family for every piece, dealt fresh each load
+  const families = SHAPES.map((shape) => ({ shape, key: random() }))
+    .sort((a, b) => a.key - b.key)
+    .map(({ shape }) => shape);
   return TEMPLATES.map((template, id) => {
-    const size = 1 + jitter(0.08);
+    const outline = makeOutline(random, template.radius * (1 + jitter(0.15)), families[id]);
+    const xs = outline.map((point) => point.x);
+    const ys = outline.map((point) => point.y);
     return {
       id,
       ax: template.ax + jitter(0.02),
       ay: template.ay + jitter(0.02),
-      w: Math.round(template.w * size),
-      h: Math.round(template.h * size),
-      radius: Math.round(template.radius * size),
+      w: Math.max(...xs) - Math.min(...xs),
+      h: Math.max(...ys) - Math.min(...ys),
+      outline,
+      extent: reach(outline),
       depth: template.depth,
+      hue: random() * 360,
       orbit: {
-        rx: template.rx,
-        ry: template.ry,
+        rx: template.rx * (1 + jitter(0.2)),
+        ry: template.ry * (1 + jitter(0.2)),
         px: 19 + random() * 12,
         py: 23 + random() * 14,
         phase: random() * TAU,
       },
     };
   });
+}
+
+/**
+ * The outline as a closed SVG path in a pane's pixels (scaled by `scale`, centre at `ox`, `oy`), with Catmull-Rom
+ * curves through every point so the clip and the rim stroke are smooth, not faceted.
+ */
+export function outlinePath(outline: readonly Point[], scale: number, ox: number, oy: number): string {
+  const n = outline.length;
+  const at = (i: number) => {
+    const point = outline[((i % n) + n) % n];
+    return { x: point.x * scale + ox, y: point.y * scale + oy };
+  };
+  const f = (value: number) => value.toFixed(1);
+  let d = `M${f(at(0).x)},${f(at(0).y)}`;
+  for (let i = 0; i < n; i++) {
+    const [p0, p1, p2, p3] = [at(i - 1), at(i), at(i + 1), at(i + 2)];
+    d +=
+      `C${f(p1.x + (p2.x - p0.x) / 6)},${f(p1.y + (p2.y - p0.y) / 6)} ` +
+      `${f(p2.x - (p3.x - p1.x) / 6)},${f(p2.y - (p3.y - p1.y) / 6)} ${f(p2.x)},${f(p2.y)}`;
+  }
+  return `${d}Z`;
 }
 
 /** Beat dip over one beat: 0 on the beat, peaks (1) ~18% in, a small rebound, back to 0 — continuous across beats. */
@@ -228,10 +352,11 @@ export function glassScale(body: GlassBody, width: number, height: number): numb
   return Math.min(clamp(width / REF_WIDTH, 0.5, 1.25), (0.6 * width) / body.w, (0.45 * height) / body.h);
 }
 
-/** Half the drawn width and height (px): how close the centre may come to a wall. */
-export function glassHalfSize(body: GlassBody, width: number, height: number): { hw: number; hh: number } {
+/** How far the drawn outline reaches from the centre each way (px): how close the centre may come to each wall. */
+export function glassExtent(body: GlassBody, width: number, height: number): Extent {
   const size = glassScale(body, width, height);
-  return { hw: (body.w * size) / 2, hh: (body.h * size) / 2 };
+  const { left, right, top, bottom } = body.extent;
+  return { left: left * size, right: right * size, top: top * size, bottom: bottom * size };
 }
 
 /** The drift orbit's offset from home (px) at time `t`: a Lissajous with an off-ratio harmonic, so it never visibly repeats. */
@@ -254,11 +379,11 @@ function driftTarget(
   height: number,
   reduced: boolean,
 ): { x: number; y: number } {
-  const { hw, hh } = glassHalfSize(body, width, height);
+  const e = glassExtent(body, width, height);
   const offset = reduced ? { x: 0, y: 0 } : orbitOffset(body, t, width, height);
   return {
-    x: clamp(home.hx * width + offset.x, hw, width - hw),
-    y: clamp(home.hy * height + offset.y, hh, height - hh),
+    x: clamp(home.hx * width + offset.x, e.left, width - e.right),
+    y: clamp(home.hy * height + offset.y, e.top, height - e.bottom),
   };
 }
 
@@ -275,17 +400,11 @@ export function applyFriction(velocity: number, dt: number): number {
 }
 
 /**
- * The viewport edges are hard walls for a body's edges: clamp inside, reflect the normal velocity with restitution,
- * and record a hit fast enough to ping. Returns the same object when nothing touched a wall.
+ * The viewport edges are hard walls for a body's outline (`extent` from glassExtent): clamp inside, reflect the
+ * normal velocity with restitution, and record a hit fast enough to ping. Returns the same object when nothing
+ * touched a wall.
  */
-export function collideWalls(
-  state: GlassState,
-  hw: number,
-  hh: number,
-  width: number,
-  height: number,
-  t: number,
-): GlassState {
+export function collideWalls(state: GlassState, extent: Extent, width: number, height: number, t: number): GlassState {
   let { x, y, vx, vy } = state;
   let hit = 0;
   let axis = state.impactAxis;
@@ -297,10 +416,11 @@ export function collideWalls(
     }
     return -v * RESTITUTION;
   };
-  if (x < hw) [x, vx] = [hw, bounce(vx, vx < 0, "x")];
-  else if (x > width - hw) [x, vx] = [width - hw, bounce(vx, vx > 0, "x")];
-  if (y < hh) [y, vy] = [hh, bounce(vy, vy < 0, "y")];
-  else if (y > height - hh) [y, vy] = [height - hh, bounce(vy, vy > 0, "y")];
+  const { left, right, top, bottom } = extent;
+  if (x < left) [x, vx] = [left, bounce(vx, vx < 0, "x")];
+  else if (x > width - right) [x, vx] = [width - right, bounce(vx, vx > 0, "x")];
+  if (y < top) [y, vy] = [top, bounce(vy, vy < 0, "y")];
+  else if (y > height - bottom) [y, vy] = [height - bottom, bounce(vy, vy > 0, "y")];
   if (x === state.x && y === state.y) return state;
   const ping = hit >= PING_MIN;
   return {
@@ -321,11 +441,11 @@ export function collideWalls(
  */
 export function stepGlass(body: GlassBody, state: GlassState, input: StepInput): GlassState {
   const { t, width, height, reduced } = input;
-  const { hw, hh } = glassHalfSize(body, width, height);
+  const e = glassExtent(body, width, height);
   if (state.mode === "held") {
     // the pointer places it; only a resize can move it, back inside the walls
-    const x = clamp(state.x, hw, width - hw);
-    const y = clamp(state.y, hh, height - hh);
+    const x = clamp(state.x, e.left, width - e.right);
+    const y = clamp(state.y, e.top, height - e.bottom);
     return x === state.x && y === state.y ? state : { ...state, x, y };
   }
   let next = state;
@@ -344,30 +464,29 @@ export function stepGlass(body: GlassBody, state: GlassState, input: StepInput):
       vx += (stiffness * (target.x - next.x) - damping * vx) * h;
       vy += (stiffness * (target.y - next.y) - damping * vy) * h;
     }
-    next = collideWalls({ ...next, x: next.x + vx * h, y: next.y + vy * h, vx, vy }, hw, hh, width, height, t);
+    next = collideWalls({ ...next, x: next.x + vx * h, y: next.y + vy * h, vx, vy }, e, width, height, t);
     if (next.mode === "thrown" && Math.hypot(next.vx, next.vy) < REST_SPEED) {
       const offset = reduced ? { x: 0, y: 0 } : orbitOffset(body, t, width, height);
       next = { ...next, mode: "drift", hx: (next.x - offset.x) / width, hy: (next.y - offset.y) / height };
     }
   }
-  return collideWalls(next, hw, hh, width, height, t);
+  return collideWalls(next, e, width, height, t);
 }
 
 /** While held, a body sits exactly where the pointer puts it (minus the grab offset), inside the walls. */
 export function dragTo(
   state: GlassState,
-  pointer: { x: number; y: number },
-  grab: { x: number; y: number },
-  hw: number,
-  hh: number,
+  pointer: Point,
+  grab: Point,
+  extent: Extent,
   width: number,
   height: number,
 ): GlassState {
   return {
     ...state,
     mode: "held",
-    x: clamp(pointer.x - grab.x, hw, width - hw),
-    y: clamp(pointer.y - grab.y, hh, height - hh),
+    x: clamp(pointer.x - grab.x, extent.left, width - extent.right),
+    y: clamp(pointer.y - grab.y, extent.top, height - extent.bottom),
   };
 }
 
@@ -406,17 +525,27 @@ export function releaseVelocity(samples: readonly PointerSample[], now: number):
   return { vx: tx / tt, vy: ty / tt };
 }
 
-/** The topmost body (last drawn) whose drawn rectangle contains `point`, ignoring tilt; -1 for none. */
+/** Even-odd point-in-polygon. */
+function insideOutline(outline: readonly Point[], x: number, y: number): boolean {
+  let inside = false;
+  for (let i = 0, j = outline.length - 1; i < outline.length; j = i++) {
+    const [a, b] = [outline[i], outline[j]];
+    if (a.y > y !== b.y > y && x < a.x + ((b.x - a.x) * (y - a.y)) / (b.y - a.y)) inside = !inside;
+  }
+  return inside;
+}
+
+/** The topmost body (last drawn) whose drawn outline contains `point`, ignoring tilt and spin; -1 for none. */
 export function hitGlass(
   bodies: readonly GlassBody[],
   states: readonly GlassState[],
-  point: { x: number; y: number },
+  point: Point,
   width: number,
   height: number,
 ): number {
   for (let i = bodies.length - 1; i >= 0; i--) {
-    const { hw, hh } = glassHalfSize(bodies[i], width, height);
-    if (Math.abs(point.x - states[i].x) <= hw && Math.abs(point.y - states[i].y) <= hh) return i;
+    const size = glassScale(bodies[i], width, height);
+    if (insideOutline(bodies[i].outline, (point.x - states[i].x) / size, (point.y - states[i].y) / size)) return i;
   }
   return -1;
 }
@@ -450,8 +579,9 @@ export function glassPose(body: GlassBody, input: GlassInput, state: GlassState)
   const u = (TAU * t) / orbit.px + orbit.phase;
   const v = (TAU * t) / orbit.py + orbit.phase * 1.7;
   const bob = isPlaying ? beatBob(input.beatPhase) : 0;
+  const e = glassExtent(body, width, height);
   const x = state.x;
-  const y = state.y + BOB_PX * size * bob;
+  const y = clamp(state.y + BOB_PX * size * bob, e.top, height - e.bottom);
 
   // bank with the drift; a cursor takes over most of that; lean into any throw or drag
   let rotateY = DRIFT_TILT * Math.cos(u);
@@ -469,7 +599,8 @@ export function glassPose(body: GlassBody, input: GlassInput, state: GlassState)
   // the ping: a flash and a wobbling squash along the axis it hit, scaled by how hard
   const since = t - state.impactAt;
   const ring = state.impact > 0 && since >= 0 ? state.impact * Math.exp(-since / PING_DECAY) : 0;
-  const wobble = ring > 0 ? ring * Math.cos(TAU * PING_HZ * since) : 0;
+  // rectified, so it only ever squashes into the wall it hit and never pokes through it
+  const wobble = ring > 0 ? ring * Math.max(0, Math.cos(TAU * PING_HZ * since)) : 0;
   const across = 1 - PING_SQUASH * wobble;
   const along = 1 + 0.5 * PING_SQUASH * wobble;
 

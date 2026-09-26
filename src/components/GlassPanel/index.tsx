@@ -1,19 +1,20 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 
-import { FilterDefs, GlassLayer, Glint, Pane, Rim, Sheen } from "./GlassPanel.styled";
+import { FilterDefs, GlassLayer, Glint, Pane, Piece, RimArt, Sheen } from "./GlassPanel.styled";
 import { engine } from "../../audio/engine";
 import { useMusicFrame } from "../../audio/react";
 import { setStyle } from "../../choreography/dom";
 import {
   createBodies,
   dragTo,
-  glassHalfSize,
+  glassExtent,
   glassMap,
   glassPose,
   glassScale,
   glassSheen,
   hitGlass,
   initialState,
+  outlinePath,
   release,
   releaseVelocity,
   stepGlass,
@@ -48,15 +49,22 @@ const TILT_TAU = 0.14;
 const REFRACTION_STEP = 3;
 const FILTER_INTERVAL_MS = 100;
 const RESIZE_DEBOUNCE_MS = 150;
+/** Displacement maps are baked at this fraction of the drawn size (they're smooth) and stretched back by feImage. */
+const MAP_SCALE = 0.5;
 /** Pointer history kept while dragging (s): enough for releaseVelocity's window. */
 const SAMPLE_HISTORY = 0.2;
 /** Presses on these never grab glass. */
 const INTERACTIVE = 'a, button, input, select, textarea, [role="dialog"], [aria-modal="true"]';
 
 interface Slab {
+  /** Bounding box of the drawn outline (px). */
   w: number;
   h: number;
-  radius: number;
+  /** Where the body's centre sits inside that box (px): the transform pivots here. */
+  ox: number;
+  oy: number;
+  /** The outline as an SVG path in the box's pixels: the clip and the rim. */
+  path: string;
   /** Displacement map as a data URI; empty when frosted. */
   map: string;
 }
@@ -86,15 +94,24 @@ function isPageSurface(target: EventTarget | null): boolean {
   );
 }
 
-/** Size every piece for the viewport and bake its displacement map. */
+/** Size every piece for the viewport, trace its outline, and bake its displacement map. */
 function cutSlabs(bodies: GlassBody[], width: number, height: number): Slab[] {
   return bodies.map((body) => {
     const size = glassScale(body, width, height);
-    const w = Math.round(body.w * size);
-    const h = Math.round(body.h * size);
-    const radius = Math.round(Math.min(body.radius * size, Math.min(w, h) / 2));
-    const bevel = Math.min(w, h) * (0.22 + 0.16 * body.depth);
-    return { w, h, radius, map: REFRACT ? toDataUri(glassMap(w, h, radius, bevel)) : "" };
+    const ox = -Math.min(...body.outline.map((point) => point.x)) * size;
+    const oy = -Math.min(...body.outline.map((point) => point.y)) * size;
+    const w = Math.ceil(body.w * size);
+    const h = Math.ceil(body.h * size);
+    let map = "";
+    if (REFRACT) {
+      const local = body.outline.map((point) => ({
+        x: (point.x * size + ox) * MAP_SCALE,
+        y: (point.y * size + oy) * MAP_SCALE,
+      }));
+      const bevel = Math.min(w, h) * (0.22 + 0.16 * body.depth) * MAP_SCALE;
+      map = toDataUri(glassMap(local, Math.ceil(w * MAP_SCALE), Math.ceil(h * MAP_SCALE), bevel));
+    }
+    return { w, h, ox, oy, path: outlinePath(body.outline, size, ox, oy), map };
   });
 }
 
@@ -119,7 +136,7 @@ const GlassPanel: React.FC = () => {
       initialState(body, performance.now() / 1000, window.innerWidth, window.innerHeight, prefersReducedMotion()),
     ),
   );
-  const panes = useRef<(HTMLDivElement | null)[]>([]);
+  const pieces = useRef<(HTMLDivElement | null)[]>([]);
   const sheens = useRef<(HTMLDivElement | null)[]>([]);
   const glints = useRef<(HTMLDivElement | null)[]>([]);
   const displacements = useRef<(SVGFEDisplacementMapElement | null)[][]>(bodies.map(() => []));
@@ -268,24 +285,24 @@ const GlassPanel: React.FC = () => {
     bodies.forEach((body, i) => {
       let state = states.current[i];
       if (held?.index === i) {
-        const { hw, hh } = glassHalfSize(body, width, height);
-        state = { ...dragTo(state, held.point, held.grab, hw, hh, width, height), ...releaseVelocity(held.samples, t) };
+        const extent = glassExtent(body, width, height);
+        state = { ...dragTo(state, held.point, held.grab, extent, width, height), ...releaseVelocity(held.samples, t) };
       } else {
         state = stepGlass(body, state, { t, dt, width, height, reduced });
       }
       states.current[i] = state;
 
-      const pane = panes.current[i];
+      const piece = pieces.current[i];
       const slab = slabs[i];
-      if (!pane || !slab) return;
+      if (!piece || !slab) return;
       const pose = glassPose(body, input, state);
       const turn = tilt.current[i];
       turn.x += (pose.rotateX - turn.x) * ease;
       turn.y += (pose.rotateY - turn.y) * ease;
       setStyle(
-        pane,
+        piece,
         "transform",
-        `translate3d(${(pose.x - slab.w / 2).toFixed(1)}px, ${(pose.y - slab.h / 2).toFixed(1)}px, 0) ` +
+        `translate3d(${(pose.x - slab.ox).toFixed(1)}px, ${(pose.y - slab.oy).toFixed(1)}px, 0) ` +
           `rotateX(${turn.x.toFixed(2)}deg) rotateY(${turn.y.toFixed(2)}deg) rotateZ(${pose.rotateZ.toFixed(2)}deg) ` +
           `scale(${(pose.scale * pose.squashX).toFixed(3)}, ${(pose.scale * pose.squashY).toFixed(3)})`,
       );
@@ -355,34 +372,52 @@ const GlassPanel: React.FC = () => {
         </FilterDefs>
       )}
       {slabs.map((slab, i) => {
-        const id = bodies[i].id;
+        const { id, hue } = bodies[i];
         const filter = REFRACT ? `url(#glass-${id}) ${CHROME_FILTER}` : FROST_FILTER;
         return (
-          <Pane
+          <Piece
             key={id}
             ref={(node) => {
-              panes.current[i] = node;
+              pieces.current[i] = node;
             }}
-            style={{
-              width: slab.w,
-              height: slab.h,
-              borderRadius: slab.radius,
-              backdropFilter: filter,
-              WebkitBackdropFilter: REFRACT ? undefined : filter,
-            }}
+            style={{ width: slab.w, height: slab.h, transformOrigin: `${slab.ox}px ${slab.oy}px` }}
           >
-            <Sheen
-              ref={(node) => {
-                sheens.current[i] = node;
-              }}
-            />
-            <Glint
-              ref={(node) => {
-                glints.current[i] = node;
-              }}
-            />
-            <Rim />
-          </Pane>
+            <Pane style={{ clipPath: `path("${slab.path}")`, backdropFilter: filter, WebkitBackdropFilter: REFRACT ? undefined : filter }}>
+              <Sheen
+                ref={(node) => {
+                  sheens.current[i] = node;
+                }}
+              />
+              <Glint
+                ref={(node) => {
+                  glints.current[i] = node;
+                }}
+                style={{
+                  background:
+                    `linear-gradient(118deg, transparent 30%, hsla(${hue.toFixed(0)}, 100%, 88%, 0.6) 47%, ` +
+                    `hsla(${hue.toFixed(0)}, 100%, 94%, 0.14) 55%, transparent 68%)`,
+                }}
+              />
+              <RimArt width={slab.w} height={slab.h}>
+                <defs>
+                  <linearGradient id={`rim-${id}`} x1="1" y1="0" x2="0" y2="1">
+                    <stop offset="0" stopColor="#fff" stopOpacity="0.95" />
+                    <stop offset="0.35" stopColor="#fff" stopOpacity="0.18" />
+                    <stop offset="0.7" stopColor="#fff" stopOpacity="0.08" />
+                    <stop offset="1" stopColor="#fff" stopOpacity="0.5" />
+                  </linearGradient>
+                  <linearGradient id={`depth-${id}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stopColor="#fff" stopOpacity="0.16" />
+                    <stop offset="0.55" stopColor="#fff" stopOpacity="0" />
+                    <stop offset="1" stopColor="#031210" stopOpacity="0.28" />
+                  </linearGradient>
+                </defs>
+                {/* strokes are centred on the outline and the clip keeps the inner half: an inner bevel glow, then the bright edge */}
+                <path d={slab.path} stroke={`url(#depth-${id})`} strokeWidth={26} />
+                <path d={slab.path} stroke={`url(#rim-${id})`} strokeWidth={3} />
+              </RimArt>
+            </Pane>
+          </Piece>
         );
       })}
     </GlassLayer>
