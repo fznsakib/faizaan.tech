@@ -1,4 +1,4 @@
-import { mkdirSync, statSync } from "node:fs";
+import { mkdirSync, renameSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -6,6 +6,7 @@ import { Document, NodeIO } from "@gltf-transform/core";
 import { ALL_EXTENSIONS, EXTMeshoptCompression, KHRMeshQuantization } from "@gltf-transform/extensions";
 import { MeshoptDecoder, MeshoptEncoder } from "meshoptimizer";
 
+import { isInside, parseFlags } from "./headmap/cli.ts";
 import { smoothstep, transferWeight } from "./headmap/falloff.ts";
 import { blurHeightField, sampleBilinear } from "./headmap/heightfield.ts";
 import { findChinY, findNoseTip, PointGrid } from "./headmap/landmarks.ts";
@@ -22,7 +23,14 @@ import {
 } from "./headmap/mesh.ts";
 import { AxisRayGrid } from "./headmap/ray.ts";
 import { applySimilarity, similarityFromPairs } from "./headmap/similarity.ts";
-import { quantizeNormals, quantizePositions, smoothMasked, smoothRim, vertexNormals } from "./headmap/surface.ts";
+import {
+  changedNeighbourhood,
+  quantizeNormals,
+  quantizePositions,
+  smoothMasked,
+  smoothRim,
+  vertexNormals,
+} from "./headmap/surface.ts";
 import { fitThinPlate } from "./headmap/thinplate.ts";
 
 import type { CropParams } from "./headmap/mesh.ts";
@@ -57,12 +65,48 @@ const USAGE = `usage: yarn headmap <capture.glb> [flags]
   --relax n           passes relaxing the head's face vertices across x/y before re-projecting (500)
   --face-smooth n     Taubin passes over the transferred face (6)
   --smooth n          Laplacian passes across the blend band (2)
-  --debug dir         also write the crop, the aligned crop and a weight map as GLBs into dir
+  --debug dir         also write GLBs of the crop (with the capture's photo — keep dir outside the repo),
+                      the aligned crop, the erased stock head and a weight map
   --out file          output (src/assets/head.glb)`;
 
-const flags = parseFlags(process.argv.slice(2));
+/** Stops with a message naming what to change, instead of a stack trace or a broken head. */
+function fail(message: string): never {
+  console.error(`headmap: ${message}`);
+  process.exit(1);
+}
+
+const FLAGS = {
+  nose: "vec3",
+  chin: "number",
+  "chin-depth": "number",
+  depth: "number",
+  window: "pair",
+  "window-y": "number",
+  "chin-cut": "number",
+  top: "number",
+  margin: "number",
+  tolerance: "number",
+  icp: "count",
+  "rim-smooth": "count",
+  blur: "number",
+  erase: "pair",
+  relax: "count",
+  "face-smooth": "count",
+  smooth: "count",
+  debug: "path",
+  out: "path",
+} as const;
+let flags: ReturnType<typeof parseFlags<keyof typeof FLAGS>>;
+try {
+  flags = parseFlags(process.argv.slice(2), FLAGS);
+} catch (error) {
+  fail(`${(error as Error).message}\n${USAGE}`);
+}
+const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const basePath = fileURLToPath(new URL("./assets/base-head.glb", import.meta.url));
 const out = flags.string("out") ?? fileURLToPath(new URL("../src/assets/head.glb", import.meta.url));
+const debugDir = flags.string("debug");
+if (debugDir && isInside(debugDir, repoRoot)) fail("--debug writes the capture's photo; point it outside the repo");
 
 await Promise.all([MeshoptDecoder.ready, MeshoptEncoder.ready]);
 const io = new NodeIO()
@@ -92,6 +136,8 @@ const capChinY =
   flags.number("chin") ??
   findChinY(capture.positions, capNose, { halfWidth: 0.004, depth: flags.number("chin-depth") ?? 0.03, step: 0.0025 });
 const capL = capNose[1] - capChinY;
+if (!capNose.every(Number.isFinite)) fail("found no nose tip in the capture; pass --nose x,y,z");
+if (!(capL > 0)) fail(`the capture's chin (y ${capChinY}) isn't below its nose tip (y ${capNose[1]}); pass --chin y`);
 const headBox = bounds(head.positions);
 const headNose = findNoseTip(head.positions, {
   centre: [0, (headBox.min[1] + headBox.max[1]) / 2],
@@ -99,6 +145,7 @@ const headNose = findNoseTip(head.positions, {
 });
 const headChinY = findChinY(head.positions, headNose, { halfWidth: 0.3, depth: 3, step: 0.1 });
 const headL = headNose[1] - headChinY;
+if (!(headL > 0)) fail(`couldn't find the base head's nose and chin (L ${headL}); is ${basePath} intact?`);
 console.log(`capture landmarks: nose ${fmt(capNose)}, chin y ${capChinY.toFixed(4)}, L ${capL.toFixed(4)}`);
 console.log(`head landmarks:    nose ${fmt(headNose)}, chin y ${headChinY.toFixed(3)}, L ${headL.toFixed(3)}`);
 
@@ -121,6 +168,7 @@ console.log(
   `crop: ${cut.length / 3} triangles inside the cuts, ${face.indices.length / 3} in the largest piece, ` +
     `${count(face.positions)} vertices`
 );
+if (face.indices.length < 300) fail(`the crop kept ${face.indices.length / 3} triangles; loosen --depth, --window, --top or --chin-cut`);
 const faceRim = boundaryEdges(face.indices);
 
 // 4. Align: similarity from face-relative landmark samples, then ICP on the central face.
@@ -151,13 +199,16 @@ for (let it = 0; it < iterations; it++) {
       pairs.push([p, r, Math.hypot(r[0] - q[0], r[1] - q[1], r[2] - q[2])]);
     }
   }
-  const median = [...pairs.map(([, , d]) => d)].sort((a, b) => a - b)[pairs.length >> 1];
-  const kept = pairs.filter(([, , d]) => d <= 2.5 * median);
-  align = similarityFromPairs(kept.map(([p]) => p), kept.map(([, r]) => r));
+  const median = pairs.map(([, , d]) => d).sort((a, b) => a - b)[pairs.length >> 1];
+  const inliers = pairs.filter(([, , d]) => d <= 2.5 * median);
+  if (inliers.length < 3) fail(`ICP matched ${inliers.length} points to the head; check the landmarks (--nose, --chin) or pass --icp 0`);
+  align = similarityFromPairs(inliers.map(([p]) => p), inliers.map(([, r]) => r));
   if (it === iterations - 1)
-    console.log(`icp: ${iterations} iterations, ${kept.length}/${icpSource.length} pairs, ${describe(align)}, ` +
-      `rms ${rms(kept.map(([p]) => p), kept.map(([, r]) => r), align).toFixed(3)}`);
+    console.log(`icp: ${iterations} iterations, ${inliers.length}/${icpSource.length} pairs, ${describe(align)}, ` +
+      `rms ${rms(inliers.map(([p]) => p), inliers.map(([, r]) => r), align).toFixed(3)}`);
 }
+
+if (!(align.scale > 0) || !align.translation.every(Number.isFinite)) fail(`the alignment failed (${describe(align)})`);
 
 // 5. Transfer. Each head vertex under the aligned face moves along z to the face's front surface (where the scan
 //    folds — the glasses' lens over an eye — the layer the camera saw), by a weight that fades to 0 at the crop's
@@ -283,11 +334,12 @@ for (let i = 0; i < canon.length; i++) {
 // 7. Normals: recompute (welded) wherever the surface changed, keep the stock normals elsewhere.
 const fresh = vertexNormals(smoothed, welded);
 const normals = readNormals(headDoc);
+// Wherever the transfer, the erase or the relaxing moved a vertex or one of its neighbours.
+const changed = changedNeighbourhood(head.positions, smoothed, rings);
 let touched = 0;
 for (let i = 0; i < canon.length; i++) {
   const c = canon[i];
-  const changed = weights[c] > 0 || [...rings[c]].some((j) => weights[j] > 0);
-  if (!changed) continue;
+  if (!changed[c]) continue;
   touched++;
   normals.set(toFace(point(fresh, c)), i * 3); // the face-frame map is its own inverse
 }
@@ -304,6 +356,8 @@ console.log(
     `${fullCount} fully onto the scan; max shift ${(maxShift / headL).toFixed(3)} L; ` +
     `inside-out face triangles ${foldsBefore} → ${foldsAfter} after relaxing; ${touched} normals recomputed`
 );
+
+if (movedCount === 0) fail("no head vertex moved: the aligned capture doesn't cover the head's face");
 
 // 8. Write: back to the stock scene space, quantised + meshopt like the stock file.
 const scene = new Float32Array(smoothed.length);
@@ -325,10 +379,12 @@ headDoc
   .createExtension(EXTMeshoptCompression)
   .setRequired(true)
   .setEncoderOptions({ method: EXTMeshoptCompression.EncoderMethod.FILTER });
-await io.write(out, headDoc);
+// Write beside the target and rename, so a failed write never leaves a half-written head in its place.
+const partial = `${out}.partial`;
+writeFileSync(partial, await io.writeBinary(headDoc));
+renameSync(partial, out);
 console.log(`wrote ${out}: ${prim.getIndices()!.getCount() / 3} triangles, ${(statSync(out).size / 1024).toFixed(1)} KB`);
 
-const debugDir = flags.string("debug");
 if (debugDir) {
   mkdirSync(debugDir, { recursive: true });
   const photo = compactMesh(capture.positions, kept);
@@ -459,28 +515,4 @@ function fmt(p: Vec3) {
 
 function pct(n: number, of: number) {
   return `${((100 * n) / Math.max(1, of)).toFixed(1)}%`;
-}
-
-function parseFlags(argv: string[]) {
-  const [capture, ...rest] = argv;
-  if (!capture || capture.startsWith("--")) {
-    console.error(USAGE);
-    process.exit(1);
-  }
-  const values = new Map<string, string>();
-  for (let i = 0; i < rest.length; i += 2) {
-    if (!rest[i].startsWith("--") || rest[i + 1] === undefined) {
-      console.error(`bad flag ${rest[i]}\n${USAGE}`);
-      process.exit(1);
-    }
-    values.set(rest[i].slice(2), rest[i + 1]);
-  }
-  const list = (name: string) => values.get(name)?.split(",").map(Number);
-  return {
-    capture,
-    string: (name: string) => values.get(name),
-    number: (name: string) => (values.has(name) ? Number(values.get(name)) : undefined),
-    pair: (name: string) => list(name) as [number, number] | undefined,
-    vec: (name: string) => list(name) as Vec3 | undefined,
-  };
 }

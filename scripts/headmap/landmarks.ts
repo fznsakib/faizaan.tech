@@ -14,11 +14,13 @@ export function findNoseTip(positions: Float32Array, { centre, radii }: { centre
 /**
  * Walks down the midline from the nose tip in `step` bands and returns the height of the last band
  * whose front surface is still within `depth` of the nose tip: below it the surface falls away under
- * the chin (or the mesh ends).
+ * the chin (or the mesh ends). NaN when the nose tip is not a real point.
  */
 export function findChinY(positions: Float32Array, nose: Vec3, { halfWidth, depth, step }: { halfWidth: number; depth: number; step: number }) {
-  let chin = nose[1];
-  for (let y = nose[1] - step; ; y -= step) {
+  let bottom = Infinity;
+  for (let i = 1; i < positions.length; i += 3) bottom = Math.min(bottom, positions[i]);
+  let chin = nose.every(Number.isFinite) ? nose[1] : NaN;
+  for (let y = chin - step; y >= bottom - step / 2; y -= step) {
     let front = -Infinity;
     for (let i = 0; i < positions.length; i += 3) {
       if (Math.abs(positions[i] - nose[0]) < halfWidth && Math.abs(positions[i + 1] - y) <= step / 2) front = Math.max(front, positions[i + 2]);
@@ -26,6 +28,7 @@ export function findChinY(positions: Float32Array, nose: Vec3, { halfWidth, dept
     if (front < nose[2] - depth) return chin;
     chin = y;
   }
+  return chin;
 }
 
 /** Nearest-point queries over a point cloud, bucketed into cubic cells. */

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { vertexNeighbours } from "./mesh.ts";
 import {
+  changedNeighbourhood,
   dequantizePosition,
   quantizeNormals,
   quantizePositions,
@@ -124,5 +125,19 @@ describe("quantizePositions", () => {
 describe("quantizeNormals", () => {
   it("stores unit normals as normalised int8", () => {
     expect([...quantizeNormals(new Float32Array([0, 0, 1, 0.6, -0.8, 0]))]).toEqual([0, 0, 127, 76, -102, 0]);
+  });
+});
+
+describe("changedNeighbourhood", () => {
+  const rings = vertexNeighbours(tris, 9);
+
+  it("marks every vertex that moved and every vertex next to one", () => {
+    const moved = grid.slice();
+    moved[4 * 3 + 2] = 0.3;
+    expect([...changedNeighbourhood(grid, moved, rings)]).toEqual([1, 1, 0, 1, 1, 1, 0, 1, 1]);
+  });
+
+  it("marks nothing when nothing moved", () => {
+    expect([...changedNeighbourhood(grid, grid.slice(), rings)]).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0]);
   });
 });

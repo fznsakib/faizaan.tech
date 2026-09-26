@@ -120,3 +120,14 @@ export function dequantizePosition({ array, translation, scale }: QuantizedPosit
 export function quantizeNormals(normals: Float32Array) {
   return Int8Array.from(normals, (n) => Math.round(n * 127));
 }
+
+/** 1 for every vertex that moved between `before` and `after`, or has a neighbour that did: where normals change. */
+export function changedNeighbourhood(before: Float32Array, after: Float32Array, rings: Set<number>[]) {
+  const moved = new Uint8Array(before.length / 3);
+  for (let i = 0; i < moved.length; i++) {
+    for (let k = 0; k < 3; k++) if (before[i * 3 + k] !== after[i * 3 + k]) moved[i] = 1;
+  }
+  const out = moved.slice();
+  for (let i = 0; i < moved.length; i++) if (moved[i]) for (const j of rings[i]) out[j] = 1;
+  return out;
+}

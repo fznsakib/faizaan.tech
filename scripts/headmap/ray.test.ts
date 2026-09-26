@@ -68,3 +68,42 @@ describe("AxisRayGrid", () => {
     expect(wall.nearest([0, 0.2, 0.2])?.t).toBeCloseTo(2, 12);
   });
 });
+
+describe("AxisRayGrid on shared edges", () => {
+  // A fan of triangles around a centre, with coordinates that aren't round in binary.
+  const n = 13;
+  const centre = [0.1 / 3, 0.7 / 3, 0.3];
+  const ring = Array.from({ length: n }, (_, k) => [
+    centre[0] + 0.37 * Math.cos((2 * Math.PI * k) / n),
+    centre[1] + 0.29 * Math.sin((2 * Math.PI * k) / n),
+    0.3 + 0.01 * k,
+  ]);
+  const positions = new Float32Array([...centre, ...ring.flat()]);
+  const indices = new Uint32Array(Array.from({ length: n }, (_, k) => [0, 1 + k, 1 + ((k + 1) % n)]).flat());
+  const grid = new AxisRayGrid(positions, indices, 2, 0.05);
+  const at = (i: number) => [positions[i * 3], positions[i * 3 + 1]];
+
+  it("hits a ray passing exactly through any shared edge", () => {
+    for (let k = 0; k < n; k++) {
+      for (const f of [0.25, 0.5, 0.75]) {
+        const [cx, cy] = at(0), [ex, ey] = at(1 + k);
+        const x = cx + f * (ex - cx), y = cy + f * (ey - cy);
+        expect(grid.front([x, y, 5]), `edge ${k} at ${f}`).not.toBeNull();
+      }
+    }
+  });
+
+  it("hits a ray running along the mirror plane through an edge on it (the stock nose bridge)", () => {
+    // Two mirrored triangles sharing an edge at x = 0, from the stock head; the ray is at x = -0.
+    const bridge = new Float32Array([
+      0.048189982771873474, 9.905195236206055, 8.632953643798828, 0, 9.905195236206055, 8.636480331420898,
+      0, 9.82526969909668, 8.70817756652832, -0.048189982771873474, 9.905195236206055, 8.632953643798828,
+    ]);
+    const mirrored = new AxisRayGrid(bridge, new Uint32Array([0, 1, 2, 3, 2, 1]), 2, 0.2);
+    expect(mirrored.front([-0, 9.886388778686523, 9.13])?.point[2]).toBeCloseTo(8.6534, 3); // along the shared edge
+  });
+
+  it("hits a ray passing exactly through the shared centre vertex", () => {
+    expect(grid.front([positions[0], positions[1], 5])).not.toBeNull();
+  });
+});

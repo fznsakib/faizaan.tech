@@ -38,6 +38,17 @@ describe("findChinY", () => {
   });
 });
 
+describe("findChinY on bad input", () => {
+  it("terminates when no nose tip was found", () => {
+    expect(findChinY(face(head), [NaN, NaN, -Infinity], { halfWidth: 0.05, depth: 1, step: 0.02 })).toBeNaN();
+  });
+
+  it("stops at the bottom of the mesh when the midline never falls away", () => {
+    const flat = face(() => 0);
+    expect(findChinY(flat, [0, 0, 0], { halfWidth: 0.05, depth: 1, step: 0.02 })).toBeCloseTo(-1.6, 1);
+  });
+});
+
 describe("PointGrid", () => {
   const points = new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 5, 5, -3, 0.2, 0]);
   const grid = new PointGrid(points, 0.5);

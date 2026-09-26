@@ -9,8 +9,10 @@ export interface TriangleHit {
 }
 
 const EPSILON = 1e-12;
+/** Barycentric slack, so a ray exactly on a shared edge or vertex hits a triangle instead of slipping between both. */
+const EDGE = 1e-9;
 
-/** Möller–Trumbore, two-sided, along the whole line (both directions). */
+/** Möller–Trumbore, two-sided, along the whole line (both directions); edges and corners count as inside. */
 export function intersectRayTriangle(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3, c: Vec3): TriangleHit | null {
   const e1x = b[0] - a[0], e1y = b[1] - a[1], e1z = b[2] - a[2];
   const e2x = c[0] - a[0], e2y = c[1] - a[1], e2z = c[2] - a[2];
@@ -22,12 +24,12 @@ export function intersectRayTriangle(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3, 
   const inv = 1 / det;
   const sx = origin[0] - a[0], sy = origin[1] - a[1], sz = origin[2] - a[2];
   const u = (sx * px + sy * py + sz * pz) * inv;
-  if (u < 0 || u > 1) return null;
+  if (u < -EDGE || u > 1 + EDGE) return null;
   const qx = sy * e1z - sz * e1y;
   const qy = sz * e1x - sx * e1z;
   const qz = sx * e1y - sy * e1x;
   const v = (dir[0] * qx + dir[1] * qy + dir[2] * qz) * inv;
-  if (v < 0 || u + v > 1) return null;
+  if (v < -EDGE || u + v > 1 + EDGE) return null;
   return { t: (e2x * qx + e2y * qy + e2z * qz) * inv, u, v };
 }
 
