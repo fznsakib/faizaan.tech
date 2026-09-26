@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { decodeWithAfconvert } from "./decode.ts";
-import { analyzeTrack } from "../src/audio/analysis/analyzeTrack.ts";
+import { analyzeTrack, gridConfidence } from "../src/audio/analysis/analyzeTrack.ts";
 import { buildBeatMap } from "../src/audio/analysis/buildBeatMap.ts";
 
 import type { BeatMapOverrides } from "../src/audio/analysis/buildBeatMap.ts";
@@ -30,6 +30,7 @@ describe.skipIf(process.platform !== "darwin")("beat maps for the bundled tracks
       expect(Math.abs(analysis.bpm - ref.bpm)).toBeLessThanOrEqual(0.05);
       expect(Math.abs(map.beat0 - ref.beat0)).toBeLessThanOrEqual(0.01);
       expect(map.downbeatMod).toBe(ref.downbeatMod);
+      expect(gridConfidence(analysis)).toBeGreaterThanOrEqual(0.8);
 
       const committed: BeatMap = JSON.parse(readFileSync(path(`src/audio/beatmaps/${ref.id}.json`), "utf8"));
       expect(committed).toMatchObject({ bpm: map.bpm, beat0: map.beat0, downbeatMod: map.downbeatMod });
