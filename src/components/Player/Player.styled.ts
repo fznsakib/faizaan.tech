@@ -229,7 +229,7 @@ export const Shell = styled.section`
 
   &${DRAWER} {
     top: 50%;
-    right: 0;
+    right: env(safe-area-inset-right, 0px);
     display: flex;
     align-items: center;
     transform: translate(var(--drawer-shift, 0px), -50%);
@@ -254,7 +254,7 @@ export const Tab = styled.button`
   justify-content: center;
   gap: 8px;
   width: 44px;
-  height: 116px;
+  min-height: 116px;
   padding: 10px 0;
   cursor: pointer;
   touch-action: manipulation;
@@ -272,10 +272,6 @@ export const Tab = styled.button`
     border-radius: 12px 0 0 12px;
   }
 
-  [data-skin="base"] & {
-    text-transform: uppercase;
-  }
-
   svg {
     width: 16px;
     height: auto;
@@ -285,8 +281,16 @@ export const Tab = styled.button`
   ${focusRing}
 `;
 
+/**
+ * Stacked upright, one letter per em-high cell: sideways, a monospaced face (Doto) or WebKit's vertical metrics left
+ * a gap after the narrow "l" ("pl ayer").
+ */
 export const TabLabel = styled.span`
   writing-mode: vertical-rl;
+  text-orientation: upright;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  line-height: 1;
 `;
 
 /** The windows, stacked like Winamp's: main above the playlist. */
@@ -1164,10 +1168,32 @@ export const VisuallyHidden = styled.p`
   white-space: nowrap;
 `;
 
-/** The jam pad keeps the top-right spot it had in the old transport row. */
+/**
+ * The jam pad keeps the top-right spot it had in the old transport row. On a portrait phone that's the name's
+ * line, so it centres just under the name instead (over the head's crown at most); on a landscape phone it's a
+ * 2×2 block right of the head, clear of the drawer tab.
+ */
 export const PadDock = styled.div`
   position: fixed;
-  top: 0.75rem;
-  right: 1rem;
+  top: max(0.75rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
   z-index: 20;
+
+  @media (max-width: 767px) {
+    top: calc(max(2rem, env(safe-area-inset-top)) + 12.5vw * 1.1 + 8px);
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: calc(100vw - 32px);
+  }
+
+  @media (max-height: 500px) {
+    top: 50%;
+    right: calc(max(16px, env(safe-area-inset-right)) + 60px);
+    left: auto;
+    transform: translateY(-50%);
+    width: auto;
+    max-width: 12rem;
+  }
 `;

@@ -223,6 +223,28 @@ const inside = (body: GlassBody, state: GlassState, width = W, height = H) => {
   );
 };
 
+describe("glassScale", () => {
+  it("keeps desktop sizes as authored (1440 wide) and in proportion down to laptops", () => {
+    everyBody((piece) => {
+      expect(glassScale(piece, 1440, 900)).toBe(1);
+      expect(glassScale(piece, 1280, 800)).toBeCloseTo(1280 / 1440);
+    });
+  });
+
+  it("keeps a piece's share of a phone's width within 1.5× its share of a desktop's", () => {
+    everyBody((piece) => {
+      for (const [width, height] of [
+        [393, 852],
+        [375, 667],
+        [412, 915],
+      ]) {
+        const phoneShare = (glassScale(piece, width, height) * piece.w) / width;
+        expect(phoneShare).toBeLessThanOrEqual((1.5 * piece.w) / 1440);
+      }
+    });
+  });
+});
+
 describe("glass drift", () => {
   it("moves continuously: < 3 px and < 1 deg between 120 Hz frames over 30 s", () => {
     let maxMove = 0;

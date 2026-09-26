@@ -347,9 +347,12 @@ export function outlinePath(outline: readonly Point[], scale: number, ox: number
 const BOB_PEAK = Math.sin(TAU * 0.179) * Math.exp(-3 * 0.179);
 const beatBob = (phase: number) => (Math.sin(TAU * phase) * Math.exp(-3 * phase)) / BOB_PEAK;
 
+/** Smallest scale, reached on phones: a piece there covers at most ~1.5× the share of the width it does on desktop. */
+const MIN_SCALE = 0.38;
+
 /** How big a body is drawn at this viewport, relative to its authored size. */
 export function glassScale(body: GlassBody, width: number, height: number): number {
-  return Math.min(clamp(width / REF_WIDTH, 0.5, 1.25), (0.6 * width) / body.w, (0.45 * height) / body.h);
+  return Math.min(clamp(width / REF_WIDTH, MIN_SCALE, 1.25), (0.6 * width) / body.w, (0.45 * height) / body.h);
 }
 
 /** How far the drawn outline reaches from the centre each way (px): how close the centre may come to each wall. */

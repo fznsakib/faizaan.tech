@@ -35,6 +35,7 @@ export const GlobalStyle = createGlobalStyle`
     display: flex;
     min-width: 320px;
     min-height: 100vh;
+    min-height: 100dvh; /* iOS: 100vh is the viewport without its toolbars, so the page would scroll */
     color: ${colors.site.text};
     background-color: ${colors.site.background};
   }

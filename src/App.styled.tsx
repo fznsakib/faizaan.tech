@@ -44,6 +44,7 @@ export const HeaderText = styled.h1`
 
   @media ${SHORT} {
     font-size: min(12.5vw, 24vh);
+    font-size: min(12.5vw, 24svh); /* with the toolbars showing */
   }
 `;
 
@@ -85,5 +86,6 @@ export const SubtitleText = styled.h2<{ $bottom: number; $left: number; $width?:
     bottom: calc(max(16px, env(safe-area-inset-bottom)) + ${({ $index }) => $index} * 1.1em);
     width: auto;
     font-size: clamp(16px, 8.5vh, 40px);
+    font-size: clamp(16px, 8.5svh, 40px);
   }
 `;

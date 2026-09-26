@@ -19,6 +19,9 @@ const Splash: React.FC = () => {
     if (entered.current) return;
     entered.current = true;
     engine.setMuted(muted);
+    // iOS: play as media, not as a sound effect the ringer switch silences
+    const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
+    if (session && !muted) session.type = "playback";
     engine.unlock();
     enableDeviceTilt(); // inside the gesture: iOS asks for motion access here
     engine.play(0);
