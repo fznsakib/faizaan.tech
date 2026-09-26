@@ -37,8 +37,9 @@ Key files:
 - `src/audio/MusicEngine.ts` — Web Audio playback and player operations, DJ-mode hits, live band analysis, visualiser readers (`readSpectrum`/`readWaveform`)
 - `src/audio/frame.ts` — `MusicFrame` construction, beat-map-derived per-frame math
 - `src/audio/analysis/` — build-time onset/energy/section analysis (`analyzeTrack.ts`, `buildBeatMap.ts`)
-- `src/choreography/` — pure, tested per-effect math (`nod`, `type`, `faces`, `grid`, `glass`, `dom`)
-- `src/components/Head/index.tsx` — 3D head, beat-locked nodding
+- `src/choreography/` — pure, tested per-effect math (`nod`, `type`, `faces`, `grid`, `glass`, `fit`, `tilt`, `dom`)
+- `src/components/Head/index.tsx` — 3D head, beat-locked nodding, mouse/tilt follow, camera from `fitCamera`
+- `src/hooks/useDeviceTilt.ts` — phone tilt feed for the head (enabled on the Splash's enter tap)
 
 ## MusicFrame
 
