@@ -10,6 +10,7 @@ import { CAMERA_Z, fitCamera } from "../../choreography/fit";
 import { bob, nodDrive, Spring } from "../../choreography/nod";
 import { choreographyProbe } from "../../choreography/probe";
 import { prefersReducedMotion } from "../../hooks/reducedMotion";
+import { useDeviceTilt } from "../../hooks/useDeviceTilt";
 
 import type { DirectionalLight, Object3D } from "three";
 
@@ -64,6 +65,7 @@ function Head() {
     []
   );
   const mouse = useRef({ yaw: 0, pitch: 0 });
+  const tilt = useDeviceTilt(); // on phones, the tilt stands in for the mouse
 
   useEffect(() => () => material.dispose(), [material]);
 
@@ -74,8 +76,9 @@ function Head() {
     const reduced = prefersReducedMotion();
     const dt = Math.min(delta, 0.1);
     const reach = reduced ? 0.5 : 1;
-    damp(mouse.current, "yaw", MathUtils.clamp(pointer.x, -1, 1) * MOUSE_YAW * reach, 0.35, dt);
-    damp(mouse.current, "pitch", MathUtils.clamp(-pointer.y, -1, 1) * MOUSE_PITCH * reach, 0.35, dt);
+    const look = tilt.current ?? pointer;
+    damp(mouse.current, "yaw", MathUtils.clamp(look.x, -1, 1) * MOUSE_YAW * reach, 0.35, dt);
+    damp(mouse.current, "pitch", MathUtils.clamp(-look.y, -1, 1) * MOUSE_PITCH * reach, 0.35, dt);
 
     let curve = 0;
     let pitch: number;
@@ -128,6 +131,8 @@ function Head() {
     choreographyProbe.headPitchDeg = MathUtils.radToDeg(pitch);
     choreographyProbe.nodCurve = curve;
     choreographyProbe.beatPhase = frame.beatPhase;
+    choreographyProbe.lookYawDeg = MathUtils.radToDeg(mouse.current.yaw);
+    choreographyProbe.lookPitchDeg = MathUtils.radToDeg(mouse.current.pitch);
   });
 
   return (
