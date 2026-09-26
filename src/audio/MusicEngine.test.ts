@@ -420,3 +420,64 @@ describe("state subscription", () => {
     expect(listener).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("DJ mode hits", () => {
+  async function ready() {
+    const s = setup();
+    await s.engine.preload();
+    s.engine.unlock();
+    return s;
+  }
+
+  it("quantises hits to the next 16th of the playing track", async () => {
+    const { engine, ctx } = await playing();
+    ctx().currentTime = 1.07;
+    engine.hit("kick");
+    expect(engine.songTimeAtContext(ctx().oscillators[0].startAt!)).toBeCloseTo(1.125);
+  });
+
+  it("plays immediately when nothing is playing", async () => {
+    const { engine, ctx } = await ready();
+    ctx().currentTime = 3;
+    engine.hit("hat");
+    expect(ctx().sources[0].started?.when).toBeCloseTo(3.005);
+  });
+
+  it("routes voices through a 0.7 sampler gain into the bus", async () => {
+    const { engine, ctx } = await ready();
+    engine.hit("kick");
+    const [bus, , sampler] = ctx().gains;
+    expect(sampler.gain.value).toBeCloseTo(0.7);
+    expect(sampler.connections).toContain(bus);
+  });
+
+  it("merges hits into the frame and flags jamming while paused", async () => {
+    const { engine, ctx } = await ready();
+    ctx().currentTime = 3;
+    engine.hit("kick");
+    audibleAt(ctx(), 3.005, 1000);
+    const frame = engine.update(1000);
+    expect(frame.kick).toBeCloseTo(1);
+    expect(frame.isPlaying).toBe(false);
+    expect(frame.jamming).toBe(true);
+    expect(Math.max(...frame.bands)).toBeGreaterThan(0);
+    audibleAt(ctx(), 5.1, 3000);
+    const later = engine.update(3000);
+    expect(later.jamming).toBe(false);
+    expect(Math.max(...later.bands)).toBe(0);
+  });
+
+  it("flags stabHit on exactly one frame", async () => {
+    const { engine, ctx } = await ready();
+    ctx().currentTime = 3;
+    engine.hit("stab");
+    audibleAt(ctx(), 3.0, 1000);
+    expect(engine.update(1000).stabHit).toBe(false);
+    audibleAt(ctx(), 3.01, 1016);
+    const frame = engine.update(1016);
+    expect(frame.stabHit).toBe(true);
+    expect(frame.stab).toBeCloseTo(Math.exp(-0.005 / 0.3));
+    audibleAt(ctx(), 3.02, 1032);
+    expect(engine.update(1032).stabHit).toBe(false);
+  });
+});

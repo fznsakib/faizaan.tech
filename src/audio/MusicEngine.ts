@@ -1,7 +1,10 @@
 import { BAND_COUNT, clearFrame, createCursors, createFrame, writeFrame } from "./frame";
+import { HitLog, JAM_WINDOW } from "./sampler/hits";
+import { nextSixteenth } from "./sampler/quantize";
+import { createNoiseBuffer, playVoice } from "./sampler/voices";
 
 import type { FrameCursors } from "./frame";
-import type { BeatMap, EngineState, MusicFrame, TrackSource } from "./types";
+import type { BeatMap, EngineState, MusicFrame, TrackSource, Voice } from "./types";
 
 export interface EngineDeps {
   createContext: () => AudioContext;
@@ -11,6 +14,8 @@ export interface EngineDeps {
 /** Sources start this far ahead of currentTime so the clock anchor is sample-exact. */
 const SCHEDULE_AHEAD = 0.05;
 const MUTE_RAMP = 0.01;
+/** DJ-mode voices sit under the song so a kick on top can't clip. */
+const SAMPLER_LEVEL = 0.7;
 /** 6 log-spaced bands, 40 Hz – 16 kHz. */
 const BAND_EDGES = Array.from(
   { length: BAND_COUNT + 1 },
@@ -68,6 +73,10 @@ export class MusicEngine {
   private wantsPlay = false;
   private cursors: FrameCursors = createCursors();
   private lastNow = Number.NaN;
+  private sampler: GainNode | null = null;
+  private noise: AudioBuffer | null = null;
+  private readonly hits = new HitLog();
+  private lastHeard = -Infinity;
   /** Song time never steps backwards within one playback run (jittery output timestamps would re-fire beat edges). */
   private timeFloor = -Infinity;
 
@@ -225,6 +234,21 @@ export class MusicEngine {
     this.set({ muted });
   }
 
+  /** Play a DJ-mode voice for a user gesture: on the next 16th of the playing track, otherwise now. */
+  hit(voice: Voice): void {
+    this.unlock();
+    const ctx = this.ctx;
+    if (!ctx || !this.sampler) return;
+    if (!this.noise) this.noise = createNoiseBuffer(ctx);
+    const map = this.tracks[this.current].map;
+    let when = ctx.currentTime + 0.005;
+    if (this.source && map && ctx.state === "running") {
+      when = this.contextTimeAtSong(nextSixteenth(this.songTimeAtContext(ctx.currentTime), map.beat0, map.bpm));
+    }
+    playVoice(ctx, this.sampler, voice, when, this.noise);
+    this.hits.record(voice, when);
+  }
+
   /** Compute the frame for a rAF timestamp. Only the ticker calls this; idempotent per `nowMs`. */
   update(nowMs: number): MusicFrame {
     if (nowMs === this.lastNow) return this.frame;
@@ -243,7 +267,8 @@ export class MusicEngine {
     const map = this.tracks[this.current].map;
     if (map) writeFrame(this.frame, map, time, playing, this.cursors);
     else clearFrame(this.frame, time, playing);
-    this.writeBands(playing);
+    this.applyHits(nowMs, playing);
+    this.writeBands(playing || this.frame.jamming);
     return this.frame;
   }
 
@@ -283,10 +308,14 @@ export class MusicEngine {
     bus.connect(muteGain);
     muteGain.connect(ctx.destination);
     muteGain.gain.value = this.state.muted ? 0 : 1;
+    const sampler = ctx.createGain(); // after the mute gain: gains are bus, mute, sampler
+    sampler.gain.value = SAMPLER_LEVEL;
+    sampler.connect(bus);
     this.ctx = ctx;
     this.bus = bus;
     this.muteGain = muteGain;
     this.analyser = analyser;
+    this.sampler = sampler;
     this.spectrum = new Float32Array(analyser.frequencyBinCount);
     return true;
   }
@@ -359,6 +388,26 @@ export class MusicEngine {
     });
     if (resume) this.play(0);
     else void this.preload();
+  }
+
+  /** Merge DJ-mode hit envelopes into the frame (hits are logged on the context clock). */
+  private applyHits(nowMs: number, playing: boolean): void {
+    const frame = this.frame;
+    if (!this.ctx) {
+      frame.stab = 0;
+      frame.stabHit = false;
+      frame.jamming = false;
+      return;
+    }
+    const heard = Math.max(this.lastHeard, this.audibleContextTime(nowMs) + this.visualLead + this.userOffset);
+    frame.kick = Math.max(frame.kick, this.hits.envelope("kick", heard));
+    frame.snare = Math.max(frame.snare, this.hits.envelope("snare", heard));
+    frame.hat = Math.max(frame.hat, this.hits.envelope("hat", heard));
+    frame.stab = this.hits.envelope("stab", heard);
+    frame.stabHit = this.hits.landed("stab", this.lastHeard, heard);
+    frame.jamming = !playing && heard - this.hits.lastHitAt(heard) < JAM_WINDOW;
+    this.lastHeard = heard;
+    this.hits.prune(heard);
   }
 
   private audibleContextTime(nowMs: number): number {
