@@ -360,6 +360,18 @@ describe("frames", () => {
     expect(engine.update(2000).time).toBeCloseTo(1.05);
   });
 
+  it("freezes time and reports not playing while the context is suspended", async () => {
+    const { engine, ctx } = await playing();
+    audibleAt(ctx(), 1.0, 1000);
+    engine.update(1000);
+    ctx().state = "suspended";
+    ctx().currentTime = 1.03;
+    const frozen = engine.update(2000).time;
+    expect(frozen).toBeCloseTo(1.03 - 0.005 - 0.02 - 0.05);
+    expect(engine.frame.isPlaying).toBe(false);
+    expect(engine.update(3000).time).toBeCloseTo(frozen);
+  });
+
   it("is idempotent for the same timestamp", async () => {
     const { engine, ctx } = await playing();
     audibleAt(ctx(), 1.0, 1000);
