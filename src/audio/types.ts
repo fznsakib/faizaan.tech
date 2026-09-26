@@ -80,6 +80,12 @@ export interface EngineState {
   /** Playing or starting (a play is pending while the track decodes). */
   isPlaying: boolean;
   muted: boolean;
+  /** 0..1 output gain; mute multiplies with it, so unmuting restores it. */
+  volume: number;
+  /** The current track's seconds once decoded (or from its beat map); null while unknown. */
+  duration: number | null;
+  /** The current decoded track's channel count; null while unknown. */
+  channels: number | null;
   tracks: readonly TrackInfo[];
 }
 

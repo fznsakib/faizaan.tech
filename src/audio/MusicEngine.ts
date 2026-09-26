@@ -16,6 +16,13 @@ export interface EngineDeps {
 /** Sources start this far ahead of currentTime so the clock anchor is sample-exact. */
 const SCHEDULE_AHEAD = 0.05;
 const MUTE_RAMP = 0.01;
+/** `previous()` past this many seconds restarts the track instead (as CD players and Winamp do). */
+const RESTART_AFTER = 3;
+/** The display analyser's window: quieter reads as an empty bar, louder clips to full. */
+const SPECTRUM_FLOOR_DB = -90;
+const SPECTRUM_CEIL_DB = -20;
+const SPECTRUM_LO_HZ = 40;
+const SPECTRUM_HI_HZ = 16000;
 /** DJ-mode voices sit a little under the song; the soft clipper catches what they add on top of its peaks. */
 const SAMPLER_LEVEL = 0.7;
 
@@ -63,9 +70,10 @@ export class MusicEngine {
   private ctx: AudioContext | null = null;
   private contextFailed = false;
   private bus: GainNode | null = null;
-  private muteGain: GainNode | null = null;
+  private outputGain: GainNode | null = null;
   private analyser: AnalyserNode | null = null;
   private spectrum = new Float32Array(0);
+  private waveform = new Float32Array(0);
   private source: AudioBufferSourceNode | null = null;
   private anchorCtx = 0;
   private anchorSong = 0;
@@ -92,6 +100,9 @@ export class MusicEngine {
       bpm: null,
       isPlaying: false,
       muted: false,
+      volume: 1,
+      duration: null,
+      channels: null,
       tracks: tracks.map(({ id, title, artist, album, year, artwork, duration }) => ({
         id,
         title,
@@ -230,6 +241,23 @@ export class MusicEngine {
     this.switchTo((this.current + 1) % this.tracks.length, this.state.isPlaying);
   }
 
+  /** Restart the track if more than 3 s in; otherwise switch to the previous one (looping). Keeps playing if it was. */
+  previous(): void {
+    if (this.position() > RESTART_AFTER) {
+      this.seek(0);
+      return;
+    }
+    const count = this.tracks.length;
+    this.switchTo((this.current - 1 + count) % count, this.state.isPlaying);
+  }
+
+  /** Pause and return to the start of the track. */
+  stop(): void {
+    this.pause();
+    this.pausedAt = 0;
+    this.cursors = createCursors();
+  }
+
   /** A pick from the crate: switch to the track by id and play it (a paused pick of the current track resumes it). */
   select(id: string): void {
     const index = this.tracks.findIndex((t) => t.source.id === id);
@@ -239,14 +267,54 @@ export class MusicEngine {
   }
 
   setMuted(muted: boolean): void {
-    if (this.muteGain && this.ctx) {
-      const gain = this.muteGain.gain;
-      const now = this.ctx.currentTime;
-      gain.cancelScheduledValues(now);
-      gain.setValueAtTime(gain.value, now);
-      gain.linearRampToValueAtTime(muted ? 0 : 1, now + MUTE_RAMP);
-    }
     this.set({ muted });
+    this.rampOutput();
+  }
+
+  /** Output volume, clamped to 0..1. Mute multiplies with it, so unmuting comes back to this level. */
+  setVolume(volume: number): void {
+    this.set({ volume: Math.min(1, Math.max(0, volume)) || 0 });
+    this.rampOutput();
+  }
+
+  /**
+   * Fill `out` with `out.length` log-spaced bars (40 Hz – 16 kHz) as 0..1 levels, −90..−20 dB clamped: a display
+   * analyser, clipped like Winamp's. Reflects the last `update`: false (and zeros) unless playing or jamming.
+   */
+  readSpectrum(out: Float32Array): boolean {
+    const analyser = this.analyser;
+    if (!analyser || !this.ctx || !this.audible()) {
+      out.fill(0);
+      return false;
+    }
+    analyser.getFloatFrequencyData(this.spectrum);
+    const binHz = this.ctx.sampleRate / analyser.fftSize;
+    const last = this.spectrum.length - 1;
+    const bars = out.length;
+    for (let b = 0; b < bars; b++) {
+      const loHz = SPECTRUM_LO_HZ * Math.pow(SPECTRUM_HI_HZ / SPECTRUM_LO_HZ, b / bars);
+      const hiHz = SPECTRUM_LO_HZ * Math.pow(SPECTRUM_HI_HZ / SPECTRUM_LO_HZ, (b + 1) / bars);
+      const lo = Math.min(last, Math.max(1, Math.round(loHz / binHz)));
+      const hi = Math.min(last, Math.max(lo, Math.round(hiHz / binHz) - 1));
+      let peak = -Infinity;
+      for (let k = lo; k <= hi; k++) if (this.spectrum[k] > peak) peak = this.spectrum[k];
+      const level = (peak - SPECTRUM_FLOOR_DB) / (SPECTRUM_CEIL_DB - SPECTRUM_FLOOR_DB);
+      out[b] = Math.min(1, Math.max(0, level)) || 0;
+    }
+    return true;
+  }
+
+  /** Fill `out` with the latest output samples (−1..1), resampled to its length. False (and zeros) as `readSpectrum`. */
+  readWaveform(out: Float32Array): boolean {
+    const analyser = this.analyser;
+    if (!analyser || !this.audible()) {
+      out.fill(0);
+      return false;
+    }
+    analyser.getFloatTimeDomainData(this.waveform);
+    const step = this.waveform.length / out.length;
+    for (let i = 0; i < out.length; i++) out[i] = this.waveform[Math.floor(i * step)];
+    return true;
   }
 
   /**
@@ -323,35 +391,41 @@ export class MusicEngine {
       return false;
     }
     const bus = ctx.createGain();
-    const muteGain = ctx.createGain();
+    const outputGain = ctx.createGain();
     const analyser = ctx.createAnalyser();
     analyser.fftSize = 1024;
     analyser.smoothingTimeConstant = 0;
     bus.connect(analyser);
-    muteGain.connect(ctx.destination);
-    muteGain.gain.value = this.state.muted ? 0 : 1;
-    const sampler = ctx.createGain(); // after the mute gain: gains are bus, mute, sampler
+    outputGain.connect(ctx.destination);
+    outputGain.gain.value = this.outputLevel();
+    const sampler = ctx.createGain(); // after the output gain: gains are bus, output, sampler
     sampler.gain.value = SAMPLER_LEVEL;
     sampler.connect(bus);
-    const clipIn = ctx.createGain(); // bus → clipIn (1/CLIP_RANGE) → soft clipper → mute
+    const clipIn = ctx.createGain(); // bus → clipIn (1/CLIP_RANGE) → soft clipper → output (volume × mute)
     clipIn.gain.value = 1 / CLIP_RANGE;
     const clipper = ctx.createWaveShaper();
     clipper.curve = softClipCurve();
     bus.connect(clipIn);
     clipIn.connect(clipper);
-    clipper.connect(muteGain);
+    clipper.connect(outputGain);
     this.ctx = ctx;
     this.bus = bus;
-    this.muteGain = muteGain;
+    this.outputGain = outputGain;
     this.analyser = analyser;
     this.sampler = sampler;
     this.spectrum = new Float32Array(analyser.frequencyBinCount);
+    this.waveform = new Float32Array(analyser.fftSize);
     return true;
   }
 
   private onCurrentReady(): void {
     const track = this.tracks[this.current];
-    this.set({ status: "ready", bpm: track.map?.bpm ?? null });
+    this.set({
+      status: "ready",
+      bpm: track.map?.bpm ?? null,
+      duration: track.buffer?.duration ?? track.map?.duration ?? null,
+      channels: track.buffer?.numberOfChannels ?? null,
+    });
     if (this.wantsPlay) this.startSource(this.pausedAt);
   }
 
@@ -412,11 +486,38 @@ export class MusicEngine {
       track: track.source.id,
       title: track.source.title,
       bpm: track.map?.bpm ?? null,
+      duration: track.buffer?.duration ?? track.map?.duration ?? null,
+      channels: track.buffer?.numberOfChannels ?? null,
       isPlaying: resume,
       status: track.buffer ? "ready" : "loading",
     });
     if (resume) this.play(0);
     else void this.preload();
+  }
+
+  /** Song seconds at the scheduling clock now (where a pause would freeze it). */
+  private position(): number {
+    if (this.source && this.ctx) return Math.max(this.anchorSong, this.songTimeAtContext(this.ctx.currentTime));
+    return this.pausedAt;
+  }
+
+  /** Whether the last frame had sound in the analyser: a playing track or a DJ-mode jam. */
+  private audible(): boolean {
+    return this.frame.isPlaying || this.frame.jamming;
+  }
+
+  private outputLevel(): number {
+    return this.state.muted ? 0 : this.state.volume;
+  }
+
+  /** Ramp the output gain to volume × mute (a short ramp: no click). */
+  private rampOutput(): void {
+    if (!this.outputGain || !this.ctx) return;
+    const gain = this.outputGain.gain;
+    const now = this.ctx.currentTime;
+    gain.cancelScheduledValues(now);
+    gain.setValueAtTime(gain.value, now);
+    gain.linearRampToValueAtTime(this.outputLevel(), now + MUTE_RAMP);
   }
 
   /** Merge DJ-mode hit envelopes into the frame (hits are logged on the context clock). */
