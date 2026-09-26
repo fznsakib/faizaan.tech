@@ -198,3 +198,11 @@ async (at) => { const e = window.__music; e.seek(at); await new Promise(r => set
 - Click-through results.
 - JS cost and frame-drop numbers (or why not).
 - Every `Ruling:` line.
+
+## Owner additions (2026-09-26, during execution)
+
+- **Icon links stay clickable:** the glass sits below the icons and transport (z 20).
+- **Draggable glass:** window-level pointer hit-testing, because the head canvas (z 10) receives events. Presses on controls or overlays never start a drag. The cursor shows `grab` over glass and `grabbing` while dragging.
+- **Throwing:** a released body keeps its fling velocity (from the last ~80 ms of pointer samples) and slows under frame-rate-independent friction.
+- **Hard walls:** the viewport edges are walls. Bodies bounce (restitution ≈ 0.8) with a visible "ping" (glint flash + squash, scaled by impact speed) and are never outside the viewport.
+- **Physics state:** position and velocity are integrated per frame with clamped dt, replacing "positions are pure functions of time". Drift is a gentle force toward a moving orbit target around the body's home; a thrown body's home becomes where it stops; resizing keeps bodies inside the walls.
