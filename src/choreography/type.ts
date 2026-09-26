@@ -55,6 +55,25 @@ export function eqWeight(level: number): number {
   return 100 + 800 * level;
 }
 
+/**
+ * Variation steps are deliberately coarse: each distinct font-variation value makes the browser
+ * re-rasterise 6–12rem glyphs (and re-blur the glass above them). Measured at 120 Hz: step 10 dropped
+ * 27% of frames; these steps drop none. The dot-matrix EQ reads as LED segments anyway.
+ */
+export const EQ_WEIGHT_STEP = 100;
+export const HEADER_WEIGHT_STEP = 50;
+export const ROND_STEP = 25;
+
+/** `font-variation-settings` for a Doto EQ line at `level` (0..1) in a section of intensity `section`. */
+export function eqVariation(level: number, section: number): string {
+  return `"wght" ${quantise(eqWeight(level), EQ_WEIGHT_STEP)}, "ROND" ${quantise(100 * section, ROND_STEP)}`;
+}
+
+/** `font-variation-settings` for a header letter. */
+export function headerVariation(section: number, energy: number, kick: number): string {
+  return `"wght" ${quantise(headerWeight(section, energy, kick), HEADER_WEIGHT_STEP)}`;
+}
+
 /** Idle "scan": a slow top-to-bottom weight wave over the Doto lines (4 s period). */
 export function idleScanWeight(seconds: number, line: number): number {
   const wave = Math.max(0, Math.sin(2 * Math.PI * (seconds / 4 - line / 8)));

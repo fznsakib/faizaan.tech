@@ -3,7 +3,7 @@ import { useMemo, useRef } from "react";
 import * as Styled from "../../App.styled";
 import { useMusicFrame } from "../../audio/react";
 import { setStyle } from "../../choreography/dom";
-import { eqWeight, idleScanWeight, quantise, vuStep } from "../../choreography/type";
+import { eqVariation, idleScanWeight, quantise, vuStep } from "../../choreography/type";
 import { prefersReducedMotion } from "../../hooks/reducedMotion";
 
 const LINES: { text: string; bottom: number; width?: number }[] = [
@@ -32,7 +32,7 @@ const SubtitleStack: React.FC = () => {
         settings = '"wght" 500, "ROND" 0';
       } else if (frame.isPlaying) {
         levels[band] = vuStep(levels[band], frame.bands[band] ?? 0, dt);
-        settings = `"wght" ${quantise(eqWeight(levels[band]), 10)}, "ROND" ${Math.round(100 * frame.section)}`;
+        settings = eqVariation(levels[band], frame.section);
       } else {
         levels[band] = 0;
         settings = `"wght" ${quantise(idleScanWeight(now / 1000, i), 10)}, "ROND" 0`;

@@ -5,10 +5,9 @@ import { useMusicFrame } from "../../audio/react";
 import { forgetStyles, setStyle } from "../../choreography/dom";
 import {
   createFlipState,
-  headerWeight,
+  headerVariation,
   KickHistory,
   letterFlipped,
-  quantise,
   SHOCKWAVE_SPEED,
   updateFlip,
 } from "../../choreography/type";
@@ -76,7 +75,7 @@ const NameHeader: React.FC = () => {
       setStyle(
         span,
         "fontVariationSettings",
-        flipped ? '"wght" 900, "ROND" 100' : `"wght" ${quantise(headerWeight(frame.section, frame.energy, kick), 10)}`
+        flipped ? '"wght" 900, "ROND" 100' : headerVariation(frame.section, frame.energy, kick)
       );
       setStyle(span, "transform", `translateY(${(-0.05 * kick).toFixed(3)}em) scaleY(${(1 + 0.06 * kick).toFixed(3)})`);
     });

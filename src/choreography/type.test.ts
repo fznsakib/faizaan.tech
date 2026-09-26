@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   createFlipState,
+  eqVariation,
   eqWeight,
+  headerVariation,
   headerWeight,
   idleScanWeight,
   KickHistory,
@@ -99,5 +101,32 @@ describe("drop flip", () => {
     updateFlip(state, 1, true, 10);
     updateFlip(state, 1, false, 11);
     expect(state.changedAt).toBe(10);
+  });
+});
+
+describe("font variation strings", () => {
+  // Every distinct variation value re-rasterises 6–12rem glyphs; step 10 dropped 27% of frames at 120 Hz.
+  it("limits the EQ lines to 9 weights and 5 roundness steps", () => {
+    const weights = new Set<string>();
+    const ronds = new Set<string>();
+    for (let level = 0; level <= 1; level += 0.001) {
+      for (let section = 0; section <= 1; section += 0.05) {
+        const [, wght, rond] = eqVariation(level, section).match(/"wght" (\d+), "ROND" (\d+)/) ?? [];
+        weights.add(wght);
+        ronds.add(rond);
+      }
+    }
+    expect(weights.size).toBeLessThanOrEqual(9);
+    expect(ronds.size).toBeLessThanOrEqual(5);
+  });
+
+  it("limits the header to 7 weights between 600 and 900", () => {
+    const values = new Set<string>();
+    for (let kick = 0; kick <= 1; kick += 0.01) {
+      for (let energy = 0; energy <= 1; energy += 0.1) values.add(headerVariation(1, energy, kick));
+    }
+    expect(values.size).toBeLessThanOrEqual(7);
+    expect(headerVariation(0, 0, 0)).toBe('"wght" 600');
+    expect(headerVariation(1, 1, 1)).toBe('"wght" 900');
   });
 });
