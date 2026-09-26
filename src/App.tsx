@@ -11,8 +11,10 @@ import stravaIcon from "./assets/strava.png";
 import Background from "./components/Background";
 import GlassPanel from "./components/GlassPanel";
 import Head from "./components/Head";
+import NameHeader from "./components/NameHeader";
 import PixelIcon from "./components/PixelIcon";
 import Splash from "./components/Splash";
+import SubtitleStack from "./components/SubtitleStack";
 import Transport from "./components/Transport";
 import { theme } from "./styles/theme";
 
@@ -24,25 +26,8 @@ function App() {
     <ThemeProvider theme={theme}>
       <Background />
       <GlassPanel />
-      <Styled.HeaderText>(faiz)aan sakib</Styled.HeaderText>
-      <Styled.SubtitleText bottom="52" left="2" width="20">
-        senior
-      </Styled.SubtitleText>
-      <Styled.SubtitleText bottom="42" left="2" width="20">
-        software
-      </Styled.SubtitleText>
-      <Styled.SubtitleText bottom="32" left="2" width="20">
-        engineer
-      </Styled.SubtitleText>
-      <Styled.SubtitleText bottom="22" left="2">
-        fullstack
-      </Styled.SubtitleText>
-      <Styled.SubtitleText bottom="12" left="2">
-        london
-      </Styled.SubtitleText>
-      <Styled.SubtitleText bottom="2" left="2">
-        affirm
-      </Styled.SubtitleText>
+      <NameHeader />
+      <SubtitleStack />
 
       <Styled.SocialIconsContainer>
         <PixelIcon
