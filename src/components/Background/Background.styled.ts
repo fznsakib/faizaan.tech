@@ -12,21 +12,10 @@ export const Background = styled.div`
   background-color: rgb(20, 61, 50);
 `;
 
-export const GridLayout = styled.div<{
-  $gridWidth: number;
-  $gridHeight: number;
-  $columns: number;
-  $rows: number;
-  $zIndex: number;
-}>`
+export const Canvas = styled.canvas`
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: ${({ $gridWidth }) => $gridWidth}px;
-  height: ${({ $gridHeight }) => $gridHeight}px;
-  z-index: ${({ $zIndex }) => $zIndex};
-  display: grid;
-  grid-template-columns: repeat(${({ $columns }) => $columns}, 40px);
-  grid-template-rows: repeat(${({ $rows }) => $rows}, 40px);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 `;
