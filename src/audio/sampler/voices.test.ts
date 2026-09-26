@@ -66,4 +66,8 @@ describe("voices", () => {
     expect(Math.min(...data.slice(0, 1000))).toBeGreaterThanOrEqual(-1);
     expect(createNoiseBuffer(new FakeAudioContext() as unknown as BaseAudioContext).getChannelData(0)[10]).toBe(data[10]);
   });
+  it("does not fall into a short cycle (32-bit LCG, no precision loss)", () => {
+    const data = setup().noise.getChannelData(0);
+    expect(Array.from(data.slice(17090, 17154))).not.toEqual(Array.from(data.slice(6624, 6688)));
+  });
 });
