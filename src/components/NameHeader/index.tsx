@@ -48,9 +48,12 @@ const NameHeader: React.FC = () => {
       if (!cancelled) measure();
     });
     window.addEventListener("resize", measure);
+    // `fonts.ready` can settle before Golos is even requested (Safari/Firefox): re-lock when a face lands.
+    document.fonts.addEventListener("loadingdone", measure);
     return () => {
       cancelled = true;
       window.removeEventListener("resize", measure);
+      document.fonts.removeEventListener("loadingdone", measure);
     };
   }, []);
 
