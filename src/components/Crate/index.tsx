@@ -36,6 +36,7 @@ const Crate: React.FC<CrateProps> = ({ onClose }) => {
           <Styled.Sleeve
             type="button"
             aria-label={`Play ${track.title}`}
+            title={track.title}
             aria-current={track.id === current ? "true" : undefined}
             $current={track.id === current}
             onMouseDown={keepFocus}
