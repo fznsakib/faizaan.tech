@@ -162,10 +162,11 @@ const GlassPanel: React.FC = () => {
       cursor = next;
       document.body.style.cursor = next ?? restoreCursor;
     };
-    const hit = (event: PointerEvent) =>
-      engine.getSnapshot().unlocked && isPageSurface(event.target)
-        ? hitGlass(bodies, states.current, { x: event.clientX, y: event.clientY }, window.innerWidth, window.innerHeight)
+    const hitAt = (target: EventTarget | null, x: number, y: number) =>
+      engine.getSnapshot().unlocked && isPageSurface(target)
+        ? hitGlass(bodies, states.current, { x, y }, window.innerWidth, window.innerHeight)
         : -1;
+    const hit = (event: PointerEvent) => hitAt(event.target, event.clientX, event.clientY);
 
     const down = (event: PointerEvent) => {
       if (drag.current || (event.pointerType === "mouse" && event.button !== 0)) return;
@@ -223,7 +224,12 @@ const GlassPanel: React.FC = () => {
       pointer.current = null;
       letGo(null, false);
     };
-    // a held piece owns the touch: no scrolling or pull-to-refresh underneath it
+    // a finger that lands on glass owns the touch from the start, before the browser can make it a scroll, zoom or
+    // pull-to-refresh (which would cancel the drag); and a held piece keeps it
+    const touchStart = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      if (event.touches.length === 1 && hitAt(event.target, touch.clientX, touch.clientY) >= 0) event.preventDefault();
+    };
     const touchMove = (event: TouchEvent) => {
       if (drag.current) event.preventDefault();
     };
@@ -234,6 +240,7 @@ const GlassPanel: React.FC = () => {
     window.addEventListener("pointercancel", cancel, capture);
     window.addEventListener("pointerout", out);
     window.addEventListener("blur", blur);
+    window.addEventListener("touchstart", touchStart, { passive: false });
     window.addEventListener("touchmove", touchMove, { passive: false });
     return () => {
       window.removeEventListener("pointerdown", down, capture);
@@ -242,6 +249,7 @@ const GlassPanel: React.FC = () => {
       window.removeEventListener("pointercancel", cancel, capture);
       window.removeEventListener("pointerout", out);
       window.removeEventListener("blur", blur);
+      window.removeEventListener("touchstart", touchStart);
       window.removeEventListener("touchmove", touchMove);
       setCursor(null);
     };

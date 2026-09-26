@@ -528,6 +528,14 @@ describe("dragging", () => {
     expect([next.x, next.y]).toEqual([788, 507]);
   });
 
+  it("stays glued to the pointer while held: no beat bob moves it off the grab point", () => {
+    const held = dragTo(start, { x: 800, y: 500 }, { x: 0, y: 0 }, e, W, H);
+    for (const beatPhase of [0.05, 0.18, 0.4, 0.75]) {
+      const pose = glassPose(body, input({ isPlaying: true, beatPhase, energy: 1 }), held);
+      expect([pose.x, pose.y]).toEqual([held.x, held.y]);
+    }
+  });
+
   it("stops at the walls", () => {
     const held = dragTo(start, { x: -300, y: 5000 }, { x: 0, y: 0 }, e, W, H);
     expect(held.x).toBe(e.left);
@@ -549,11 +557,30 @@ describe("hitGlass", () => {
     const alone = states.map((state, k) => (k === 2 ? state : { ...state, x: -9999 }));
     expect(hitGlass(bodies, alone, { x: states[2].x + tip.x * size - 2, y: states[2].y + tip.y * size }, W, H)).toBe(2);
     expect(hitGlass(bodies, alone, { x: states[2].x + tip.x * size + 2, y: states[2].y + tip.y * size }, W, H)).toBe(-1);
-    // the corners of its bounding box are empty glass-free space
-    const e = glassExtent(bodies[2], W, H);
-    expect(hitGlass(bodies, alone, { x: states[2].x + e.right - 1, y: states[2].y + e.bottom - 1 }, W, H)).toBe(-1);
     const stacked = states.map((state) => ({ ...state, x: 700, y: 450 }));
     expect(hitGlass(bodies, stacked, { x: 700, y: 450 }, W, H)).toBe(bodies.length - 1);
+  });
+
+  it("misses the empty corners of a piece's own bounding box: point-in-outline, not a box test", () => {
+    for (const seed of SEEDS) {
+      const pieces = createBodies(seeded(seed));
+      pieces.forEach((body, i) => {
+        const size = glassScale(body, W, H);
+        const alone = pieces.map((piece, k) => ({ ...initialState(piece, 0, W, H, false), x: k === i ? 720 : -9999, y: 450 }));
+        const xs = body.outline.map((point) => point.x * size);
+        const ys = body.outline.map((point) => point.y * size);
+        const [left, right, top, bottom] = [Math.min(...xs) + 2, Math.max(...xs) - 2, Math.min(...ys) + 2, Math.max(...ys) - 2];
+        expect(hitGlass(pieces, alone, { x: 720, y: 450 }, W, H)).toBe(i);
+        for (const [x, y] of [
+          [left, top],
+          [right, top],
+          [left, bottom],
+          [right, bottom],
+        ]) {
+          expect(hitGlass(pieces, alone, { x: 720 + x, y: 450 + y }, W, H)).toBe(-1);
+        }
+      });
+    }
   });
 });
 

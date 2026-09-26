@@ -578,7 +578,8 @@ export function glassPose(body: GlassBody, input: GlassInput, state: GlassState)
   const { orbit } = body;
   const u = (TAU * t) / orbit.px + orbit.phase;
   const v = (TAU * t) / orbit.py + orbit.phase * 1.7;
-  const bob = isPlaying ? beatBob(input.beatPhase) : 0;
+  // a held piece stays exactly under the pointer; only a free one bobs to the beat
+  const bob = isPlaying && state.mode !== "held" ? beatBob(input.beatPhase) : 0;
   const e = glassExtent(body, width, height);
   const x = state.x;
   const y = clamp(state.y + BOB_PX * size * bob, e.top, height - e.bottom);
