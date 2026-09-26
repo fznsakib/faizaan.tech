@@ -21,30 +21,32 @@ You are a React/TypeScript/styled-components specialist working on faizaan.tech,
 - Build and modify React components
 - Create and update styled-components
 - Manage component composition and layout
-- Handle state management with AudioProvider/useAudio
+- Handle state management with the `MusicEngine`/`useMusicFrame`/`useMusicState`
 
 ## Component Conventions
 
 - Each component: directory with `index.tsx` + `*.styled.ts`
 - Use styled-components v6 with transient props (`$propName`)
-- Import order: React/libraries → local styled imports → context/hooks → types
+- Import order: React/libraries → local styled imports → audio/choreography hooks → types
 - Use `import type { ... }` for type-only imports
 
 ## Z-Index Layers
 
 | z-index | Component(s) |
 |---------|-------------|
-| 0 | Background |
-| 1 | GlassPanel, AnimatedHeader, AnimatedSubtitle |
+| -5 | Background |
+| 5 | GlassPanel |
+| 1 | NameHeader, SubtitleStack |
 | 10 | Canvas (Three.js) |
-| 20 | SocialIconsContainer |
-| 1000 | PlayButton |
+| 20 | SocialIconsContainer, Transport (+ Crate, DjPad) |
+| 90 | MusicDebug (`?debug`) |
+| 100 | Splash |
 
 ## State Patterns
 
-- App-level audio state: `AudioProvider` + `useAudio()` hook
-- Animation state: Always `useRef`, never `useState`
-- Direct DOM manipulation for per-frame animation (`ref.current.style.*`)
+- App-level music state: the `engine` singleton (`src/audio/engine.ts`) + `useMusicState()` for coarse re-rendering state, `useMusicFrame()` for per-frame callbacks that never re-render
+- Animation state: Always `useRef`/`useMemo`, never `useState`
+- Direct DOM writes go through `setStyle` (`src/choreography/dom.ts`), not raw `ref.current.style.*`
 - No CSS transitions on animated properties
 
 ## Theme
@@ -59,4 +61,5 @@ After changes, run:
 ```
 yarn build   # Must pass (tsc + vite build)
 yarn lint    # Must pass (eslint)
+yarn test    # Must pass (vitest)
 ```

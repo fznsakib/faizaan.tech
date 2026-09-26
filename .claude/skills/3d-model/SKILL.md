@@ -9,87 +9,89 @@ Key file: `src/components/Head/index.tsx`
 
 ## Model Loading
 
-Uses `OBJLoader` from `three/examples/jsm/Addons.js`:
-1. Load model from `/src/assets/head.obj`
-2. Center at origin: compute bounding box, subtract center
-3. Traverse children, apply material to each `Mesh`
-4. Store in state via `useState<Group | null>`
+Uses `useGLTF` from `@react-three/drei`:
+1. Load `headModelUrl` (`src/assets/head.glb`, imported with `?url`)
+2. `prepareModel()` clones the scene, traverses children and applies the shared material to each `Mesh`
+3. Computes a bounding box and re-centres the model on a pivot near the atlanto-occipital joint (22% up from the neck, slightly behind centre) — this makes a pitch rotation read as a nod, not a spin
+4. Memoize the prepared model with `useMemo` keyed on `[scene, material]`
 
 ## Current Material Config
 
 ```ts
 new MeshStandardMaterial({
-  color: "orange",
-  metalness: 0.9,
-  roughness: 0,
-  emissive: "orange",
-  emissiveIntensity: 0.2,
+  color: "#ff8a1c",
+  metalness: 1,
+  roughness: 0.22,
+  emissive: "#ff6a00",
+  emissiveIntensity: BASE_EMISSIVE, // 0.04, pulses with kick*energy
+  envMapIntensity: 1.3,
 })
 ```
 
-## Lighting Setup (in App.tsx)
+Dispose it on unmount: `useEffect(() => () => material.dispose(), [material])`.
 
+## Lighting Setup
+
+In `App.tsx` (Canvas-level):
 ```tsx
-<ambientLight intensity={5} />
+<ambientLight intensity={0.3} />
 <pointLight position={[10, 10, 10]} intensity={20} distance={20} decay={2} />
 <pointLight position={[-5, -5, -5]} intensity={5} />
 ```
 
+In `Head/index.tsx`: an `Environment` with 4 `Lightformer`s (front rect, two colored side rects, a ring below) plus one `directionalLight` rim light (`BASE_RIM` 1.5, intensity pulses with `frame.snare`).
+
 ## Animation with useFrame
 
-Always use `useFrame` for animation — never raw `requestAnimationFrame`:
+`Head` reads `engine.frame` directly inside `useFrame` — no hook subscription, since it already lives inside the r3f render loop:
 
 ```tsx
-useFrame(({ pointer, clock }) => {
-  if (!meshRef.current) return;
+useFrame(({ pointer, clock, camera }, delta) => {
+  const frame = engine.frame;
   // animation logic here
 });
 ```
 
-Use `useRef` for mutable state between frames (not `useState`).
+Use `useRef`/`useMemo` for mutable state between frames (springs, the rig group ref) — never `useState`.
 
-## BPM-Synced Motion
+## Beat-Locked Nodding
 
-The head nods to the beat using a sine wave:
+The head nods locked to the beat map, not a free-running sine wave. From `src/choreography/nod.ts`:
 
 ```
-sineValue = sin(timeSinceMusicStart * (bpm / 60) * PI * 2)
-nodAngle = sineValue * maxNodAngle * intensityMultiplier
+drive = nodDrive(frame)          // { phase, period, accent } — phase 0 at the landing beat
+curve = bob(drive.phase, drive.period)   // authored curve: rebound + anticipation lift
+amplitude = deg(2.5 + 6.5 * frame.energy) * drive.accent * frame.beatConfidence
+pitch = pitchSpring.step(curve * amplitude, dt)
 ```
 
-- Intensity updates only at direction changes (peak/trough detection via sign change)
-- Bass intensity mapped through cubic curve: `intensity^3`
-- Multiplier range: 0.1 (quiet) to 0.5 (loud bass)
+- Half-time above `HALF_TIME_BPM` (135): nods every other beat.
+- `DOWNBEAT_ACCENT` (1.35) scales the nod when the nearest landing is a downbeat.
+- `NOD_LEAD` (0.05s) samples the authored curve early to cancel the smoothing spring's lag.
+- Pitch/lift/roll are each driven through a `Spring` (second-order, sub-stepped at 240Hz): pitch/lift `(900, 45)`, roll `(120, 18)` stiffness/damping.
+- With no song playing but a recent DJ hit (`frame.jamming`): a small extra nod, `deg(6) * frame.kick`.
 
 ## Mouse Interaction
 
-Pointer NDC coordinates (-1 to 1) → rotation:
-- Vertical: `mouseY * 0.15` → pitch (rotation.x)
-- Horizontal: `mouseX * 0.2` → yaw (rotation.y)
-- Combined with BPM nodding for final rotation
-- Clamped to `[-maxNodAngle, maxNodAngle]` for X and `[-0.5, 0.5]` for Y
+Pointer NDC coordinates (-1 to 1), damped with `maath/easing`'s `damp` (tau 0.35):
+- `MOUSE_YAW` = 22°, `MOUSE_PITCH` = 10°
+- Combined additively with the music-driven pitch/yaw/roll for the final `head.rotation`
+- Scaled by `0.5` instead of `1` under `prefersReducedMotion()`
 
 ## Current Head Transform
 
-```tsx
-<primitive
-  object={obj}
-  scale={0.25}
-  position={[0, -2.5, 0]}
-  rotation={[Math.PI / 2, Math.PI, 0]}
-/>
-```
+Set inside `prepareModel()`, not as a static JSX prop: `rotation.set(Math.PI / 2, Math.PI, 0)`, `scale.setScalar(0.25)`, then re-centred onto the nod pivot described above.
 
 ## Canvas Setup
 
-In `App.tsx`, the Canvas uses fixed positioning with z-index 10:
+In `App.tsx`, the Canvas is fixed-position with `dpr={[1, 1.75]}` and z-index 10:
 ```tsx
-<Canvas style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", zIndex: 10 }}>
+<Canvas dpr={[1, 1.75]} style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", zIndex: 10 }}>
 ```
 
 ## Performance Tips
 
-- Use `useRef` for animation state, not `useState`
+- `useRef`/`useMemo` for animation state and one-time objects (material, springs), not `useState`
 - Avoid creating new objects (Vector3, Material) inside `useFrame`
-- Track music start time with `useRef<number | null>` to avoid reset on re-render
-- Use `useEffect` to detect music state changes, store timing in ref
+- `Head` reads `engine.frame` directly each tick — no per-frame allocations, no React re-renders
+- `prefersReducedMotion()` (`src/hooks/reducedMotion.ts`) gates mouse reach and idle motion; check it inside `useFrame`, not once at mount
