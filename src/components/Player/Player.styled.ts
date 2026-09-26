@@ -263,7 +263,6 @@ export const Tab = styled.button`
   width: 44px;
   height: 116px;
   padding: 10px 0;
-  margin-right: -2px;
   cursor: pointer;
   touch-action: manipulation;
   background: var(--win-bg);
@@ -304,9 +303,10 @@ export const Stack = styled.div`
   flex-direction: column;
   width: 318px;
 
+  /* centred at mid-height, this cap keeps the open drawer clear of the link dock (bottom 16 + 48 px) */
   ${DRAWER} & {
     width: var(--drawer-width);
-    max-height: calc(100dvh - 32px);
+    max-height: calc(100dvh - 144px);
   }
 `;
 
@@ -329,6 +329,7 @@ const windowChrome = css`
 export const Window = styled.div`
   ${windowChrome}
   z-index: 1;
+  flex: none;
 `;
 
 export const PlaylistWindow = styled.div`
@@ -375,7 +376,7 @@ export const TitleBar = styled.div<{ $small?: boolean }>`
   }
 
   ${DRAWER} & {
-    height: ${({ $small }) => ($small ? 22 : 44)}px;
+    height: ${({ $small }) => ($small ? 22 : 48)}px;
     font-size: calc(var(--title-size) + 2px);
   }
 `;
@@ -472,7 +473,7 @@ export const TitleButton = styled.button`
 
   ${DRAWER} & {
     width: 44px;
-    height: 36px;
+    height: 44px;
 
     svg {
       width: 12px;
@@ -607,6 +608,12 @@ export const Clock = styled.button`
   cursor: pointer;
   display: inline-flex;
   color: var(--lcd-fg);
+
+  /* a 44 px tall touch target without growing the LCD */
+  ${DRAWER} & {
+    padding: 9px 0;
+    margin: -9px 0;
+  }
 
   ${focusRing}
 `;
@@ -1080,10 +1087,13 @@ export const List = styled.ul`
     margin: 0 4px 5px;
   }
 
+  /* the drawer's give: the list shrinks (to two rows) before the drawer would reach the link dock */
   ${DRAWER} & {
+    flex: 0 1 auto;
     height: auto;
-    max-height: min(260px, 30dvh);
-    line-height: 40px;
+    min-height: 92px;
+    max-height: 268px;
+    line-height: 44px;
     font-size: 13px;
   }
 
