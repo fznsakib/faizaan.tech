@@ -138,16 +138,20 @@ describe("createBodies", () => {
       const { outline } = body;
       const n = outline.length;
       expect(n).toBeGreaterThanOrEqual(48);
+      let crossings = 0;
+      let sharpest = 0;
       for (let i = 0; i < n; i++) {
         for (let j = i + 2; j < n; j++) {
           if (i === 0 && j === n - 1) continue;
-          expect(segmentsCross(outline[i], outline[i + 1], outline[j], outline[(j + 1) % n])).toBe(false);
+          if (segmentsCross(outline[i], outline[i + 1], outline[j], outline[(j + 1) % n])) crossings++;
         }
         // smooth: consecutive edges turn by less than 20 degrees
         const [a, b, c] = [outline[i], outline[(i + 1) % n], outline[(i + 2) % n]];
         const turn = Math.atan2((b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x), (b.x - a.x) * (c.x - b.x) + (b.y - a.y) * (c.y - b.y));
-        expect(Math.abs(turn)).toBeLessThan((20 * Math.PI) / 180);
+        sharpest = Math.max(sharpest, Math.abs(turn));
       }
+      expect(crossings).toBe(0);
+      expect(sharpest).toBeLessThan((20 * Math.PI) / 180);
       // counter-clockwise on screen (y down), and fills a good part of its bounding box
       expect(area(outline)).toBeGreaterThan(0.5 * body.w * body.h);
     });
