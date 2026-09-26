@@ -49,7 +49,7 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 
 | Layer            | z-index | Component(s)                       |
 |-------------------|---------|------------------------------------|
-| Background        | -5      | `Background` (canvas plus-grid)    |
+| Background        | 0       | `Background` (canvas plus-grid); 0, not below, so a body background (ours or a host page's) can't paint over it |
 | Header/Subtitle   | 1       | `NameHeader`, `SubtitleStack`      |
 | GlassPanel        | 9       | `GlassPanel` (refractive glass, always behind the head) |
 | Canvas (3D)       | 10      | Three.js `Canvas` with `Head`      |
@@ -62,10 +62,12 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 - **Engine state**: `MusicEngine` is a plain class outside React. `useMusicState()` for coarse, re-rendering state; `useMusicFrame()` for per-frame callbacks that never re-render.
 - **Animation state**: Always `useRef`/`useMemo` for per-frame values (never `useState` — avoids re-renders).
 - **Direct DOM manipulation**: Write through `setStyle(el, prop, value)` in `src/choreography/dom.ts`, which dedupes so a redundant write never hits the DOM.
-- **Choreography module** (`src/choreography/`): pure, unit-tested per-effect math, kept separate from components — `nod` (phase-locked head nod, spring physics), `type` (header weight pulse, EQ ballistics, coarse font-variation steps), `faces` (per-word/per-letter header faces and their shockwave), `grid` (cursor-facing plusses, music pulses), `glass` (glass outlines, refraction maps, drift/drag/throw/wall physics), `dom` (`setStyle`).
+- **Choreography module** (`src/choreography/`): pure, unit-tested per-effect math, kept separate from components — `nod` (phase-locked head nod, spring physics), `type` (header weight pulse, EQ ballistics, coarse font-variation steps), `faces` (per-word/per-letter header faces and their shockwave), `grid` (cursor-facing plusses, music pulses), `glass` (glass outlines, refraction maps, drift/drag/throw/wall physics), `fit` (camera distance/height so the head suits the viewport), `tilt` (phone tilt → pointer-like look, calibration), `dom` (`setStyle`).
 - **No CSS transitions** on properties written per-frame.
 - **Player skins**: each skin is a set of CSS custom properties on the Player's `Shell` (`[data-skin]`) plus a few `[data-skin="…"] &` rules; the visualiser's canvas palettes live in `Player/paint.ts`. The layout is shared; skins change look only.
 - **Three.js**: Use `useFrame` for animation loops (never raw `requestAnimationFrame`). `Head` reads `engine.frame` directly inside `useFrame` rather than via a hook. Use `useRef`/`useMemo` for mutable state and one-time objects (materials, springs).
+- **Colour**: one palette, whatever the colour scheme or a host page's styles (`colors.site` in `src/styles/colors.ts`: white text on `rgb(20, 61, 50)`). `global.ts` sets it on `:root`, `body` and `#root` with `color-scheme: dark`, and text components set their own `color`; never rely on inherited text colour. Import `colors` directly: `styled.d.ts`'s `DefaultTheme` alias doesn't type `theme.colors`.
+- **Mobile**: phones take their own layout under `(max-width: 767px)` (portrait) and `(max-height: 500px)` (landscape); desktop windows ≥ 1280 px wide and taller than 500 px are untouched by them (a desktop window ≤ 500 px tall gets the landscape-phone name and subtitles too). `viewport-fit=cover`, so every edge-fixed element insets with `max(Npx, env(safe-area-inset-*))`. The camera fit (`fitCamera`) pulls back and lowers the camera in portrait (head ≤ 65% of the width, ≤ 45% of the height, centred at 40% down) and is exactly today's z = 5, y = 0 on desktop.
 
 ## Code Conventions
 
@@ -94,8 +96,12 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 | `src/choreography/faces.ts` | Header faces: per word when calm, per letter in drops, Doto/Golos anchors, shockwave |
 | `src/choreography/grid.ts` | Plus-grid maths: layout, cursor turn, music pulse |
 | `src/choreography/glass.ts` | Glass outlines (new per load), displacement maps, drift/drag/throw/wall-bounce physics |
+| `src/choreography/fit.ts` | `fitCamera(width, height)` → `{ z, y }`: desktop keeps z = 5, phones pull back (and lower the camera in portrait) until the head fits |
+| `src/choreography/tilt.ts` | `tiltLook` (beta/gamma → gravity in the screen's axes by `screen.orientation.angle` → the right edge's dip and the screen's raise → pointer-like look; continuous through upright, where the raw Euler angles flip) and `TiltCalibration` |
+| `src/hooks/useDeviceTilt.ts` | Tilt-follow on touch devices: `enableDeviceTilt()` on the enter tap (iOS permission, levels at the current attitude), `useDeviceTilt()` gives `Head` a look or null (no sensor/permission, desktop, reduced motion); re-levels on rotation |
+| `src/styles/global.ts` | Global reset and the host-independent palette |
 | `src/components/Background/index.tsx` | Canvas plus-grid: big plusses face the cursor, mini plusses pulse with the kick |
-| `src/components/Head/index.tsx` | 3D head model, beat-locked nodding |
+| `src/components/Head/index.tsx` | 3D head model, beat-locked nodding; follows the mouse, or the phone's tilt on touch devices; camera from `fitCamera` |
 | `src/assets/head.glb` | The head mesh: stock head with the owner's face, generated by `yarn headmap` (UVs + `_FACEWEIGHT`) |
 | `src/assets/head-face.jpg` | The face's photo skin (face crop only, no room), generated beside `head.glb` |
 | `src/components/Head/faceSkin.ts` | Shader patch blending the chrome into the photo skin by `_faceweight` |
@@ -103,14 +109,14 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 | `scripts/assets/base-head.glb` | The untouched stock head every `yarn headmap` run starts from |
 | `src/components/NameHeader/index.tsx` | Font-cycling, kick-shockwave name header |
 | `src/components/SubtitleStack/index.tsx` | 6-band graphic EQ / idle scan |
-| `src/components/Player/index.tsx` | Winamp-style player: artwork, LCD, visualiser, seek, transport, volume, playlist; 3 skins; docked above the links on desktop, a slide-out drawer with a tab on narrow screens. `?debug` exposes its per-frame cost as `window.__player.costs` (ms) |
+| `src/components/Player/index.tsx` | Winamp-style player: artwork, LCD, visualiser, seek, transport, volume, playlist; 3 skins; docked above the links on desktop, a slide-out drawer with a tab (label stacked upright; the panel is hidden while tucked away) on narrow screens and landscape phones of any width; the jam pad docks top-right on desktop, under the name on portrait phones, right of the head on landscape ones, and opening it from the drawer tucks the drawer away. `?debug` exposes its per-frame cost as `window.__player.costs` (ms) |
 | `src/components/Player/useGlobalKeys.ts` | Page-wide keys (Space play/pause, M mute, A S D F hits), mounted by the Player; pure logic in `Player/keys.ts` |
 | `src/components/Player/skins.ts` | Skin ids/names, cycling, `localStorage` (`player.skin`) |
 | `src/components/Player/analyser.ts` | Visualiser bar falloff and Winamp-style peak caps (pure) |
 | `src/components/DjPad/index.tsx` | On-screen DJ-mode pad (opened by the Player's JAM button) |
 | `src/components/GlassPanel/index.tsx` | Refractive 3D glass (SVG displacement via `backdrop-filter`; frosted fallback / `?frosted`), draggable |
 | `src/components/SocialLinks/index.tsx` | Dot-matrix link dock: resolves on hover/focus, beat shimmer on touch |
-| `src/components/Splash/index.tsx` | Click-to-enter veil, unlocks audio |
+| `src/components/Splash/index.tsx` | Click-to-enter veil: inside the tap, unlocks audio (iOS audio session `playback` when entering with sound) and calls `enableDeviceTilt()` |
 | `src/components/MusicDebug/index.tsx` | `?debug` overlay (lamps, meters, metronome) |
 
 ## Adding a New Song

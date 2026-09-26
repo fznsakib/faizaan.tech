@@ -8,14 +8,15 @@ import { patchFaceSkin } from "./faceSkin";
 import headFaceUrl from "../../assets/head-face.jpg?url";
 import headModelUrl from "../../assets/head.glb?url";
 import { engine } from "../../audio/engine";
+import { CAMERA_Z, fitCamera } from "../../choreography/fit";
 import { bob, nodDrive, Spring } from "../../choreography/nod";
 import { choreographyProbe } from "../../choreography/probe";
 import { prefersReducedMotion } from "../../hooks/reducedMotion";
+import { useDeviceTilt } from "../../hooks/useDeviceTilt";
 
 import type { DirectionalLight, Object3D } from "three";
 
 const D = MathUtils.degToRad;
-const CAMERA_Z = 5;
 const BASE_EMISSIVE = 0.04;
 const BASE_RIM = 1.5;
 const MOUSE_YAW = D(22);
@@ -76,18 +77,20 @@ function Head() {
     []
   );
   const mouse = useRef({ yaw: 0, pitch: 0 });
+  const tilt = useDeviceTilt(); // on phones, the tilt stands in for the mouse
 
   useEffect(() => () => material.dispose(), [material]);
 
-  useFrame(({ pointer, clock, camera }, delta) => {
+  useFrame(({ pointer, clock, camera, size }, delta) => {
     const head = rig.current;
     if (!head) return;
     const frame = engine.frame;
     const reduced = prefersReducedMotion();
     const dt = Math.min(delta, 0.1);
     const reach = reduced ? 0.5 : 1;
-    damp(mouse.current, "yaw", MathUtils.clamp(pointer.x, -1, 1) * MOUSE_YAW * reach, 0.35, dt);
-    damp(mouse.current, "pitch", MathUtils.clamp(-pointer.y, -1, 1) * MOUSE_PITCH * reach, 0.35, dt);
+    const look = tilt.current ?? pointer;
+    damp(mouse.current, "yaw", MathUtils.clamp(look.x, -1, 1) * MOUSE_YAW * reach, 0.35, dt);
+    damp(mouse.current, "pitch", MathUtils.clamp(-look.y, -1, 1) * MOUSE_PITCH * reach, 0.35, dt);
 
     let curve = 0;
     let pitch: number;
@@ -97,7 +100,8 @@ function Head() {
     let squash = 0;
     let emissive = BASE_EMISSIVE;
     let rimIntensity = BASE_RIM;
-    let cameraZ = CAMERA_Z;
+    const fit = fitCamera(size.width, size.height); // today's camera on desktop; back (and down) on phones
+    let cameraZ = fit.z;
 
     if (frame.isPlaying && frame.bpm > 0 && !reduced) {
       const drive = nodDrive(frame);
@@ -111,7 +115,7 @@ function Head() {
         dt
       );
       yaw = D(1.5) * Math.sin(2 * Math.PI * frame.barPhase - 0.6) * confidence;
-      cameraZ = CAMERA_Z - 0.35 * frame.section;
+      cameraZ = fit.z - 0.35 * frame.section * (fit.z / CAMERA_Z);
     } else {
       const t = clock.elapsedTime;
       const breathe = reduced ? 0 : 1;
@@ -135,10 +139,13 @@ function Head() {
     material.emissiveIntensity = emissive;
     if (rim.current) rim.current.intensity = rimIntensity;
     camera.position.z = MathUtils.lerp(camera.position.z, cameraZ, 1 - Math.exp(-3 * dt));
+    camera.position.y = fit.y;
 
     choreographyProbe.headPitchDeg = MathUtils.radToDeg(pitch);
     choreographyProbe.nodCurve = curve;
     choreographyProbe.beatPhase = frame.beatPhase;
+    choreographyProbe.lookYawDeg = MathUtils.radToDeg(mouse.current.yaw);
+    choreographyProbe.lookPitchDeg = MathUtils.radToDeg(mouse.current.pitch);
   });
 
   return (

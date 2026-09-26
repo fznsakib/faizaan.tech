@@ -4,10 +4,11 @@ import { createPortal } from "react-dom";
 import * as Styled from "./Splash.styled";
 import { engine } from "../../audio/engine";
 import { useMusicState } from "../../audio/react";
+import { enableDeviceTilt } from "../../hooks/useDeviceTilt";
 
 const FADE_MS = 600;
 
-/** Click-to-enter veil: unlocks Web Audio inside the user gesture and starts the first track. */
+/** Click-to-enter veil: unlocks Web Audio (and asks for motion access) inside the user gesture, starts the first track. */
 const Splash: React.FC = () => {
   const { status } = useMusicState();
   const [phase, setPhase] = useState<"open" | "leaving" | "gone">("open");
@@ -18,7 +19,11 @@ const Splash: React.FC = () => {
     if (entered.current) return;
     entered.current = true;
     engine.setMuted(muted);
+    // iOS: play as media, not as a sound effect the ringer switch silences
+    const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
+    if (session && !muted) session.type = "playback";
     engine.unlock();
+    enableDeviceTilt(); // inside the gesture: iOS asks for motion access here
     engine.play(0);
     setPhase("leaving");
   };
