@@ -147,9 +147,13 @@ export class MusicEngine {
         track.map = map;
         if (this.tracks[this.current] === track) this.onCurrentReady();
       } catch (err) {
-        console.error(`[music] failed to load ${track.source.id}`, err);
         if (track.loading !== loading) return;
         track.loading = null; // allow a retry
+        if (track.source.loop) {
+          this.dropTrack(track, err); // a runtime preview failing is not the whole transport failing
+          return;
+        }
+        console.error(`[music] failed to load ${track.source.id}`, err);
         if (this.tracks[this.current] === track) {
           this.wantsPlay = false;
           this.set({ status: "error", isPlaying: false });
@@ -440,6 +444,25 @@ export class MusicEngine {
     frame.jamming = !playing && heard - this.hits.lastHitAt(heard) < JAM_WINDOW;
     this.lastHeard = heard;
     this.hits.prune(heard);
+  }
+
+  /** Remove a runtime track that failed to load; if it was current, fall back to the next bundled track. */
+  private dropTrack(track: LoadedTrack, err: unknown): void {
+    console.info(`[music] dropped ${track.source.id}:`, err instanceof Error ? err.message : err);
+    const index = this.tracks.indexOf(track);
+    if (index < 0) return;
+    const wasCurrent = index === this.current;
+    const resume = wasCurrent && (this.state.isPlaying || this.wantsPlay);
+    this.tracks.splice(index, 1);
+    if (index < this.current) this.current -= 1;
+    this.set({ tracks: this.tracks.map((t) => trackInfo(t.source)) });
+    if (!wasCurrent) return;
+    let target = index % this.tracks.length;
+    for (let step = 0; step < this.tracks.length && this.tracks[target].source.loop; step++) {
+      target = (target + 1) % this.tracks.length;
+    }
+    this.current = target;
+    this.switchTo(target, resume);
   }
 
   /** The next track the playlist advances to on its own: looping tracks (previews) are skipped. */

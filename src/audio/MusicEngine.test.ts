@@ -577,6 +577,23 @@ describe("crate", () => {
     expect(engine.update(1000)).toMatchObject({ isPlaying: true, beatConfidence: 0 });
   });
 
+  it("drops a runtime track that fails to load and falls back to a bundled one", async () => {
+    const info = vi.spyOn(console, "info").mockImplementation(() => {});
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { engine } = await playing({
+      fetch: (url) => (url === "/p.m4a" ? Promise.reject(new Error("blocked")) : Promise.resolve(new ArrayBuffer(8))),
+    });
+    engine.addTrack(preview());
+    engine.select("p");
+    await flush();
+    await engine.preload();
+    expect(engine.getSnapshot().status).not.toBe("error");
+    expect(engine.getSnapshot().tracks.map((t) => t.id)).toEqual(["a", "b"]);
+    expect(engine.getSnapshot()).toMatchObject({ track: "a", isPlaying: true });
+    expect(info).toHaveBeenCalledTimes(1);
+    expect(error).not.toHaveBeenCalled();
+  });
+
   it("loops a looping track instead of advancing", async () => {
     const { engine, ctx } = await playing();
     engine.addTrack(preview());

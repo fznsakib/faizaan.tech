@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { nowPlaying } from "./now-playing.mts";
+import { nowPlaying } from "./functions/now-playing.mts";
 
 const env = { LASTFM_USER: "faiz", LASTFM_API_KEY: "key" };
 const lastfm = (tracks: unknown) =>
