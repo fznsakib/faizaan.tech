@@ -13,20 +13,20 @@ export const Background = styled.div`
 `;
 
 export const GridLayout = styled.div<{
-  gridWidth: number;
-  gridHeight: number;
-  columns: number;
-  rows: number;
-  zIndex: number;
+  $gridWidth: number;
+  $gridHeight: number;
+  $columns: number;
+  $rows: number;
+  $zIndex: number;
 }>`
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: ${({ gridWidth }) => gridWidth}px;
-  height: ${({ gridHeight }) => gridHeight}px;
-  z-index: ${({ zIndex }) => zIndex};
+  width: ${({ $gridWidth }) => $gridWidth}px;
+  height: ${({ $gridHeight }) => $gridHeight}px;
+  z-index: ${({ $zIndex }) => $zIndex};
   display: grid;
-  grid-template-columns: repeat(${({ columns }) => columns}, 40px);
-  grid-template-rows: repeat(${({ rows }) => rows}, 40px);
+  grid-template-columns: repeat(${({ $columns }) => $columns}, 40px);
+  grid-template-rows: repeat(${({ $rows }) => $rows}, 40px);
 `;

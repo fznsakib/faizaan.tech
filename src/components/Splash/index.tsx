@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import * as Styled from "./Splash.styled";
 import { engine } from "../../audio/engine";
@@ -33,6 +34,17 @@ const Splash: React.FC = () => {
     return () => window.clearTimeout(timer);
   }, [phase]);
 
+  const open = phase !== "gone";
+  useEffect(() => {
+    if (!open) return;
+    const root = document.getElementById("root");
+    if (!root) return;
+    root.inert = true; // nothing behind the veil can take focus or clicks
+    return () => {
+      root.inert = false;
+    };
+  }, [open]);
+
   useEffect(() => {
     if (phase !== "open") return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -48,7 +60,7 @@ const Splash: React.FC = () => {
   if (phase === "gone") return null;
 
   const loading = status === "idle" || status === "loading";
-  return (
+  return createPortal(
     <Styled.Veil
       role="dialog"
       aria-modal="true"
@@ -76,7 +88,8 @@ const Splash: React.FC = () => {
       >
         enter without sound
       </Styled.SilentButton>
-    </Styled.Veil>
+    </Styled.Veil>,
+    document.body
   );
 };
 

@@ -188,7 +188,11 @@ export class MusicEngine {
     this.set({ isPlaying: false });
   }
 
+  /** Play/pause for a user gesture. If the system interrupted audio (iOS call, Siri), the gesture resumes it. */
   toggle(): void {
+    const interrupted = this.source !== null && this.ctx !== null && this.ctx.state !== "running";
+    this.unlock();
+    if (interrupted) return;
     if (this.state.isPlaying) this.pause();
     else this.play();
   }
@@ -225,9 +229,11 @@ export class MusicEngine {
   update(nowMs: number): MusicFrame {
     if (nowMs === this.lastNow) return this.frame;
     this.lastNow = nowMs;
-    const playing = this.source !== null && this.ctx !== null;
+    // A suspended/interrupted context (iOS call, Siri) freezes currentTime: visuals go idle with it.
+    const running = this.ctx !== null && this.ctx.state === "running";
+    const playing = this.source !== null && running;
     let time = this.pausedAt;
-    if (playing) {
+    if (this.source && this.ctx) {
       time = Math.max(
         this.timeFloor,
         this.songTimeAtContext(this.audibleContextTime(nowMs) + this.visualLead + this.userOffset)
@@ -359,6 +365,7 @@ export class MusicEngine {
     const ctx = this.ctx as AudioContext;
     const stamp = typeof ctx.getOutputTimestamp === "function" ? ctx.getOutputTimestamp() : undefined;
     if (
+      ctx.state === "running" &&
       stamp?.contextTime !== undefined &&
       stamp.performanceTime !== undefined &&
       stamp.performanceTime > 0

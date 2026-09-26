@@ -206,6 +206,15 @@ describe("transport", () => {
     expect(engine.getSnapshot().isPlaying).toBe(true);
   });
 
+  it("toggle resumes an interrupted context instead of pausing", async () => {
+    const { engine, ctx } = await playing();
+    ctx().state = "suspended";
+    engine.toggle();
+    expect(ctx().state).toBe("running");
+    expect(engine.getSnapshot().isPlaying).toBe(true);
+    expect(ctx().sources[0].stopped).toBe(false);
+  });
+
   it("seek restarts the source at the target and clamps to the track", async () => {
     const { engine, ctx } = await playing();
     engine.seek(10);
@@ -358,6 +367,18 @@ describe("frames", () => {
     engine.seek(1);
     audibleAt(ctx(), 5.1, 2000);
     expect(engine.update(2000).time).toBeCloseTo(1.05);
+  });
+
+  it("freezes time and reports not playing while the context is suspended", async () => {
+    const { engine, ctx } = await playing();
+    audibleAt(ctx(), 1.0, 1000);
+    engine.update(1000);
+    ctx().state = "suspended";
+    ctx().currentTime = 1.03;
+    const frozen = engine.update(2000).time;
+    expect(frozen).toBeCloseTo(1.03 - 0.005 - 0.02 - 0.05);
+    expect(engine.frame.isPlaying).toBe(false);
+    expect(engine.update(3000).time).toBeCloseTo(frozen);
   });
 
   it("is idempotent for the same timestamp", async () => {

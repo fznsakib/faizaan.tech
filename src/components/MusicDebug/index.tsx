@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import * as Styled from "./MusicDebug.styled";
 import { engine } from "../../audio/engine";
 import { useMusicFrame } from "../../audio/react";
+import { choreographyProbe } from "../../choreography/probe";
 
 import type { MusicFrame } from "../../audio/types";
 
@@ -54,6 +55,7 @@ const MusicDebug: React.FC = () => {
 
   useEffect(() => {
     (window as Window & { __music?: typeof engine }).__music = engine;
+    (window as Window & { __choreo?: typeof choreographyProbe }).__choreo = choreographyProbe;
   }, []);
 
   useMusicFrame((frame) => {
@@ -75,7 +77,8 @@ const MusicDebug: React.FC = () => {
       readout.textContent =
         `t=${frame.time.toFixed(3)} bpm=${frame.bpm.toFixed(2)} beat=${frame.beatIndex} ` +
         `bar=${frame.barIndex}.${Math.floor(frame.barPhase * 4) + 1}\n` +
-        `sec=${frame.section.toFixed(2)} lvl=${frame.sectionLevel} conf=${frame.beatConfidence}`;
+        `sec=${frame.section.toFixed(2)} lvl=${frame.sectionLevel} conf=${frame.beatConfidence}` +
+        ` head=${choreographyProbe.headPitchDeg.toFixed(1)}°`;
     }
     if (metronomeOn.current) tickMetronome.current(frame);
   });

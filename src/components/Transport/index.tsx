@@ -7,6 +7,8 @@ import { useMusicState } from "../../audio/react";
 
 const TYPING = "input, select, textarea, [contenteditable='true']";
 const CONTROLS = "a, button";
+/** Mouse clicks shouldn't leave focus on a control (Space would then re-press it instead of play/pause). */
+const keepFocus = (event: { preventDefault(): void }) => event.preventDefault();
 
 /** Always-visible Doto transport: play/pause, track · bpm, mute, next. Space = play/pause, M = mute. */
 const Transport: React.FC = () => {
@@ -26,7 +28,7 @@ const Transport: React.FC = () => {
       });
       if (action === "toggle") {
         event.preventDefault();
-        engine.toggle();
+        engine.toggle(); // also resumes audio the system interrupted
       } else if (action === "mute") {
         engine.setMuted(!engine.getSnapshot().muted);
       }
@@ -43,11 +45,9 @@ const Transport: React.FC = () => {
     <Styled.Bar>
       <Styled.Control
         type="button"
+        onMouseDown={keepFocus}
         aria-label={isPlaying ? "Pause music" : "Play music"}
-        onClick={() => {
-          engine.unlock();
-          engine.toggle();
-        }}
+        onClick={() => engine.toggle()}
       >
         {isPlaying ? "pause" : "play"}
       </Styled.Control>
@@ -56,11 +56,12 @@ const Transport: React.FC = () => {
         {bpm ? ` · ${Math.round(bpm)} bpm` : ""}
         {status === "loading" ? " · loading" : ""}
       </Styled.Label>
-      <Styled.Control type="button" aria-pressed={muted} onClick={() => engine.setMuted(!muted)}>
+      <Styled.Control type="button" onMouseDown={keepFocus} aria-label={muted ? "Unmute music" : "Mute music"} onClick={() => engine.setMuted(!muted)}>
         {muted ? "unmute" : "mute"}
       </Styled.Control>
       <Styled.Control
         type="button"
+        onMouseDown={keepFocus}
         aria-label="Next track"
         onClick={() => {
           engine.unlock();
