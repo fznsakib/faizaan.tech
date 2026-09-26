@@ -2,7 +2,7 @@ import styled from "styled-components";
 
 /**
  * Full-viewport layer at z 9: just beneath the head's canvas (10), so the head stands in front of the glass, and
- * above the name/subtitles (1) and grid, which it refracts. Transport and icons (20) sit above it. Never takes a
+ * above the name/subtitles (1) and grid, which it refracts. The player and icons (20) sit above it. Never takes a
  * click, and never becomes a backdrop root: no filter, opacity, mask, clip-path or blend here, or the glass would
  * stop seeing the page behind it.
  */

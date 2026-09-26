@@ -199,7 +199,7 @@ export class MusicEngine {
     const track = this.tracks[this.current];
     if (!track.buffer) {
       this.wantsPlay = true;
-      this.set({ isPlaying: true }); // "playing or starting": the transport label and toggle agree
+      this.set({ isPlaying: true }); // "playing or starting": the player's play state and toggle agree
       void this.preload(track.source.id);
       return;
     }
@@ -258,7 +258,7 @@ export class MusicEngine {
     this.cursors = createCursors();
   }
 
-  /** A pick from the crate: switch to the track by id and play it (a paused pick of the current track resumes it). */
+  /** A pick from the playlist: switch to the track by id and play it (a paused pick of the current track resumes it). */
   select(id: string): void {
     const index = this.tracks.findIndex((t) => t.source.id === id);
     if (index < 0) return;

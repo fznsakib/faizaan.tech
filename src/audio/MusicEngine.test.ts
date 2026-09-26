@@ -545,7 +545,7 @@ describe("DJ mode hits", () => {
   });
 });
 
-describe("crate", () => {
+describe("playlist picks", () => {
   it("selects a track by id and keeps playing", async () => {
     const { engine, ctx } = await playing();
     engine.select("b");
