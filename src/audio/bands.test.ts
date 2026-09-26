@@ -39,4 +39,11 @@ describe("BandNormaliser", () => {
     expect(normaliser.update(-Infinity, 1 / 120)).toBe(0);
     expect(normaliser.update(-140, 1 / 120)).toBe(0);
   });
+
+  it("keeps moving in the first 2 s after a quiet-to-loud jump, not just after the floor catches up", () => {
+    const normaliser = new BandNormaliser();
+    run(normaliser, () => -60, 5, 120);
+    const levels = run(normaliser, loud, 2, 120, 5).map(([, level]) => level);
+    expect(Math.max(...levels) - Math.min(...levels)).toBeGreaterThan(0.3);
+  });
 });
