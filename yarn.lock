@@ -529,6 +529,21 @@
     "@eslint/core" "^0.13.0"
     levn "^0.4.1"
 
+"@gltf-transform/core@^4.5.0":
+  version "4.5.0"
+  resolved "https://registry.yarnpkg.com/@gltf-transform/core/-/core-4.5.0.tgz#f5b6c307810e5190829d9518540a0e2be27287a7"
+  integrity sha512-JlvShvnB4AtfGZqjnESS/wfPJbpVnyHhTwJBbWN4qXqkB3C5HIoxxpu/orwGBge6Pc0zObeWj70lVf+4gbuu0A==
+  dependencies:
+    property-graph "^4.1.0"
+
+"@gltf-transform/extensions@^4.5.0":
+  version "4.5.0"
+  resolved "https://registry.yarnpkg.com/@gltf-transform/extensions/-/extensions-4.5.0.tgz#87d5bbccd42c6e71c7a8791757989277d934ec55"
+  integrity sha512-J4cKzrmEr75YkrtdI4cKosBg2vDC4rT56aq/QoijW7GT1Y9gSEMJbqyFO9xcFO3FNpZaZiDrHWUqE5Okrl5nOQ==
+  dependencies:
+    "@gltf-transform/core" "^4.5.0"
+    ktx-parse "^1.1.0"
+
 "@humanfs/core@^0.19.1":
   version "0.19.1"
   resolved "https://registry.yarnpkg.com/@humanfs/core/-/core-0.19.1.tgz#17c55ca7d426733fe3c561906b8173c336b40a77"
@@ -2614,6 +2629,11 @@ keyv@^4.5.4:
   dependencies:
     json-buffer "3.0.1"
 
+ktx-parse@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/ktx-parse/-/ktx-parse-1.1.0.tgz#1077c87776ddabfc32fc01f644f6ad8f8890abf8"
+  integrity sha512-mKp3y+FaYgR7mXWAbyyzpa/r1zDWeaunH+INJO4fou3hb45XuNSwar+7llrRyvpMWafxSIi99RNFJ05MHedaJQ==
+
 levn@^0.4.1:
   version "0.4.1"
   resolved "https://registry.yarnpkg.com/levn/-/levn-0.4.1.tgz#ae4562c007473b932a6200d403268dd2fffc6ade"
@@ -2696,6 +2716,11 @@ meshoptimizer@~0.18.1:
   version "0.18.1"
   resolved "https://registry.yarnpkg.com/meshoptimizer/-/meshoptimizer-0.18.1.tgz#cdb90907f30a7b5b1190facd3b7ee6b7087797d8"
   integrity sha512-ZhoIoL7TNV4s5B6+rx5mC//fw8/POGyNxS/DZyCJeiZ12ScLfVwRE/GfsxwiTkMYYD5DmK2/JXnEVXqL4rF+Sw==
+
+meshoptimizer@~1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/meshoptimizer/-/meshoptimizer-1.2.0.tgz#3dcbf6a0f78a721adbb5869818c31518a89fd2df"
+  integrity sha512-davRZeIJbxJrE24cwQle7ZDsxjdk/OphNOV83oX+efQinyoHY9Jcyz3MHbaoG0qySZajldGztNZ1RN/T19PZsg==
 
 micromatch@^4.0.8:
   version "4.0.8"
@@ -2950,6 +2975,11 @@ prop-types@^15.6.0:
     loose-envify "^1.4.0"
     object-assign "^4.1.1"
     react-is "^16.13.1"
+
+property-graph@^4.1.0:
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/property-graph/-/property-graph-4.1.0.tgz#b81b859f5113b980c8acf29bf2f0ecf7392d9534"
+  integrity sha512-AvPcP7XECNWy4LGmFQ77k7un4lSKM4eS29PTvW4ck95uYeLxXPWJM7hLuBqK91FaHqCcgJvIUCuNJjjxKE7VKQ==
 
 punycode@^2.1.0:
   version "2.3.1"
