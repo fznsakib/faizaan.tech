@@ -35,11 +35,11 @@ const Background: React.FC = () => {
     <Styled.Background>
       {/* big plus */}
       <Styled.GridLayout
-        zIndex={-2}
-        gridWidth={gridWidth}
-        gridHeight={gridHeight}
-        columns={columns}
-        rows={rows}
+        $zIndex={-2}
+        $gridWidth={gridWidth}
+        $gridHeight={gridHeight}
+        $columns={columns}
+        $rows={rows}
       >
         {Array.from({ length: totalIcons }, (_, index) => (
           <PlusIcon key={index} color="#555555" />
@@ -48,11 +48,11 @@ const Background: React.FC = () => {
 
       {/* mini plus */}
       <Styled.GridLayout
-        zIndex={-1}
-        gridWidth={gridWidth}
-        gridHeight={gridHeight}
-        columns={columns}
-        rows={rows}
+        $zIndex={-1}
+        $gridWidth={gridWidth}
+        $gridHeight={gridHeight}
+        $columns={columns}
+        $rows={rows}
       >
         {Array.from({ length: totalIcons }, (_, index) => (
           <PlusMiniIcon key={index} color="#8AB1EE" opacity={0.5} />

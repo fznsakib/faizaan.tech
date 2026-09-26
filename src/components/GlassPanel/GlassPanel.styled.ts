@@ -23,34 +23,21 @@ export const GlassPanelContainer = styled.div`
   overflow: hidden;
 `;
 
-export const GlassShape = styled.div<{
-  clipPath: string;
-  transform: string;
-  top: string;
-  left: string;
-  width: string;
-  height: string;
-  animationDelay: string;
-  scale: string;
-}>`
+export const GlassShape = styled.div`
   position: absolute;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-
-  clip-path: ${({ clipPath }) => clipPath};
-  transform: ${({ transform }) => transform};
-  top: ${({ top }) => top};
-  left: ${({ left }) => left};
-  width: ${({ width }) => width};
-  height: ${({ height }) => height};
-  animation-delay: ${({ animationDelay }) => animationDelay};
-  scale: ${({ scale }) => scale};
-
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2),
     inset 0 0 0 1px rgba(255, 255, 255, 0.08),
     inset 0 0 30px rgba(255, 255, 255, 0.05);
+  animation-name: ${float};
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  transition: opacity 0.8s ease-out;
+  transform-style: preserve-3d;
+  perspective: 1000px;
 
   &::before {
     content: "";
@@ -59,20 +46,11 @@ export const GlassShape = styled.div<{
     left: 0;
     right: 0;
     height: 40%;
-    background: linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.1),
-      rgba(255, 255, 255, 0)
-    );
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
     pointer-events: none;
   }
 
-  animation: ${float} 10s ease-in-out infinite;
-  animation-duration: ${() => 8 + Math.random() * 6}s;
-
-  opacity: ${0.5 + Math.random() * 0.5};
-  transition: opacity 0.8s ease-out;
-
-  transform-style: preserve-3d;
-  perspective: 1000px;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 `;

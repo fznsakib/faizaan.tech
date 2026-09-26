@@ -1,93 +1,64 @@
-import React, { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 
 import { GlassPanelContainer, GlassShape } from "./GlassPanel.styled";
-import { clamp } from "../../utils/random";
-import { clampedRandom } from "../../utils/random";
+import { useMusicFrame } from "../../audio/react";
+import { setStyle } from "../../choreography/dom";
+import { generateShards, IDLE_RECUT_MS, recutDue, shardCount } from "../../choreography/shards";
+import { prefersReducedMotion } from "../../hooks/reducedMotion";
 
-const generateRandomPolygon = (points: number = 6) => {
-  let polygon = "";
+import type { ShardSpec } from "../../choreography/shards";
 
-  for (let i = 0; i < points; i++) {
-    // Calculate base position on a circle
-    const angle = (i / points) * Math.PI * 2;
-    // Add some randomness to the radius (between 40% and 100%)
-    const radius = 40 + Math.random() * 60;
-
-    const x = 50 + radius * Math.cos(angle);
-    const y = 50 + radius * Math.sin(angle);
-
-    polygon += `${clamp(x, 0, 100)}% ${clamp(y, 0, 100)}%`;
-
-    if (i < points - 1) {
-      polygon += ", ";
-    }
-  }
-
-  polygon = `polygon(${polygon.trim()})`;
-  return polygon;
-};
-
-const generateRandomRotation = () => {
-  return `rotateX(${Math.random() * 20 - 10}) 
-          rotateY(${Math.random() * 20 - 10}) 
-          rotateZ(${Math.random() * 5 - 2.5})`;
-};
-
+/** Frosted-glass shards: hard re-cuts on downbeats (every 2 bars, every bar in a drop), every 4 s when idle. */
 const GlassPanel: React.FC = () => {
-  const [panels, setPanels] = useState<
-    Array<{
-      id: number;
-      clipPath: string;
-      transform: string;
-      top: string;
-      left: string;
-      width: string;
-      height: string;
-      delay: string;
-      scale: string;
-    }>
-  >([]);
+  const [cut, setCut] = useState<{ generation: number; shards: ShardSpec[] }>(() => ({
+    generation: 0,
+    shards: generateShards(5),
+  }));
+  const nodes = useRef<(HTMLDivElement | null)[]>([]);
+  const lastRecutBar = useRef<number | null>(null);
+  const lastIdleRecut = useRef<number | null>(null);
 
-  useEffect(() => {
-    const generatePanels = (numPanels = 3) => {
-      const newPanels = Array.from({ length: numPanels }, (_, i) => ({
-        id: i,
-        clipPath: generateRandomPolygon(clampedRandom(3, 8)),
-        transform: generateRandomRotation(),
-        top: `${20 + Math.random() * 50}%`,
-        left: `${10 + Math.random() * 70}%`,
-        width: `${200 + Math.random() * 200}px`,
-        height: `${150 + Math.random() * 150}px`,
-        delay: `${i * 0.2}s`,
-        scale: `${clampedRandom(0.2, 1)}`,
-      }));
+  const recut = (level: 0 | 1) =>
+    setCut((previous) => ({ generation: previous.generation + 1, shards: generateShards(shardCount(level)) }));
 
-      setPanels(newPanels);
-    };
-
-    generatePanels(5);
-
-    const intervalId = setInterval(
-      () => generatePanels(clampedRandom(3, 5)),
-      4000
-    );
-
-    return () => clearInterval(intervalId);
-  }, []);
+  useMusicFrame((frame, now) => {
+    const reduced = prefersReducedMotion();
+    if (recutDue(frame, lastRecutBar.current, reduced)) {
+      lastRecutBar.current = frame.barIndex;
+      recut(frame.sectionLevel);
+    } else if (!frame.isPlaying) {
+      lastRecutBar.current = null;
+      if (lastIdleRecut.current === null) lastIdleRecut.current = now;
+      if (!reduced && now - lastIdleRecut.current >= IDLE_RECUT_MS) {
+        lastIdleRecut.current = now;
+        recut(0);
+      }
+    }
+    const gain = frame.isPlaying ? 0.55 + 0.45 * frame.energy : 1;
+    cut.shards.forEach((shard, i) => {
+      const node = nodes.current[i];
+      if (node) setStyle(node, "opacity", (shard.opacity * gain).toFixed(2));
+    });
+  });
 
   return (
     <GlassPanelContainer>
-      {panels.map((panel) => (
+      {cut.shards.map((shard, i) => (
         <GlassShape
-          key={panel.id}
-          clipPath={panel.clipPath}
-          transform={panel.transform}
-          top={panel.top}
-          left={panel.left}
-          width={panel.width}
-          height={panel.height}
-          animationDelay={panel.delay}
-          scale={panel.scale}
+          key={`${cut.generation}-${shard.id}`}
+          ref={(el) => {
+            nodes.current[i] = el;
+          }}
+          style={{
+            clipPath: shard.clipPath,
+            top: `${shard.top}%`,
+            left: `${shard.left}%`,
+            width: `${shard.width}px`,
+            height: `${shard.height}px`,
+            scale: String(shard.scale),
+            animationDelay: `${shard.delay}s`,
+            animationDuration: `${shard.duration}s`,
+          }}
         />
       ))}
     </GlassPanelContainer>
