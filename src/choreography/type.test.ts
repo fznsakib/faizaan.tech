@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  createFlipState,
   eqVariation,
   eqWeight,
   headerVariation,
@@ -9,10 +8,8 @@ import {
   headerWeight,
   idleScanWeight,
   KickHistory,
-  letterFlipped,
   quantise,
   SHOCKWAVE_SPEED,
-  updateFlip,
   vuStep,
 } from "./type";
 
@@ -86,47 +83,6 @@ describe("weights", () => {
         expect(w).toBeLessThanOrEqual(700);
       }
     }
-  });
-});
-
-describe("drop flip", () => {
-  it("animates outward from the head when a section change fires", () => {
-    const state = createFlipState();
-    updateFlip(state, 1, true, 10);
-    expect(letterFlipped(state, 10, 0)).toBe(true);
-    expect(letterFlipped(state, 10, 440)).toBe(false);
-    expect(letterFlipped(state, 10.21, 440)).toBe(true);
-  });
-
-  it("snaps without an edge (seek, track switch)", () => {
-    const state = createFlipState();
-    updateFlip(state, 1, false, 50);
-    expect(letterFlipped(state, 50, 1000)).toBe(true);
-  });
-
-  it("flips back outward when the section calms", () => {
-    const state = createFlipState();
-    updateFlip(state, 1, true, 10);
-    updateFlip(state, 0, true, 20);
-    expect(letterFlipped(state, 20, 440)).toBe(true);
-    expect(letterFlipped(state, 20.21, 440)).toBe(false);
-  });
-
-  it("forgets an old change when time goes backwards (next track, seek back)", () => {
-    const state = createFlipState();
-    updateFlip(state, 1, true, 21.3);
-    updateFlip(state, 0, true, 112.59);
-    updateFlip(state, 0, false, 0.5);
-    expect(letterFlipped(state, 0.5, 20)).toBe(false);
-    updateFlip(state, 1, false, 30);
-    expect(letterFlipped(state, 30, 20)).toBe(true);
-  });
-
-  it("ignores updates that don't change the level", () => {
-    const state = createFlipState();
-    updateFlip(state, 1, true, 10);
-    updateFlip(state, 1, false, 11);
-    expect(state.changedAt).toBe(10);
   });
 });
 
