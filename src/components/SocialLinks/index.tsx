@@ -20,6 +20,8 @@ const SUPERSAMPLE = 8;
 /** How quickly an icon's lean follows the pointer, 1/s. */
 const LEAN_RATE = 18;
 const NO_LEAN = { x: 0, y: 0 };
+/** Below this devicePixelRatio the dot pitch is only a couple of device pixels: dots must sit on whole pixels. */
+const LOW_DENSITY = 1.5;
 
 const hoverless =
   typeof window !== "undefined" && typeof window.matchMedia === "function"
@@ -28,13 +30,14 @@ const hoverless =
 
 /** A glyph's dot screen, from each part's cover of each cell (rasterised once, through a 2D canvas). */
 function glyphDots(glyph: Glyph): Dot[] {
+  const view = Number(glyph.viewBox.split(" ")[2]);
   const size = DOT_CELLS * SUPERSAMPLE;
   const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
   const context = canvas.getContext("2d", { willReadFrequently: true });
-  if (!context) return [];
-  const view = Number(glyph.viewBox.split(" ")[2]);
+  // No canvas: blank grids, which dotScreen fills (the clip still draws the shape).
+  if (!context) return dotScreen(glyph.parts.map(() => new Float32Array(DOT_CELLS * DOT_CELLS)), DOT_CELLS, view);
   context.scale(size / view, size / view);
   const coverage = glyph.parts.map((part) => {
     context.clearRect(0, 0, view, view);
@@ -120,6 +123,7 @@ const SocialLinks: React.FC = () => {
     state.lastNow = now;
     const reduced = prefersReducedMotion();
     const touch = hoverless?.matches ?? false;
+    const crisp = window.devicePixelRatio < LOW_DENSITY;
     // Real time, not song time: song time is frozen while paused-and-jamming.
     const seconds = now / 1000;
     state.kicks.push(seconds, (frame.isPlaying || frame.jamming) && !reduced ? frame.kick : 0);
@@ -133,7 +137,7 @@ const SocialLinks: React.FC = () => {
       current.x = approach(current.x, target.x, dt, LEAN_RATE);
       current.y = approach(current.y, target.y, dt, LEAN_RATE);
       const kick = state.kicks.at(seconds - kickDelay(centre.distance, i, touch));
-      const pose = iconPose({ kick, leanX: current.x, leanY: current.y, touch, reduced });
+      const pose = iconPose({ kick, leanX: current.x, leanY: current.y, touch, reduced, crisp });
       setStyle(lean, "transform", pose.transform);
       setStyle(rest, "opacity", pose.rest);
       setStyle(solid, "opacity", pose.solid);

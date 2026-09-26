@@ -18,6 +18,8 @@ export interface PoseInput {
   leanY: number;
   touch: boolean;
   reduced: boolean;
+  /** A low-density screen, where a dot off a whole pixel smears: snap the lean, pulse by brightness alone. */
+  crisp: boolean;
 }
 
 /** Per-frame inline styles for one icon: its leaning/pulsing wrapper's transform and its two layers' opacity. */
@@ -32,11 +34,11 @@ export interface Pose {
 /** Fixed decimals with trailing zeros (and -0) dropped, so float noise around a value writes the same string. */
 const num = (value: number, digits: number): string => String(Number(value.toFixed(digits)) || 0);
 
-export function iconPose({ kick, leanX, leanY, touch, reduced }: PoseInput): Pose {
+export function iconPose({ kick, leanX, leanY, touch, reduced, crisp }: PoseInput): Pose {
   if (reduced) return { transform: "none", rest: touch ? "0" : String(REST_GLOW), solid: "1" };
-  const x = touch ? 0 : leanX;
-  const y = touch ? 0 : leanY;
-  const transform = `translate(${num(x, 2)}px, ${num(y, 2)}px) scale(${num(1 + PULSE * kick, 3)})`;
+  const snap = (lean: number) => (touch ? 0 : crisp ? Math.round(lean) : lean);
+  const scale = crisp ? 1 : 1 + PULSE * kick;
+  const transform = `translate(${num(snap(leanX), 2)}px, ${num(snap(leanY), 2)}px) scale(${num(scale, 3)})`;
   if (touch) return { transform, rest: num(SHIMMER * kick, 2), solid: num(1 - SOLID_DIP * kick, 2) };
   return { transform, rest: num(REST_GLOW + (1 - REST_GLOW) * kick, 2), solid: "1" };
 }

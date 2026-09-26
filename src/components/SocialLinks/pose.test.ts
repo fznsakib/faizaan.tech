@@ -6,7 +6,7 @@ import { SHOCKWAVE_SPEED } from "../../choreography/type";
 import type { PoseInput } from "./pose";
 
 const pose = (overrides: Partial<PoseInput>) =>
-  iconPose({ kick: 0, leanX: 0, leanY: 0, touch: false, reduced: false, ...overrides });
+  iconPose({ kick: 0, leanX: 0, leanY: 0, touch: false, reduced: false, crisp: false, ...overrides });
 const scaleOf = (transform: string) => Number(/scale\(([\d.]+)\)/.exec(transform)?.[1]);
 const translateOf = (transform: string) => /translate\(([-\d.]+)px, ([-\d.]+)px\)/.exec(transform)?.slice(1).map(Number);
 
@@ -34,6 +34,13 @@ describe("iconPose", () => {
 
   it("carries the magnet lean", () => {
     expect(translateOf(pose({ leanX: 3.2, leanY: -1.5 }).transform)).toEqual([3.2, -1.5]);
+  });
+
+  it("on a low-density screen keeps dots on whole pixels: lean snapped, kick pulses brightness only", () => {
+    const kicked = pose({ crisp: true, kick: 1, leanX: 3.4, leanY: -1.6 });
+    expect(translateOf(kicked.transform)).toEqual([3, -2]);
+    expect(scaleOf(kicked.transform)).toBe(1);
+    expect(Number(kicked.rest)).toBeGreaterThan(Number(pose({ crisp: true }).rest));
   });
 
   it("on touch rests resolved: no dots, full glyph", () => {

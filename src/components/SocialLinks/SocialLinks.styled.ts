@@ -96,6 +96,14 @@ export const Face = styled.span`
       transition-duration: 60ms;
     }
   }
+
+  /* still answers a press without motion: dims instead of giving */
+  @media (prefers-reduced-motion: reduce) {
+    ${Link}:active &,
+    ${Link}[data-pressed] & {
+      opacity: 0.55;
+    }
+  }
 `;
 
 /** The dot-matrix layer (per-frame opacity: the beat glow, or the touch shimmer). */
@@ -105,6 +113,12 @@ export const Rest = styled.span`
 
   @media (hover: none) {
     opacity: 0;
+  }
+
+  /* The 2 px dot pitch puts dot centres on pixel corners, which a 1x screen smears into a flat tint: shift them onto
+     pixel centres. */
+  @media (max-resolution: 1.49dppx), (-webkit-max-device-pixel-ratio: 1.49) {
+    transform: translate(0.5px, 0.5px);
   }
 `;
 

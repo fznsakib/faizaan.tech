@@ -39,10 +39,6 @@ describe("dotScreen", () => {
     }
   });
 
-  it("draws nothing for an empty glyph", () => {
-    expect(dotScreen([grid(4, () => 0)], 4, 24)).toEqual([]);
-  });
-
   it("keeps a dot for a barely covered edge cell (the clip trims it), but none for an untouched one", () => {
     const dots = dotScreen([grid(2, (col) => (col === 0 ? 0 : 0.02))], 2, 24);
     expect(dots.map((dot) => dot.cx)).toEqual([18, 18]);
@@ -55,6 +51,12 @@ describe("dotScreen", () => {
     const dots = dotScreen([left, right], 2, 24);
     expect(dots.filter((dot) => dot.part === 0)).toHaveLength(4);
     expect(dots.filter((dot) => dot.part === 1).map((dot) => dot.cx)).toEqual([18, 18]);
+  });
+
+  it("falls back to a dot on every cell when a part's raster came back blank (blocked canvas readback)", () => {
+    const dots = dotScreen([grid(3, () => 1), grid(3, () => 0)], 3, 24);
+    expect(dots.filter((dot) => dot.part === 0)).toHaveLength(9);
+    expect(dots.filter((dot) => dot.part === 1)).toHaveLength(9);
   });
 
   it("ripples the resolve out from the centre: centre first, corners last", () => {

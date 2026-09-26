@@ -35,7 +35,8 @@ export function cellCoverage(rgba: Uint8ClampedArray, size: number, cells: numbe
 /**
  * A glyph as a dot screen: for each part, one equal dot on every cell the part touches, to be clipped to the part's
  * exact silhouette (so edges stay true while the dots read as a matrix). `coverage` holds one cells × cells grid per
- * part.
+ * part. A part whose grid is blank (canvas readback blocked or blanked) gets a dot on every cell: the clip still trims
+ * them to its shape, so the glyph never vanishes.
  */
 export function dotScreen(coverage: Float32Array[], cells: number, viewSize: number): Dot[] {
   const pitch = viewSize / cells;
@@ -44,8 +45,9 @@ export function dotScreen(coverage: Float32Array[], cells: number, viewSize: num
   const farthest = Math.hypot(middle, middle) || 1;
   const dots: Dot[] = [];
   coverage.forEach((grid, part) => {
+    const blank = grid.every((cover) => cover < DUST);
     for (let i = 0; i < cells * cells; i++) {
-      if (grid[i] < DUST) continue;
+      if (!blank && grid[i] < DUST) continue;
       const col = i % cells;
       const row = Math.floor(i / cells);
       dots.push({
