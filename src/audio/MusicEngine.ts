@@ -1,4 +1,5 @@
 import { BAND_COUNT, clearFrame, createCursors, createFrame, writeFrame } from "./frame";
+import { CLIP_RANGE, softClipCurve } from "./limiter";
 import { HitLog, JAM_WINDOW } from "./sampler/hits";
 import { nearestSixteenth } from "./sampler/quantize";
 import { createNoiseBuffer, playVoice } from "./sampler/voices";
@@ -14,7 +15,7 @@ export interface EngineDeps {
 /** Sources start this far ahead of currentTime so the clock anchor is sample-exact. */
 const SCHEDULE_AHEAD = 0.05;
 const MUTE_RAMP = 0.01;
-/** DJ-mode voices sit under the song so a kick on top can't clip. */
+/** DJ-mode voices sit a little under the song; the soft clipper catches what they add on top of its peaks. */
 const SAMPLER_LEVEL = 0.7;
 /** 6 log-spaced bands, 40 Hz – 16 kHz. */
 const BAND_EDGES = Array.from(
@@ -313,12 +314,18 @@ export class MusicEngine {
     analyser.fftSize = 1024;
     analyser.smoothingTimeConstant = 0;
     bus.connect(analyser);
-    bus.connect(muteGain);
     muteGain.connect(ctx.destination);
     muteGain.gain.value = this.state.muted ? 0 : 1;
     const sampler = ctx.createGain(); // after the mute gain: gains are bus, mute, sampler
     sampler.gain.value = SAMPLER_LEVEL;
     sampler.connect(bus);
+    const clipIn = ctx.createGain(); // bus → clipIn (1/CLIP_RANGE) → soft clipper → mute
+    clipIn.gain.value = 1 / CLIP_RANGE;
+    const clipper = ctx.createWaveShaper();
+    clipper.curve = softClipCurve();
+    bus.connect(clipIn);
+    clipIn.connect(clipper);
+    clipper.connect(muteGain);
     this.ctx = ctx;
     this.bus = bus;
     this.muteGain = muteGain;

@@ -469,6 +469,18 @@ describe("DJ mode hits", () => {
     expect(sampler.connections).toContain(bus);
   });
 
+  it("soft-clips the mix between the bus and the mute gain", async () => {
+    const { ctx } = await ready();
+    const [bus, mute, , clipIn] = ctx().gains;
+    const [shaper] = ctx().shapers;
+    expect(bus.connections).toContain(clipIn);
+    expect(bus.connections).not.toContain(mute);
+    expect(clipIn.gain.value).toBeCloseTo(0.5);
+    expect(clipIn.connections).toContain(shaper);
+    expect(shaper.connections).toContain(mute);
+    expect(shaper.curve?.length).toBeGreaterThan(1000);
+  });
+
   it("merges hits into the frame and flags jamming while paused", async () => {
     const { engine, ctx } = await ready();
     ctx().currentTime = 3;

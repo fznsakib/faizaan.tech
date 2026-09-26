@@ -106,6 +106,11 @@ export class FakeFilter extends FakeNode {
   readonly Q = new FakeParam(1);
 }
 
+export class FakeWaveShaper extends FakeNode {
+  curve: Float32Array | null = null;
+  oversample = "none";
+}
+
 export class FakeAudioContext {
   currentTime = 0;
   sampleRate = 44100;
@@ -117,6 +122,7 @@ export class FakeAudioContext {
   readonly sources: FakeSource[] = [];
   readonly oscillators: FakeOscillator[] = [];
   readonly filters: FakeFilter[] = [];
+  readonly shapers: FakeWaveShaper[] = [];
   outputTimestamp = { contextTime: 0, performanceTime: 0 };
   bufferDuration = 120;
   decodeCalls = 0;
@@ -150,6 +156,12 @@ export class FakeAudioContext {
     const oscillator = new FakeOscillator();
     this.oscillators.push(oscillator);
     return oscillator;
+  }
+
+  createWaveShaper() {
+    const shaper = new FakeWaveShaper();
+    this.shapers.push(shaper);
+    return shaper;
   }
 
   createBiquadFilter() {
