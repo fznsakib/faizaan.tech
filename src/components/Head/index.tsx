@@ -1,9 +1,11 @@
-import { Environment, Lightformer, useGLTF } from "@react-three/drei";
+import { Environment, Lightformer, useGLTF, useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { damp } from "maath/easing";
 import { useEffect, useMemo, useRef } from "react";
-import { Box3, Group, MathUtils, Mesh, MeshStandardMaterial, Vector3 } from "three";
+import { Box3, Group, MathUtils, Mesh, MeshStandardMaterial, SRGBColorSpace, Vector3 } from "three";
 
+import { patchFaceSkin } from "./faceSkin";
+import headFaceUrl from "../../assets/head-face.jpg?url";
 import headModelUrl from "../../assets/head.glb?url";
 import { engine } from "../../audio/engine";
 import { bob, nodDrive, Spring } from "../../choreography/nod";
@@ -41,21 +43,31 @@ function prepareModel(scene: Object3D, material: MeshStandardMaterial) {
   return { holder, baseY: pivot.y - centre.y - 0.1 };
 }
 
-/** The chrome head: nods on the beat (phase-locked, with anticipation), sways with the bar, follows the mouse. */
+/**
+ * The chrome head with the owner's photo face (blended by the mesh's `_faceweight`): nods on the beat (phase-locked,
+ * with anticipation), sways with the bar, follows the mouse.
+ */
 function Head() {
   const { scene } = useGLTF(headModelUrl);
-  const material = useMemo(
-    () =>
-      new MeshStandardMaterial({
-        color: "#ff8a1c",
-        metalness: 1,
-        roughness: 0.22,
-        emissive: "#ff6a00",
-        emissiveIntensity: BASE_EMISSIVE,
-        envMapIntensity: 1.3,
-      }),
-    []
-  );
+  const skin = useTexture(headFaceUrl);
+  const material = useMemo(() => {
+    skin.flipY = false; // glTF-style UVs: v runs down from the top of the image
+    skin.colorSpace = SRGBColorSpace;
+    skin.anisotropy = 4;
+    skin.needsUpdate = true;
+    const chrome = new MeshStandardMaterial({
+      color: "#ff8a1c",
+      metalness: 1,
+      roughness: 0.22,
+      emissive: "#ff6a00",
+      emissiveIntensity: BASE_EMISSIVE,
+      envMapIntensity: 1.3,
+      map: skin,
+    });
+    chrome.onBeforeCompile = patchFaceSkin;
+    chrome.customProgramCacheKey = () => "face-skin";
+    return chrome;
+  }, [skin]);
   const model = useMemo(() => prepareModel(scene, material), [scene, material]);
   const rig = useRef<Group>(null);
   const rim = useRef<DirectionalLight>(null);
@@ -167,5 +179,6 @@ function Head() {
 }
 
 useGLTF.preload(headModelUrl);
+useTexture.preload(headFaceUrl);
 
 export default Head;

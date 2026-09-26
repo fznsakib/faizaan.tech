@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { Document, NodeIO } from "@gltf-transform/core";
 import { ALL_EXTENSIONS, EXTMeshoptCompression, KHRMeshQuantization } from "@gltf-transform/extensions";
+import jpeg from "jpeg-js";
 import { MeshoptDecoder, MeshoptEncoder } from "meshoptimizer";
 
 import { isInside, parseFlags } from "./headmap/cli.ts";
@@ -31,6 +32,7 @@ import {
   smoothRim,
   vertexNormals,
 } from "./headmap/surface.ts";
+import { dilate, interpolateCorners, normalizedUint, sampleRgb } from "./headmap/texture.ts";
 import { fitThinPlate } from "./headmap/thinplate.ts";
 
 import type { CropParams } from "./headmap/mesh.ts";
@@ -67,7 +69,7 @@ const USAGE = `usage: yarn headmap <capture.glb> [flags]
   --smooth n          Laplacian passes across the blend band (2)
   --debug dir         also write GLBs of the crop (with the capture's photo — keep dir outside the repo),
                       the aligned crop, the erased stock head and a weight map
-  --out file          output (src/assets/head.glb)`;
+  --out file          output (src/assets/head.glb; the face texture goes beside it as head-face.jpg)`;
 
 /** Stops with a message naming what to change, instead of a stack trace or a broken head. */
 function fail(message: string): never {
@@ -164,6 +166,7 @@ const capCanon = weldMap(capture.positions);
 const cut = cropTriangles(capture.positions, capture.indices, (p) => insideCrop(p, crop));
 const kept = largestComponent(cut, count(capture.positions), capCanon);
 const face = compactMesh(capture.positions, kept.map((i) => capCanon[i]));
+const photoCrop = compactMesh(capture.positions, kept); // unwelded: keeps the photo's per-corner UVs
 console.log(
   `crop: ${cut.length / 3} triangles inside the cuts, ${face.indices.length / 3} in the largest piece, ` +
     `${count(face.positions)} vertices`
@@ -359,7 +362,55 @@ console.log(
 
 if (movedCount === 0) fail("no head vertex moved: the aligned capture doesn't cover the head's face");
 
-// 8. Write: back to the stock scene space, quantised + meshopt like the stock file.
+// 8. The face's skin. Every head vertex gets a UV from a front projection of the face (x, y), which is how the phone
+//    saw it: seamless, and no stretch the photo doesn't already have. The texture is re-baked texel by texel through
+//    the aligned scan's own triangles and their UVs, so the capture's atlas seams never smear across the face, and
+//    only texels on the cropped face are taken from the photo — the rest is the face's colours dilated outward, so
+//    nothing of the room ships. `_FACEWEIGHT` (the transfer weight) tells the material where skin gives way to chrome.
+const TEXTURE_SIZE = 1024;
+const uvBox = bounds(aligned);
+const uvSide = Math.max(uvBox.max[0] - uvBox.min[0], uvBox.max[1] - uvBox.min[1]) + 0.2 * headL;
+const uvLeft = (uvBox.min[0] + uvBox.max[0] - uvSide) / 2;
+const uvTop = (uvBox.min[1] + uvBox.max[1] + uvSide) / 2;
+const uvs = new Float32Array(count(smoothed) * 2);
+for (let i = 0; i < count(smoothed); i++) {
+  uvs[i * 2] = (smoothed[i * 3] - uvLeft) / uvSide;
+  uvs[i * 2 + 1] = (uvTop - smoothed[i * 3 + 1]) / uvSide;
+}
+const photoTexture = captureDoc.getRoot().listMaterials()[0]?.getBaseColorTexture();
+const photoUvs = pickUvs(photoCrop.sourceIndex);
+if (!photoTexture || !photoUvs) fail("the capture has no base-colour texture and TEXCOORD_0 to take the skin from");
+const photo = jpeg.decode(photoTexture.getImage()!, { useTArray: true, maxMemoryUsageInMB: 1024 });
+const photoAligned = new Float32Array(photoCrop.positions.length);
+for (let i = 0; i < count(photoCrop.positions); i++) photoAligned.set(applySimilarity(align, point(photoCrop.positions, i)), i * 3);
+const photoGrid = new AxisRayGrid(photoAligned, photoCrop.indices, 2, headL / 25);
+const skin = new Float32Array(TEXTURE_SIZE * TEXTURE_SIZE * 3);
+const onFace = new Uint8Array(TEXTURE_SIZE * TEXTURE_SIZE);
+const inset = 0.05 * headL; // keep clear of the crop's ragged edge, where the photo can show the room behind
+for (let ty = 0; ty < TEXTURE_SIZE; ty++) {
+  for (let tx = 0; tx < TEXTURE_SIZE; tx++) {
+    const x = uvLeft + ((tx + 0.5) / TEXTURE_SIZE) * uvSide, y = uvTop - ((ty + 0.5) / TEXTURE_SIZE) * uvSide;
+    const hit = photoGrid.front([x, y, headNose[2]]);
+    if (!hit || distanceToSegments2D(x, y, rim) < inset) continue;
+    const [a, b, c] = [0, 1, 2].map((k) => photoCrop.indices[hit.triangle * 3 + k]);
+    const [u, v] = interpolateCorners(photoUvs, 2, a, b, c, hit.u, hit.v);
+    skin.set(sampleRgb(photo.data, photo.width, photo.height, u, v), (ty * TEXTURE_SIZE + tx) * 3);
+    onFace[ty * TEXTURE_SIZE + tx] = 1;
+  }
+}
+const padded = dilate(skin, onFace, TEXTURE_SIZE, TEXTURE_SIZE, 24);
+const rgba = new Uint8Array(TEXTURE_SIZE * TEXTURE_SIZE * 4);
+for (let i = 0; i < TEXTURE_SIZE * TEXTURE_SIZE; i++) {
+  rgba.set([padded[i * 3], padded[i * 3 + 1], padded[i * 3 + 2], 255].map(Math.round), i * 4);
+}
+const faceJpeg = jpeg.encode({ data: rgba, width: TEXTURE_SIZE, height: TEXTURE_SIZE }, 85).data;
+const faceTextureOut = out.replace(/\.glb$/, "") + "-face.jpg";
+console.log(
+  `skin: ${pct(onFace.filter(Boolean).length, onFace.length)} of a ${TEXTURE_SIZE}² texture from the photo, ` +
+    `UVs span ${uvSide.toFixed(2)} head units`
+);
+
+// 9. Write: back to the stock scene space, quantised + meshopt like the stock file.
 const scene = new Float32Array(smoothed.length);
 for (let i = 0; i < count(smoothed); i++) scene.set(toFace(point(smoothed, i)), i * 3);
 const quantized = quantizePositions(scene, 14);
@@ -372,6 +423,14 @@ prim.setAttribute(
   "NORMAL",
   headDoc.createAccessor().setType("VEC3").setArray(quantizeNormals(normals)).setNormalized(true).setBuffer(buffer)
 );
+prim.setAttribute(
+  "TEXCOORD_0",
+  headDoc.createAccessor().setType("VEC2").setArray(normalizedUint(uvs, 16)).setNormalized(true).setBuffer(buffer)
+);
+prim.setAttribute(
+  "_FACEWEIGHT",
+  headDoc.createAccessor().setType("SCALAR").setArray(normalizedUint(weights, 8)).setNormalized(true).setBuffer(buffer)
+);
 oldAccessors.forEach((a) => a.dispose());
 node.setTranslation(quantized.translation).setScale([quantized.scale, quantized.scale, quantized.scale]);
 headDoc.createExtension(KHRMeshQuantization).setRequired(true);
@@ -380,15 +439,16 @@ headDoc
   .setRequired(true)
   .setEncoderOptions({ method: EXTMeshoptCompression.EncoderMethod.FILTER });
 // Write beside the target and rename, so a failed write never leaves a half-written head in its place.
-const partial = `${out}.partial`;
-writeFileSync(partial, await io.writeBinary(headDoc));
-renameSync(partial, out);
+for (const [path, bytes] of [[out, await io.writeBinary(headDoc)], [faceTextureOut, faceJpeg]] as const) {
+  writeFileSync(`${path}.partial`, bytes);
+  renameSync(`${path}.partial`, path);
+}
 console.log(`wrote ${out}: ${prim.getIndices()!.getCount() / 3} triangles, ${(statSync(out).size / 1024).toFixed(1)} KB`);
+console.log(`wrote ${faceTextureOut}: ${TEXTURE_SIZE}×${TEXTURE_SIZE}, ${(statSync(faceTextureOut).size / 1024).toFixed(1)} KB`);
 
 if (debugDir) {
   mkdirSync(debugDir, { recursive: true });
-  const photo = compactMesh(capture.positions, kept);
-  await writeDebug(join(debugDir, "crop.glb"), photo.positions, photo.indices, { uvs: pickUvs(photo.sourceIndex) });
+  await writeDebug(join(debugDir, "crop.glb"), photoCrop.positions, photoCrop.indices, { uvs: photoUvs });
   const alignedScene = new Float32Array(aligned.length);
   for (let i = 0; i < count(aligned); i++) alignedScene.set(toFace(point(aligned, i)), i * 3);
   await writeDebug(join(debugDir, "aligned.glb"), alignedScene, face.indices, {});
