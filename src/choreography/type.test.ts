@@ -10,6 +10,7 @@ import {
   KickHistory,
   letterFlipped,
   quantise,
+  SHOCKWAVE_SPEED,
   updateFlip,
   vuStep,
 } from "./type";
@@ -24,13 +25,27 @@ describe("KickHistory", () => {
     expect(kicks.at(2.5)).toBeCloseTo(0.8);
   });
 
-  it("keeps only the most recent entries", () => {
-    const kicks = new KickHistory(2);
+  it("keeps only entries within its span", () => {
+    const kicks = new KickHistory(1, 0.5);
     kicks.push(1, 0.1);
     kicks.push(2, 0.2);
     kicks.push(3, 0.3);
     expect(kicks.at(1.5)).toBe(0);
     expect(kicks.at(2.5)).toBeCloseTo(0.2);
+  });
+
+  it("covers its whole time span on a 240 Hz display (outer letters still pulse)", () => {
+    const kicks = new KickHistory();
+    for (let i = 0; i <= 240; i++) kicks.push(i / 240, 1);
+    expect(kicks.at(1 - 800 / SHOCKWAVE_SPEED)).toBe(1);
+  });
+
+  it("forgets everything after a forward jump longer than its span (hidden tab, seek)", () => {
+    const kicks = new KickHistory();
+    kicks.push(1, 1);
+    kicks.push(10, 0.5);
+    expect(kicks.at(9.9)).toBe(0);
+    expect(kicks.at(10)).toBeCloseTo(0.5);
   });
 
   it("push with an earlier time resets the history (seek backwards)", () => {

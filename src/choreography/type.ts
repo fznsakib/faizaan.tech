@@ -6,31 +6,49 @@ export const EQ_RELEASE = 0.22;
 
 export const quantise = (value: number, step: number): number => Math.round(value / step) * step;
 
-/** Ring buffer of recent kick values so letters far from the head can read the kick "in the past". */
+/**
+ * Recent kick values over a span of *time* (not frames), so letters far from the head can read the
+ * kick "in the past" at any refresh rate. Frames closer than `minInterval` are coalesced (max).
+ */
 export class KickHistory {
+  private readonly span: number;
+  private readonly minInterval: number;
   private readonly times: Float64Array;
   private readonly values: Float32Array;
   private head = -1;
   private count = 0;
 
-  constructor(size = 64) {
+  constructor(span = 0.8, minInterval = 1 / 240) {
+    this.span = span;
+    this.minInterval = minInterval;
+    const size = Math.ceil(span / minInterval) + 1;
     this.times = new Float64Array(size);
     this.values = new Float32Array(size);
   }
 
   push(time: number, value: number): void {
-    if (this.count > 0 && time < this.times[this.head]) this.clear(); // time went backwards (seek)
+    if (this.count > 0) {
+      const last = this.times[this.head];
+      if (time < last || time - last > this.span) {
+        this.clear(); // seek back, or a jump longer than the span: nothing old is still relevant
+      } else if (time - last < this.minInterval) {
+        this.values[this.head] = Math.max(this.values[this.head], value);
+        return;
+      }
+    }
     this.head = (this.head + 1) % this.times.length;
     this.times[this.head] = time;
     this.values[this.head] = value;
     this.count = Math.min(this.count + 1, this.times.length);
   }
 
-  /** Latest value at or before `time` (0 if none is that old). */
+  /** Latest value at or before `time` (0 if none is that old, or it is older than the span). */
   at(time: number): number {
+    if (this.count === 0) return 0;
+    const oldest = this.times[this.head] - this.span;
     for (let n = 0; n < this.count; n++) {
       const i = (this.head - n + this.times.length) % this.times.length;
-      if (this.times[i] <= time) return this.values[i];
+      if (this.times[i] <= time) return this.times[i] >= oldest ? this.values[i] : 0;
     }
     return 0;
   }
