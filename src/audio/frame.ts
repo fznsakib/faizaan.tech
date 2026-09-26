@@ -44,6 +44,9 @@ export function createFrame(): MusicFrame {
     sectionLevel: 0,
     sectionChanged: false,
     bands: new Float32Array(BAND_COUNT),
+    stab: 0,
+    stabHit: false,
+    jamming: false,
     beatConfidence: 0,
   };
 }
