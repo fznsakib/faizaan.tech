@@ -16,8 +16,19 @@ import {
 import { headerVariation, jamHeaderVariation, KickHistory, SHOCKWAVE_SPEED } from "../../choreography/type";
 import { prefersReducedMotion } from "../../hooks/reducedMotion";
 
-const NAME = "(faiz)aan sakib";
+/** The name split into words, for per-word faces when calm; a space is its own entry. */
+const NAME_WORDS = ["(faiz)", "aan", " ", "sakib"];
+const NAME = NAME_WORDS.join("");
 const LETTERS = [...NAME];
+/** `WORDS[i]` is letter i's word index in `NAME_WORDS`; `-1` marks a space. */
+const WORDS = ((): number[] => {
+  let wordIndex = -1;
+  return NAME_WORDS.flatMap((word) => {
+    if (word === " ") return [-1];
+    wordIndex++;
+    return Array.from(word, () => wordIndex);
+  });
+})();
 /**
  * The name, one span per letter: weight pulses with the kick as a shockwave from the head, and the face changes in
  * the same wave: Doto when a drop hits, Golos when it ends, and the old header's fonts in between (a font a bar
@@ -26,7 +37,7 @@ const LETTERS = [...NAME];
 const NameHeader: React.FC = () => {
   const letters = useRef<HTMLSpanElement[]>([]);
   const centres = useRef<number[]>([]);
-  const state = useMemo(() => ({ kicks: new KickHistory(), faces: createFaceWave() }), []);
+  const state = useMemo(() => ({ kicks: new KickHistory(), faces: createFaceWave(WORDS) }), []);
   /** Font size (em) per face that keeps the name at its Golos width. */
   const scales = useRef(new Map<string, number>());
 
@@ -104,7 +115,7 @@ const NameHeader: React.FC = () => {
       const distance = Math.abs((centres.current[i] ?? headX) - headX);
       const kick = state.kicks.at(seconds - distance / SHOCKWAVE_SPEED);
       // Jamming without the song stays in Golos: faces follow the song's bars.
-      const face = frame.isPlaying ? letterFace(state.faces, frame.time, distance) : GOLOS;
+      const face = frame.isPlaying ? letterFace(state.faces, frame.time, distance, i) : GOLOS;
       setStyle(span, "fontFamily", face);
       setStyle(span, "fontSize", face === GOLOS ? "" : `${(scales.current.get(face) ?? 1).toFixed(3)}em`);
       setStyle(

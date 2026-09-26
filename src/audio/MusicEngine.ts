@@ -1,3 +1,4 @@
+import { BandNormaliser } from "./bands";
 import { BAND_COUNT, clearFrame, createCursors, createFrame, writeFrame } from "./frame";
 import { CLIP_RANGE, softClipCurve } from "./limiter";
 import { HitLog, JAM_WINDOW } from "./sampler/hits";
@@ -23,10 +24,6 @@ const BAND_EDGES = Array.from(
   { length: BAND_COUNT + 1 },
   (_, i) => 40 * Math.pow(16000 / 40, i / BAND_COUNT)
 );
-const DB_FLOOR = -90;
-const DB_CEIL = -20;
-const PEAK_DECAY = 0.995;
-const PEAK_FLOOR = 0.25;
 
 interface LoadedTrack {
   source: TrackSource;
@@ -59,7 +56,8 @@ export class MusicEngine {
   private readonly deps: EngineDeps;
   private readonly tracks: LoadedTrack[];
   private readonly listeners = new Set<() => void>();
-  private readonly peaks = new Float32Array(BAND_COUNT).fill(PEAK_FLOOR);
+  private readonly normalisers = Array.from({ length: BAND_COUNT }, () => new BandNormaliser());
+  private lastBandsMs = Number.NaN;
   private state: EngineState;
   private current = 0;
   private ctx: AudioContext | null = null;
@@ -285,7 +283,7 @@ export class MusicEngine {
     if (map) writeFrame(this.frame, map, time, playing, this.cursors);
     else clearFrame(this.frame, time, playing);
     this.applyHits(nowMs, playing, running);
-    this.writeBands(playing || this.frame.jamming);
+    this.writeBands(playing || this.frame.jamming, nowMs);
     return this.frame;
   }
 
@@ -447,13 +445,15 @@ export class MusicEngine {
     return ctx.currentTime - (ctx.baseLatency || 0) - (ctx.outputLatency || 0);
   }
 
-  private writeBands(playing: boolean): void {
+  private writeBands(playing: boolean, nowMs: number): void {
     const bands = this.frame.bands;
     const analyser = this.analyser;
     if (!playing || !analyser || !this.ctx) {
       bands.fill(0);
       return;
     }
+    const dt = Math.min(0.1, Math.max(0, (nowMs - this.lastBandsMs) / 1000)) || 0;
+    this.lastBandsMs = nowMs;
     analyser.getFloatFrequencyData(this.spectrum);
     const binHz = this.ctx.sampleRate / analyser.fftSize;
     for (let b = 0; b < BAND_COUNT; b++) {
@@ -461,9 +461,8 @@ export class MusicEngine {
       const hi = Math.max(lo, Math.min(this.spectrum.length - 1, Math.ceil(BAND_EDGES[b + 1] / binHz) - 1));
       let sum = 0;
       for (let k = lo; k <= hi; k++) sum += this.spectrum[k];
-      const level = Math.min(1, Math.max(0, (sum / (hi - lo + 1) - DB_FLOOR) / (DB_CEIL - DB_FLOOR)));
-      this.peaks[b] = Math.max(level, this.peaks[b] * PEAK_DECAY, PEAK_FLOOR);
-      bands[b] = level / this.peaks[b];
+      const meanDb = sum / (hi - lo + 1);
+      bands[b] = this.normalisers[b].update(meanDb, dt);
     }
   }
 }
