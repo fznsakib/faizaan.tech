@@ -6,8 +6,8 @@ export function createNoiseBuffer(ctx: BaseAudioContext): AudioBuffer {
   const data = buffer.getChannelData(0);
   let seed = 22222;
   for (let i = 0; i < data.length; i++) {
-    seed = (seed * 1103515245 + 12345) % 2147483648;
-    data[i] = seed / 1073741824 - 1;
+    seed = (Math.imul(seed, 1103515245) + 12345) >>> 0;
+    data[i] = seed / 2147483648 - 1;
   }
   return buffer;
 }

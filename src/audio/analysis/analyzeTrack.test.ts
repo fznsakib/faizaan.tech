@@ -22,6 +22,32 @@ function clickTrack(bpm: number, firstBeat: number, seconds: number, sampleRate:
   return pcm;
 }
 
+/** 150 BPM with kicks on the 3+3+2 eighths, a snare backbeat and 8th hats: kicks alone pulse at 100 BPM. */
+function dottedGroove(seconds: number, sampleRate: number) {
+  const pcm = new Float32Array(Math.round(seconds * sampleRate));
+  const eighth = 30 / 150;
+  let seed = 7;
+  const noise = () => {
+    seed = (seed * 1103515245 + 12345) % 2147483648;
+    return seed / 1073741824 - 1;
+  };
+  const hit = (t: number, hz: number, amp: number, noisiness: number, length: number) => {
+    const start = Math.round(t * sampleRate);
+    for (let i = 0; i < sampleRate * length && start + i < pcm.length; i++) {
+      const decay = Math.exp(-i / (sampleRate * 0.015));
+      pcm[start + i] +=
+        amp * decay * ((1 - noisiness) * Math.sin((2 * Math.PI * hz * i) / sampleRate) + noisiness * noise());
+    }
+  };
+  for (let k = 0; k * eighth < seconds; k++) {
+    const t = k * eighth;
+    if ([0, 3, 6].includes(k % 8)) hit(t, 55, 0.9, 0.1, 0.08);
+    if ([2, 6].includes(k % 8)) hit(t, 200, 0.4, 0.7, 0.08);
+    hit(t, 8000, 0.15, 1, 0.03);
+  }
+  return pcm;
+}
+
 describe("analyzeTrack", () => {
   // 44.1 kHz like the real tracks: the 2048-sample window is 46 ms, so the flux peak lands
   // ≤ ~40 ms before the click and the +13 ms shift brings it inside the 50 ms tolerance.
@@ -47,6 +73,11 @@ describe("analyzeTrack", () => {
     expect(Math.max(...analysis.env.kick)).toBeGreaterThan(0);
     expect(analysis.downbeatMod).toBeGreaterThanOrEqual(0);
     expect(analysis.downbeatMod).toBeLessThan(4);
+  });
+
+  it("hears a dotted groove at its beat, not the 3:2 kick pulse", () => {
+    const { bpm } = analyzeTrack(dottedGroove(30, sampleRate), sampleRate);
+    expect([150, 75].some((beat) => Math.abs(bpm - beat) <= 0.5), `${bpm} BPM`).toBe(true);
   });
 
   it("handles audio shorter than one window", () => {

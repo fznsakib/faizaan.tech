@@ -4,8 +4,9 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { decodeWithAfconvert } from "./decode.ts";
-import { analyzeTrack } from "../src/audio/analysis/analyzeTrack.ts";
+import { analyzeTrack, gridConfidence } from "../src/audio/analysis/analyzeTrack.ts";
 import { buildBeatMap } from "../src/audio/analysis/buildBeatMap.ts";
+import { analyseForMap } from "../src/audio/analysis/runtime.ts";
 
 import type { BeatMapOverrides } from "../src/audio/analysis/buildBeatMap.ts";
 import type { BeatMap } from "../src/audio/types.ts";
@@ -30,9 +31,20 @@ describe.skipIf(process.platform !== "darwin")("beat maps for the bundled tracks
       expect(Math.abs(analysis.bpm - ref.bpm)).toBeLessThanOrEqual(0.05);
       expect(Math.abs(map.beat0 - ref.beat0)).toBeLessThanOrEqual(0.01);
       expect(map.downbeatMod).toBe(ref.downbeatMod);
+      expect(gridConfidence(analysis)).toBeGreaterThanOrEqual(0.8);
 
       const committed: BeatMap = JSON.parse(readFileSync(path(`src/audio/beatmaps/${ref.id}.json`), "utf8"));
       expect(committed).toMatchObject({ bpm: map.bpm, beat0: map.beat0, downbeatMod: map.downbeatMod });
     }, 180_000);
   }
+});
+
+describe.skipIf(process.platform !== "darwin")("runtime maps for 30 s clips", () => {
+  it("does not lock a confident 3:2 tempo error (etaki from 25 s)", () => {
+    const { pcm, sampleRate } = decodeWithAfconvert(path("src/assets/audio/etaki.mp3"));
+    const clip = pcm.slice(25 * sampleRate, 55 * sampleRate);
+    const map = analyseForMap(clip, sampleRate, "clip");
+    const octave = [150, 75].some((bpm) => Math.abs(map.bpm - bpm) <= 0.5);
+    expect(octave || (map.confidence ?? 0) <= 0.5, `bpm ${map.bpm} at confidence ${map.confidence}`).toBe(true);
+  }, 180_000);
 });

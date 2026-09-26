@@ -36,7 +36,7 @@ interface Grid {
 
 const BANDS = Object.keys(BAND_RANGES) as AnalysisBand[];
 
-/** Offline beat analysis: band spectral flux → ACF tempo → grid fit → downbeat vote. */
+/** Offline beat analysis: band spectral flux → ACF tempo → grid fit (checking 3:2 relatives) → downbeat vote. */
 export function analyzeTrack(pcm: Float32Array, sampleRate: number): Analysis {
   const hop = Math.round(sampleRate / 100);
   const fps = sampleRate / hop;
@@ -52,7 +52,7 @@ export function analyzeTrack(pcm: Float32Array, sampleRate: number): Analysis {
   for (let i = 0; i < onset.length; i++) {
     onset[i] = env.full[i] + env.kick[i] + 0.5 * env.snare[i];
   }
-  const grid = fitGrid(onset, fps, duration, estimateTempo(onset, fps));
+  const grid = fitBeat(onset, fps, duration, estimateTempo(onset, fps));
   return {
     sampleRate,
     duration,
@@ -200,6 +200,33 @@ function fitGrid(onset: Float32Array, fps: number, duration: number, center: num
   return best;
 }
 
+/** An alternative beat must beat the ACF's by this factor: the ACF + prior is right far more often than not. */
+const SWITCH_MARGIN = 1.1;
+
+/**
+ * Fit the ACF tempo t, then check the 3:2 relatives 1.5t and t/1.5. A dotted (3+3+2) groove can lock the ACF onto
+ * 2/3 of the beat with a grid that fits as well as the true one (etaki 25–55 s: 100 vs 150 BPM, 8.5 vs 8.4× mean).
+ * What tells them apart is the off-beats: the true beat's midpoints are its 8ths and carry onsets, a 3:2 grid's
+ * midpoints fall on 16ths. So each grid is scored on its beats plus its midpoints.
+ */
+function fitBeat(onset: Float32Array, fps: number, duration: number, tempo: number): Grid {
+  const strength = (grid: Grid) =>
+    grid.score + gridScore(onset, fps, grid.bpm, grid.phase + 30 / grid.bpm, 0, duration);
+  const acf = fitGrid(onset, fps, duration, tempo);
+  let best = acf;
+  let bestStrength = strength(acf) * SWITCH_MARGIN;
+  for (const bpm of [tempo * 1.5, tempo / 1.5]) {
+    if (bpm < 60 || bpm > 200) continue;
+    const alternative = fitGrid(onset, fps, duration, bpm);
+    const alternativeStrength = strength(alternative);
+    if (alternativeStrength > bestStrength) {
+      best = alternative;
+      bestStrength = alternativeStrength;
+    }
+  }
+  return best;
+}
+
 /** Vote for the beat-in-bar where the biggest 8-beat texture changes land (section changes fall on downbeats). */
 function estimateDownbeat(
   env: Record<AnalysisBand, Float32Array>,
@@ -237,4 +264,37 @@ function estimateDownbeat(
   const votes = [0, 0, 0, 0];
   for (const { k, v } of candidates) votes[k % 4] += v;
   return votes.indexOf(Math.max(...votes));
+}
+
+/**
+ * Onset-strength ratio → 0..1. Calibrated 2026-09-26: best-fit grid on seeded noise 1.60; empty-lightning 3.95
+ * (30 s clip 4.19); etaki 4.84 (5.28); click track 12.7. Floor sits just above noise; both songs map ≥ 0.9.
+ */
+const RATIO_FLOOR = 1.7;
+const RATIO_SPAN = 2.5;
+
+/**
+ * How clearly the fitted grid sits on onsets: mean ±1-frame onset strength at grid beats divided by the
+ * same measure over all frames, mapped to 0..1. Choreography scales phase-locked motion by this.
+ */
+export function gridConfidence(analysis: Analysis): number {
+  const { env, onsetFps, bpm, phase, duration } = analysis;
+  const n = env.full.length;
+  if (n < 3) return 0;
+  const onset = new Float32Array(n);
+  for (let i = 0; i < n; i++) onset[i] = env.full[i] + env.kick[i] + 0.5 * env.snare[i];
+  const peak = (i: number) => Math.max(onset[i - 1], onset[i], onset[i + 1]);
+  let all = 0;
+  for (let i = 1; i + 1 < n; i++) all += peak(i);
+  const baseline = all / (n - 2);
+  let grid = 0;
+  let beats = 0;
+  for (let t = phase; t < duration; t += 60 / bpm) {
+    const i = Math.floor(t * onsetFps);
+    if (i < 1 || i + 1 >= n) continue;
+    grid += peak(i);
+    beats++;
+  }
+  if (beats === 0 || baseline <= 0) return 0;
+  return Math.min(1, Math.max(0, (grid / beats / baseline - RATIO_FLOOR) / RATIO_SPAN));
 }
