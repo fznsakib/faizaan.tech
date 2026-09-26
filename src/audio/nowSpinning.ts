@@ -10,6 +10,8 @@ export interface Spin {
   artist: string;
   track: string;
   nowPlaying: boolean;
+  /** Came from a `?spin` link rather than Faizaan's Last.fm: never labelled as something he is playing. */
+  fromLink: boolean;
 }
 
 export interface Preview {
@@ -28,13 +30,13 @@ interface ITunesResult {
   trackViewUrl?: string;
 }
 
-/** `?spin=Artist - Track`: test the preview path without Last.fm. */
+/** `?spin=Artist - Track`: try the preview path without Last.fm (labelled "preview", never "now spinning"). */
 export function spinFromQuery(search: string): Spin | null {
   const value = new URLSearchParams(search).get("spin");
   if (!value) return null;
   const [artist, ...rest] = value.split(" - ");
   const track = rest.join(" - ").trim();
-  return artist.trim() && track ? { artist: artist.trim(), track, nowPlaying: true } : null;
+  return artist.trim() && track ? { artist: artist.trim(), track, nowPlaying: false, fromLink: true } : null;
 }
 
 /** Parse the now-playing function's JSON body. */
@@ -42,7 +44,7 @@ export function spinFromResponse(body: unknown): Spin | null {
   if (!body || typeof body !== "object") return null;
   const { artist, track, nowPlaying } = body as Record<string, unknown>;
   if (typeof artist !== "string" || !artist || typeof track !== "string" || !track) return null;
-  return { artist, track, nowPlaying: nowPlaying === true };
+  return { artist, track, nowPlaying: nowPlaying === true, fromLink: false };
 }
 
 /** First iTunes result by the same artist that has a preview; artwork shrunk to 30 px for a pixelated sleeve. */
@@ -62,7 +64,7 @@ export function pickPreview(results: ITunesResult[], spin: Spin): Preview | null
 export function previewTrack(spin: Spin, preview: Preview): TrackSource {
   return {
     id: NOW_SPINNING_ID,
-    title: `${spin.nowPlaying ? "now spinning" : "last spun"} · ${preview.title} — ${preview.artist}`,
+    title: `${spin.fromLink ? "preview" : spin.nowPlaying ? "now spinning" : "last spun"} · ${preview.title} — ${preview.artist}`,
     url: preview.audio,
     loop: true,
     artwork: preview.artwork || undefined,

@@ -19,20 +19,20 @@ afterEach(() => {
 
 describe("spin sources", () => {
   it("reads ?spin=Artist - Track", () => {
-    expect(spinFromQuery("?spin=Radiohead%20-%20Weird%20Fishes")).toEqual({ artist: "Radiohead", track: "Weird Fishes", nowPlaying: true });
+    expect(spinFromQuery("?spin=Radiohead%20-%20Weird%20Fishes")).toEqual({ artist: "Radiohead", track: "Weird Fishes", nowPlaying: false, fromLink: true });
     expect(spinFromQuery("?spin=nothing")).toBeNull();
     expect(spinFromQuery("")).toBeNull();
   });
 
   it("reads the function's JSON", () => {
-    expect(spinFromResponse({ configured: true, artist: "A", track: "T", nowPlaying: false })).toEqual({ artist: "A", track: "T", nowPlaying: false });
+    expect(spinFromResponse({ configured: true, artist: "A", track: "T", nowPlaying: false })).toEqual({ artist: "A", track: "T", nowPlaying: false, fromLink: false });
     expect(spinFromResponse({ configured: false })).toBeNull();
   });
 });
 
 describe("pickPreview", () => {
   it("takes the first result by the same artist with a preview, pixel-sized artwork", () => {
-    const picked = pickPreview([{ ...result, artistName: "Radiohead Tribute" , previewUrl: undefined }, result], { artist: "radiohead", track: "Weird Fishes", nowPlaying: true });
+    const picked = pickPreview([{ ...result, artistName: "Radiohead Tribute" , previewUrl: undefined }, result], { artist: "radiohead", track: "Weird Fishes", nowPlaying: true, fromLink: false });
     expect(picked).toEqual({
       title: "Weird Fishes / Arpeggi",
       artist: "Radiohead",
@@ -43,18 +43,18 @@ describe("pickPreview", () => {
   });
 
   it("returns null when no result matches the artist", () => {
-    expect(pickPreview([result], { artist: "Portishead", track: "Roads", nowPlaying: true })).toBeNull();
+    expect(pickPreview([result], { artist: "Portishead", track: "Roads", nowPlaying: true, fromLink: false })).toBeNull();
   });
 });
 
 describe("loadNowSpinning", () => {
-  it("adds a looping now-spinning track from ?spin via iTunes", async () => {
+  it("adds a looping preview from ?spin without claiming Faizaan is listening", async () => {
     const addTrack = vi.fn();
     const fetchImpl = vi.fn(async () => json({ results: [result] }));
     await loadNowSpinning({ addTrack }, "?spin=Radiohead - Weird Fishes", fetchImpl as unknown as typeof fetch);
     expect(fetchImpl).toHaveBeenCalledWith(expect.stringContaining("https://itunes.apple.com/search?term=Radiohead%20Weird%20Fishes"));
     expect(addTrack).toHaveBeenCalledWith(
-      expect.objectContaining({ id: "now-spinning", loop: true, url: result.previewUrl, title: "now spinning · Weird Fishes / Arpeggi — Radiohead" })
+      expect.objectContaining({ id: "now-spinning", loop: true, url: result.previewUrl, title: "preview · Weird Fishes / Arpeggi — Radiohead" })
     );
   });
 
@@ -72,6 +72,15 @@ describe("loadNowSpinning", () => {
     );
     await loadNowSpinning({ addTrack }, "", fetchImpl as unknown as typeof fetch);
     expect(addTrack.mock.calls[0][0].title).toMatch(/^last spun · /);
+  });
+
+  it("says now spinning only for a live Last.fm listen", async () => {
+    const addTrack = vi.fn();
+    const fetchImpl = vi.fn(async (url: string) =>
+      url === "/api/now-playing" ? json({ configured: true, artist: "Radiohead", track: "Weird Fishes", nowPlaying: true }) : json({ results: [result] })
+    );
+    await loadNowSpinning({ addTrack }, "", fetchImpl as unknown as typeof fetch);
+    expect(addTrack.mock.calls[0][0].title).toMatch(/^now spinning · /);
   });
 
   it("treats a non-JSON response as unconfigured (vite dev serves index.html)", async () => {
