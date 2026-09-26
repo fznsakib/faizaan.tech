@@ -28,8 +28,7 @@ const Transport: React.FC = () => {
       });
       if (action === "toggle") {
         event.preventDefault();
-        engine.unlock(); // resumes a suspended context from this key gesture
-        engine.toggle();
+        engine.toggle(); // also resumes audio the system interrupted
       } else if (action === "mute") {
         engine.setMuted(!engine.getSnapshot().muted);
       }
@@ -48,10 +47,7 @@ const Transport: React.FC = () => {
         type="button"
         onMouseDown={keepFocus}
         aria-label={isPlaying ? "Pause music" : "Play music"}
-        onClick={() => {
-          engine.unlock();
-          engine.toggle();
-        }}
+        onClick={() => engine.toggle()}
       >
         {isPlaying ? "pause" : "play"}
       </Styled.Control>

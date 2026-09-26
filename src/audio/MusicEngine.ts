@@ -188,7 +188,11 @@ export class MusicEngine {
     this.set({ isPlaying: false });
   }
 
+  /** Play/pause for a user gesture. If the system interrupted audio (iOS call, Siri), the gesture resumes it. */
   toggle(): void {
+    const interrupted = this.source !== null && this.ctx !== null && this.ctx.state !== "running";
+    this.unlock();
+    if (interrupted) return;
     if (this.state.isPlaying) this.pause();
     else this.play();
   }

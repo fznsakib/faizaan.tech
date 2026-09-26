@@ -206,6 +206,15 @@ describe("transport", () => {
     expect(engine.getSnapshot().isPlaying).toBe(true);
   });
 
+  it("toggle resumes an interrupted context instead of pausing", async () => {
+    const { engine, ctx } = await playing();
+    ctx().state = "suspended";
+    engine.toggle();
+    expect(ctx().state).toBe("running");
+    expect(engine.getSnapshot().isPlaying).toBe(true);
+    expect(ctx().sources[0].stopped).toBe(false);
+  });
+
   it("seek restarts the source at the target and clamps to the track", async () => {
     const { engine, ctx } = await playing();
     engine.seek(10);
