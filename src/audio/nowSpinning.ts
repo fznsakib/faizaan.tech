@@ -71,8 +71,13 @@ export function previewTrack(spin: Spin, preview: Preview): TrackSource {
   };
 }
 
-async function readJson(response: Response): Promise<unknown> {
-  if (!response.ok || !(response.headers.get("content-type") ?? "").includes("json")) {
+/**
+ * Parse a JSON response. `strict` also requires a JSON content type: our own endpoint must be JSON (vite dev
+ * serves index.html there), while iTunes returns JSON as `text/javascript`.
+ */
+async function readJson(response: Response, strict: boolean): Promise<unknown> {
+  const type = response.headers.get("content-type") ?? "";
+  if (!response.ok || (strict && !type.includes("json"))) {
     throw new Error(`${response.url || "response"} ${response.status} ${response.headers.get("content-type") ?? ""}`.trim());
   }
   return response.json();
@@ -85,10 +90,10 @@ export async function loadNowSpinning(
   fetchImpl: typeof fetch = fetch
 ): Promise<void> {
   try {
-    const spin = spinFromQuery(search) ?? spinFromResponse(await readJson(await fetchImpl(ENDPOINT)));
+    const spin = spinFromQuery(search) ?? spinFromResponse(await readJson(await fetchImpl(ENDPOINT), true));
     if (!spin) throw new Error("nothing spinning");
     const term = encodeURIComponent(`${spin.artist} ${spin.track}`);
-    const found = (await readJson(await fetchImpl(`https://itunes.apple.com/search?term=${term}&entity=song&limit=5`))) as {
+    const found = (await readJson(await fetchImpl(`https://itunes.apple.com/search?term=${term}&entity=song&limit=5`), false)) as {
       results?: ITunesResult[];
     };
     const preview = pickPreview(found.results ?? [], spin);

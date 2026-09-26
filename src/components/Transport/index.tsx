@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { djKeyVoice, transportKeyAction } from "./keys";
 import * as Styled from "./Transport.styled";
 import { engine } from "../../audio/engine";
 import { useMusicState } from "../../audio/react";
+import Crate from "../Crate";
 import DjPad from "../DjPad";
 
 const TYPING = "input, select, textarea, [contenteditable='true']";
@@ -15,6 +16,8 @@ const keepFocus = (event: { preventDefault(): void }) => event.preventDefault();
 const Transport: React.FC = () => {
   const { status, title, bpm, isPlaying, muted } = useMusicState();
   const [padOpen, setPadOpen] = useState(false);
+  const [crateOpen, setCrateOpen] = useState(false);
+  const closeCrate = useCallback(() => setCrateOpen(false), []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -61,11 +64,19 @@ const Transport: React.FC = () => {
         >
           {isPlaying ? "pause" : "play"}
         </Styled.Control>
-        <Styled.Label aria-live="polite">
-          {title}
-          {bpm ? ` · ${Math.round(bpm)} bpm` : ""}
-          {status === "loading" ? " · loading" : ""}
-        </Styled.Label>
+        <Styled.Control
+          type="button"
+          onMouseDown={keepFocus}
+          aria-expanded={crateOpen}
+          aria-controls="crate"
+          onClick={() => setCrateOpen((open) => !open)}
+        >
+          <Styled.Label aria-live="polite">
+            {title}
+            {bpm ? ` · ${Math.round(bpm)} bpm` : ""}
+            {status === "loading" ? " · loading" : ""}
+          </Styled.Label>
+        </Styled.Control>
         <Styled.Control type="button" onMouseDown={keepFocus} aria-label={muted ? "Unmute music" : "Mute music"} onClick={() => engine.setMuted(!muted)}>
           {muted ? "unmute" : "mute"}
         </Styled.Control>
@@ -90,6 +101,7 @@ const Transport: React.FC = () => {
           jam
         </Styled.Control>
       </Styled.Bar>
+      {crateOpen && <Crate onClose={closeCrate} />}
       {padOpen && <DjPad />}
     </Styled.Dock>
   );

@@ -58,6 +58,13 @@ describe("loadNowSpinning", () => {
     );
   });
 
+  it("accepts iTunes' JSON even though it is served as text/javascript", async () => {
+    const addTrack = vi.fn();
+    const fetchImpl = vi.fn(async () => json({ results: [result] }, "text/javascript; charset=utf-8"));
+    await loadNowSpinning({ addTrack }, "?spin=Radiohead - Weird Fishes", fetchImpl as unknown as typeof fetch);
+    expect(addTrack).toHaveBeenCalledTimes(1);
+  });
+
   it("uses the now-playing function when there is no ?spin", async () => {
     const addTrack = vi.fn();
     const fetchImpl = vi.fn(async (url: string) =>
