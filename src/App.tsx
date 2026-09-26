@@ -7,10 +7,10 @@ import Background from "./components/Background";
 import GlassPanel from "./components/GlassPanel";
 import Head from "./components/Head";
 import NameHeader from "./components/NameHeader";
+import Player from "./components/Player";
 import SocialLinks from "./components/SocialLinks";
 import Splash from "./components/Splash";
 import SubtitleStack from "./components/SubtitleStack";
-import Transport from "./components/Transport";
 import { theme } from "./styles/theme";
 
 const MusicDebug = lazy(() => import("./components/MusicDebug"));
@@ -54,7 +54,7 @@ function App() {
         </Canvas>
       </Styled.AppContainer>
 
-      <Transport />
+      <Player />
       <Splash />
       {showMusicDebug && (
         <Suspense fallback={null}>

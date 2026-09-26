@@ -81,7 +81,7 @@ function toDataUri(map: GlassMap): string {
 
 /**
  * Whether a press on `target` is a press on the page itself, so it may grab glass. The head's canvas covers the
- * whole viewport above the glass, so a press on bare page lands on that canvas; presses on the transport, crate,
+ * whole viewport above the glass, so a press on bare page lands on that canvas; presses on the player,
  * jam pad, icons, splash or ?debug panel land on those instead, and never grab.
  */
 function isPageSurface(target: EventTarget | null): boolean {

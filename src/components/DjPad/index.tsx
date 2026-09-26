@@ -1,6 +1,6 @@
 import * as Styled from "./DjPad.styled";
 import { engine } from "../../audio/engine";
-import { padKeyHits } from "../Transport/keys";
+import { padKeyHits } from "../Player/keys";
 
 import type { Voice } from "../../audio/types";
 

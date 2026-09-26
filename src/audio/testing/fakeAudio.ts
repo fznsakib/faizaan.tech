@@ -53,13 +53,21 @@ export class FakeAnalyser extends FakeNode {
   fftSize = 2048;
   smoothingTimeConstant = 0.8;
   level = -40;
+  /** Per-bin dB; overrides `level` when set. */
+  levelAt: ((bin: number) => number) | null = null;
 
   get frequencyBinCount() {
     return this.fftSize / 2;
   }
 
   getFloatFrequencyData(array: Float32Array) {
-    array.fill(this.level);
+    if (this.levelAt) for (let k = 0; k < array.length; k++) array[k] = this.levelAt(k);
+    else array.fill(this.level);
+  }
+
+  /** A ramp from -1 up to just under 1 across the window. */
+  getFloatTimeDomainData(array: Float32Array) {
+    for (let i = 0; i < array.length; i++) array[i] = (2 * i) / array.length - 1;
   }
 }
 
@@ -123,6 +131,7 @@ export class FakeAudioContext {
   readonly oscillators: FakeOscillator[] = [];
   readonly filters: FakeFilter[] = [];
   readonly shapers: FakeWaveShaper[] = [];
+  readonly analysers: FakeAnalyser[] = [];
   outputTimestamp = { contextTime: 0, performanceTime: 0 };
   bufferDuration = 120;
   decodeCalls = 0;
@@ -143,7 +152,9 @@ export class FakeAudioContext {
   }
 
   createAnalyser() {
-    return new FakeAnalyser();
+    const analyser = new FakeAnalyser();
+    this.analysers.push(analyser);
+    return analyser;
   }
 
   createBufferSource() {
@@ -177,7 +188,7 @@ export class FakeAudioContext {
 
   decodeAudioData() {
     this.decodeCalls++;
-    return Promise.resolve({ duration: this.bufferDuration });
+    return Promise.resolve({ duration: this.bufferDuration, numberOfChannels: 2 });
   }
 
   getOutputTimestamp() {

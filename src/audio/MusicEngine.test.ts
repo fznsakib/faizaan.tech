@@ -21,6 +21,17 @@ const baseMap: BeatMap = {
   onsets: { kick: [], snare: [], hat: [] },
 };
 
+/** Display metadata for a fake track: everything a TrackInfo carries. */
+const meta = (id: string) => ({
+  id,
+  title: id.toUpperCase(),
+  artist: `${id} artist`,
+  album: `${id} album`,
+  year: 2020,
+  artwork: `/${id}.jpg`,
+  duration: 120,
+});
+
 interface SetupOptions {
   maps?: Record<string, BeatMap | null>;
   fetch?: (url: string) => Promise<ArrayBuffer>;
@@ -31,8 +42,7 @@ function setup(options: SetupOptions = {}) {
   const contexts: FakeAudioContext[] = [];
   const maps = options.maps ?? { a: baseMap, b: { ...baseMap, id: "b", bpm: 150 } };
   const tracks: TrackSource[] = ["a", "b"].map((id) => ({
-    id,
-    title: id.toUpperCase(),
+    ...meta(id),
     url: `/${id}.mp3`,
     loadBeatMap: async () => maps[id] ?? null,
   }));
@@ -66,6 +76,12 @@ function audibleAt(ctx: FakeAudioContext, contextTime: number, nowMs: number) {
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
+/** The first fetch resolves; every later one never does (a track that stays loading). */
+function fetchOnceThenHang() {
+  let fetches = 0;
+  return () => (++fetches === 1 ? Promise.resolve(new ArrayBuffer(8)) : new Promise<ArrayBuffer>(() => {}));
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
 });
@@ -81,6 +97,11 @@ describe("loading and unlocking", () => {
     expect(contexts[0].decodeCalls).toBe(1);
     expect(statuses).toEqual(["loading", "ready"]);
     expect(engine.getSnapshot()).toMatchObject({ track: "a", title: "A", bpm: 120, isPlaying: false });
+  });
+
+  it("lists every track's display metadata for the playlist", () => {
+    const { engine } = setup();
+    expect(engine.getSnapshot().tracks).toEqual([meta("a"), meta("b")]);
   });
 
   it("keeps the context suspended until unlock", async () => {
@@ -524,7 +545,7 @@ describe("DJ mode hits", () => {
   });
 });
 
-describe("crate", () => {
+describe("playlist picks", () => {
   it("selects a track by id and keeps playing", async () => {
     const { engine, ctx } = await playing();
     engine.select("b");
@@ -549,7 +570,7 @@ describe("crate", () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
     const ctx = new FakeAudioContext();
     const engine = new MusicEngine(
-      [{ id: "x", title: "X", url: "/x.mp3", loadBeatMap: async () => Promise.reject(new Error("decode failed")) }],
+      [{ ...meta("x"), url: "/x.mp3", loadBeatMap: async () => Promise.reject(new Error("decode failed")) }],
       { createContext: () => ctx as unknown as AudioContext, fetchArrayBuffer: async () => new ArrayBuffer(8) }
     );
     await engine.preload();
@@ -557,5 +578,174 @@ describe("crate", () => {
     engine.play(0);
     audibleAt(ctx, 1.0, 1000);
     expect(engine.update(1000)).toMatchObject({ isPlaying: true, beatConfidence: 0 });
+  });
+});
+
+describe("player operations", () => {
+  it("previous restarts the track when more than 3 s in", async () => {
+    const { engine, ctx } = await playing();
+    ctx().currentTime = 5.05;
+    engine.previous();
+    expect(engine.getSnapshot()).toMatchObject({ track: "a", isPlaying: true });
+    expect(ctx().lastSource.started?.offset).toBe(0);
+  });
+
+  it("previous goes back a track within the first 3 s, wrapping from the first to the last", async () => {
+    const { engine, ctx } = await playing();
+    ctx().currentTime = 1.05;
+    engine.previous();
+    expect(engine.getSnapshot()).toMatchObject({ track: "b", isPlaying: true });
+    await engine.preload();
+    expect(ctx().lastSource.started?.offset).toBe(0);
+    engine.previous();
+    expect(engine.getSnapshot().track).toBe("a");
+  });
+
+  it("previous while paused switches without playing, or rewinds a paused track", async () => {
+    const { engine, ctx } = await playing();
+    ctx().currentTime = 10.05;
+    engine.pause();
+    engine.previous();
+    expect(engine.getSnapshot()).toMatchObject({ track: "a", isPlaying: false });
+    expect(engine.update(1).time).toBe(0);
+    engine.previous();
+    expect(engine.getSnapshot()).toMatchObject({ track: "b", isPlaying: false });
+  });
+
+  it("stop pauses and returns to the start", async () => {
+    const { engine, ctx } = await playing();
+    ctx().currentTime = 8.05;
+    engine.stop();
+    expect(engine.getSnapshot().isPlaying).toBe(false);
+    expect(ctx().lastSource.stopped).toBe(true);
+    expect(engine.update(1).time).toBe(0);
+    engine.play();
+    expect(ctx().lastSource.started?.offset).toBe(0);
+  });
+
+  it("clamps the volume and ramps the output gain to it", async () => {
+    const { engine, ctx } = await playing();
+    engine.setVolume(0.5);
+    const out = ctx().gains[1].gain;
+    expect(out.events[out.events.length - 1]).toEqual({ type: "ramp", value: 0.5, time: 0.01 });
+    expect(engine.getSnapshot().volume).toBe(0.5);
+    engine.setVolume(3);
+    expect(engine.getSnapshot().volume).toBe(1);
+    engine.setVolume(-1);
+    expect(engine.getSnapshot().volume).toBe(0);
+    expect(out.value).toBe(0);
+  });
+
+  it("mute silences without losing the volume, and unmuting restores it", async () => {
+    const { engine, ctx } = await playing();
+    engine.setVolume(0.5);
+    engine.setMuted(true);
+    const out = ctx().gains[1].gain;
+    expect(out.value).toBe(0);
+    engine.setVolume(0.25);
+    expect(out.value).toBe(0);
+    expect(engine.getSnapshot()).toMatchObject({ muted: true, volume: 0.25 });
+    engine.setMuted(false);
+    expect(out.value).toBe(0.25);
+  });
+
+  it("applies a volume set before the context exists", async () => {
+    const { engine, ctx } = setup();
+    expect(engine.getSnapshot().volume).toBe(1);
+    engine.setVolume(0.4);
+    await engine.preload();
+    expect(ctx().gains[1].gain.value).toBe(0.4);
+  });
+
+  it("reports the decoded track's duration and channels, and forgets them on a switch", async () => {
+    const { engine, ctx } = setup();
+    expect(engine.getSnapshot()).toMatchObject({ duration: null, channels: null });
+    await engine.preload();
+    expect(engine.getSnapshot()).toMatchObject({ duration: 120, channels: 2 });
+    engine.unlock();
+    engine.play(0);
+    engine.next();
+    expect(engine.getSnapshot()).toMatchObject({ track: "b", duration: null, channels: null });
+    ctx().bufferDuration = 90;
+    await engine.preload();
+    expect(engine.getSnapshot()).toMatchObject({ track: "b", duration: 90, channels: 2 });
+  });
+
+  it("knows a returning track's length from its beat map before it decodes again", async () => {
+    const { engine } = await playing({ fetch: fetchOnceThenHang() });
+    engine.next();
+    engine.next();
+    expect(engine.getSnapshot()).toMatchObject({ track: "a", duration: 120, status: "loading" });
+  });
+});
+
+describe("visualiser readers", () => {
+  it("zero-fill and return false before audio exists, when paused, and after jamming ends", async () => {
+    const { engine } = setup();
+    const out = new Float32Array(20).fill(7);
+    expect(engine.readSpectrum(out)).toBe(false);
+    expect(Array.from(out)).toEqual(new Array(20).fill(0));
+    const s = await playing();
+    s.engine.pause();
+    s.engine.update(1000);
+    out.fill(7);
+    expect(s.engine.readSpectrum(out)).toBe(false);
+    expect(Math.max(...out)).toBe(0);
+    out.fill(7);
+    expect(s.engine.readWaveform(out)).toBe(false);
+    expect(Math.max(...out)).toBe(0);
+  });
+
+  it("maps −90..−20 dB to 0..1 bars while playing, clamped", async () => {
+    const { engine, ctx } = await playing();
+    audibleAt(ctx(), 1.0, 1000);
+    engine.update(1000);
+    const out = new Float32Array(20);
+    const analyser = ctx().analysers[0];
+    analyser.level = -40;
+    expect(engine.readSpectrum(out)).toBe(true);
+    out.forEach((v) => expect(v).toBeCloseTo(50 / 70, 5));
+    analyser.level = -5;
+    engine.readSpectrum(out);
+    out.forEach((v) => expect(v).toBe(1));
+    analyser.level = -120;
+    engine.readSpectrum(out);
+    out.forEach((v) => expect(v).toBe(0));
+  });
+
+  it("spaces bars logarithmically from 40 Hz to 16 kHz", async () => {
+    const { engine, ctx } = await playing();
+    audibleAt(ctx(), 1.0, 1000);
+    engine.update(1000);
+    const analyser = ctx().analysers[0];
+    // loud below 1 kHz, silent above: 40 Hz → 16 kHz over 20 bars puts 1 kHz at bar ~10.7
+    const binHz = ctx().sampleRate / analyser.fftSize;
+    analyser.levelAt = (bin) => (bin * binHz < 1000 ? -20 : -90);
+    const out = new Float32Array(20);
+    engine.readSpectrum(out);
+    expect(Array.from(out.slice(0, 10))).toEqual(new Array(10).fill(1));
+    expect(Array.from(out.slice(12))).toEqual(new Array(8).fill(0));
+  });
+
+  it("resamples the waveform to the requested length while playing", async () => {
+    const { engine, ctx } = await playing();
+    audibleAt(ctx(), 1.0, 1000);
+    engine.update(1000);
+    const out = new Float32Array(4);
+    expect(engine.readWaveform(out)).toBe(true);
+    expect(Array.from(out)).toEqual([-1, -0.5, 0, 0.5]);
+  });
+
+  it("keep moving while jamming with nothing playing", async () => {
+    const { engine, ctx } = setup();
+    await engine.preload();
+    engine.unlock();
+    ctx().currentTime = 3;
+    engine.hit("kick");
+    audibleAt(ctx(), 3.005, 1000);
+    expect(engine.update(1000).jamming).toBe(true);
+    const out = new Float32Array(20);
+    expect(engine.readSpectrum(out)).toBe(true);
+    expect(Math.max(...out)).toBeGreaterThan(0);
   });
 });

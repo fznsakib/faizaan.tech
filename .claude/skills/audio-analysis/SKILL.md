@@ -29,6 +29,8 @@ In `MusicEngine.writeBands()`:
 
 These bands are for visual texture only (`frame.bands`), not for detecting the beat.
 
+The Player's visualiser reads the same analyser through `readSpectrum(out)` (`out.length` log bars 40 Hz–16 kHz, peak dB per bar mapped linearly −90..−20 dB and clipped, like Winamp's) and `readWaveform(out)` (time-domain samples resampled to `out.length`). Both gate on the last frame's `isPlaying || jamming`, so call them from a `useMusicFrame` callback; falloff and peak caps are the component's job (`Player/analyser.ts`).
+
 ## Onset Envelopes (kick/snare/hat)
 
 - Committed in `BeatMap.onsets` as flat `[t0, s0, t1, s1, …]` event lists (seconds, strength 0..1), produced by `analyzeTrack`/`buildBeatMap`.
@@ -56,4 +58,4 @@ These bands are for visual texture only (`frame.bands`), not for detecting the b
 3. If tempo/downbeat detection is off, add or edit an entry for that track's id in `src/audio/beatmaps/overrides.json`, then re-run.
 4. Add the track to `src/audio/tracks.ts` (see that skill's or `CLAUDE.md`'s "Adding a New Song" steps). `src/audio/tracks.test.ts` enforces that every mp3 in `src/assets/audio/` has exactly one matching entry with a committed beat map — run `yarn test` to check.
 
-Don't hardcode the current song list here — check `src/audio/tracks.ts` for the live crate.
+Don't hardcode the current song list here — check `src/audio/tracks.ts` for the live playlist.

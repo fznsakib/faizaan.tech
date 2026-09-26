@@ -230,7 +230,7 @@ export interface GlassPose {
 
 /**
  * Where the pieces live and how big they are: over the name, beside the head, over the subtitle EQ and on the
- * right. Anchors and drift keep every centre below the transport strip (top 12%) and above the icons (bottom 15%).
+ * right. Anchors and drift keep every centre below the top strip (top 12%, the jam pad) and above the icons (bottom 15%).
  * Radius is the size of the piece's radial profile (px at 1440 wide).
  */
 const TEMPLATES = [
