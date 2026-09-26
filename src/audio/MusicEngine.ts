@@ -92,7 +92,15 @@ export class MusicEngine {
       bpm: null,
       isPlaying: false,
       muted: false,
-      tracks: tracks.map(({ id, title }) => ({ id, title })),
+      tracks: tracks.map(({ id, title, artist, album, year, artwork, duration }) => ({
+        id,
+        title,
+        artist,
+        album,
+        year,
+        artwork,
+        duration,
+      })),
     };
   }
 

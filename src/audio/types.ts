@@ -83,16 +83,22 @@ export interface EngineState {
   tracks: readonly TrackInfo[];
 }
 
-export interface TrackSource {
+/** What the player shows for a track (and the playlist lists). */
+export interface TrackInfo {
   id: string;
+  /** Full release title. */
   title: string;
+  artist: string;
+  album: string;
+  year: number;
+  /** Bundled 300×300 cover URL. */
+  artwork: string;
+  /** Nominal length in seconds (from the beat map), for the playlist before a track is decoded. */
+  duration: number;
+}
+
+export interface TrackSource extends TrackInfo {
   url: string;
   /** Beat map for this track: bundled tracks import the committed JSON. */
   loadBeatMap: () => Promise<BeatMap | null>;
-}
-
-/** A crate entry as React sees it. */
-export interface TrackInfo {
-  id: string;
-  title: string;
 }

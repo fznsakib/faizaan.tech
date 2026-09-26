@@ -21,6 +21,17 @@ const baseMap: BeatMap = {
   onsets: { kick: [], snare: [], hat: [] },
 };
 
+/** Display metadata for a fake track: everything a TrackInfo carries. */
+const meta = (id: string) => ({
+  id,
+  title: id.toUpperCase(),
+  artist: `${id} artist`,
+  album: `${id} album`,
+  year: 2020,
+  artwork: `/${id}.jpg`,
+  duration: 120,
+});
+
 interface SetupOptions {
   maps?: Record<string, BeatMap | null>;
   fetch?: (url: string) => Promise<ArrayBuffer>;
@@ -31,8 +42,7 @@ function setup(options: SetupOptions = {}) {
   const contexts: FakeAudioContext[] = [];
   const maps = options.maps ?? { a: baseMap, b: { ...baseMap, id: "b", bpm: 150 } };
   const tracks: TrackSource[] = ["a", "b"].map((id) => ({
-    id,
-    title: id.toUpperCase(),
+    ...meta(id),
     url: `/${id}.mp3`,
     loadBeatMap: async () => maps[id] ?? null,
   }));
@@ -81,6 +91,11 @@ describe("loading and unlocking", () => {
     expect(contexts[0].decodeCalls).toBe(1);
     expect(statuses).toEqual(["loading", "ready"]);
     expect(engine.getSnapshot()).toMatchObject({ track: "a", title: "A", bpm: 120, isPlaying: false });
+  });
+
+  it("lists every track's display metadata for the playlist", () => {
+    const { engine } = setup();
+    expect(engine.getSnapshot().tracks).toEqual([meta("a"), meta("b")]);
   });
 
   it("keeps the context suspended until unlock", async () => {
@@ -549,7 +564,7 @@ describe("crate", () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
     const ctx = new FakeAudioContext();
     const engine = new MusicEngine(
-      [{ id: "x", title: "X", url: "/x.mp3", loadBeatMap: async () => Promise.reject(new Error("decode failed")) }],
+      [{ ...meta("x"), url: "/x.mp3", loadBeatMap: async () => Promise.reject(new Error("decode failed")) }],
       { createContext: () => ctx as unknown as AudioContext, fetchArrayBuffer: async () => new ArrayBuffer(8) }
     );
     await engine.preload();
