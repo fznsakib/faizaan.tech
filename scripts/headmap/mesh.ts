@@ -31,10 +31,14 @@ export function cropTriangles(positions: Float32Array, indices: Uint32Array, kee
   return new Uint32Array(out);
 }
 
-/** The triangles of the connected component (through shared vertices) with the most triangles. */
-export function largestComponent(indices: Uint32Array, vertexCount: number) {
+/**
+ * The triangles of the connected component with the most triangles. Triangles connect through shared
+ * vertices, or through shared positions when `canon` (from `weldMap`) is given.
+ */
+export function largestComponent(indices: Uint32Array, vertexCount: number, canon?: Uint32Array) {
   const parent = new Int32Array(vertexCount).map((_, i) => i);
-  const find = (i: number): number => {
+  const find = (v: number): number => {
+    let i = canon ? canon[v] : v;
     while (parent[i] !== i) {
       parent[i] = parent[parent[i]];
       i = parent[i];
@@ -109,4 +113,44 @@ export function vertexNeighbours(indices: Uint32Array, vertexCount: number) {
     }
   }
   return rings;
+}
+
+/** For each vertex, the first vertex with exactly the same position (seams split vertices, not surfaces). */
+export function weldMap(positions: Float32Array) {
+  const first = new Map<string, number>();
+  const out = new Uint32Array(positions.length / 3);
+  for (let i = 0; i < out.length; i++) {
+    const key = `${positions[i * 3]},${positions[i * 3 + 1]},${positions[i * 3 + 2]}`;
+    const j = first.get(key);
+    if (j === undefined) first.set(key, i);
+    out[i] = j ?? i;
+  }
+  return out;
+}
+
+/** Distance from (x, y) to the nearest of a list of 2D segments packed as x0, y0, x1, y1. */
+export function distanceToSegments2D(x: number, y: number, segments: Float32Array) {
+  let best = Infinity;
+  for (let i = 0; i < segments.length; i += 4) {
+    const ax = segments[i], ay = segments[i + 1];
+    const dx = segments[i + 2] - ax, dy = segments[i + 3] - ay;
+    const lenSq = dx * dx + dy * dy;
+    const t = lenSq > 0 ? Math.min(1, Math.max(0, ((x - ax) * dx + (y - ay) * dy) / lenSq)) : 0;
+    best = Math.min(best, Math.hypot(x - ax - t * dx, y - ay - t * dy));
+  }
+  return best;
+}
+
+/** How many of the included triangles face away from +z (negative signed area seen from the front). */
+export function foldedTriangles(positions: Float32Array, indices: Uint32Array, include: (triangle: number) => boolean) {
+  let folded = 0;
+  for (let t = 0; t < indices.length / 3; t++) {
+    if (!include(t)) continue;
+    const a = indices[t * 3] * 3, b = indices[t * 3 + 1] * 3, c = indices[t * 3 + 2] * 3;
+    const area =
+      (positions[b] - positions[a]) * (positions[c + 1] - positions[a + 1]) -
+      (positions[c] - positions[a]) * (positions[b + 1] - positions[a + 1]);
+    if (area < 0) folded++;
+  }
+  return folded;
 }

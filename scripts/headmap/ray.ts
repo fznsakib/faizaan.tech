@@ -80,6 +80,15 @@ export class AxisRayGrid {
 
   /** The hit closest to `origin` on the line through it along the axis, or null if the line misses. */
   nearest(origin: Vec3): GridHit | null {
+    return this.pick(origin, (hit, best) => Math.abs(hit.t) < Math.abs(best.t));
+  }
+
+  /** The hit furthest along the axis on the line through `origin` (the surface seen from that end). */
+  front(origin: Vec3): GridHit | null {
+    return this.pick(origin, (hit, best) => hit.t > best.t);
+  }
+
+  private pick(origin: Vec3, better: (hit: TriangleHit, best: TriangleHit) => boolean): GridHit | null {
     const [p, q] = this.across();
     const list = this.cells.get(this.key(this.cell(origin[p]), this.cell(origin[q])));
     if (!list) return null;
@@ -87,7 +96,7 @@ export class AxisRayGrid {
     for (const tri of list) {
       this.load(tri);
       const hit = intersectRayTriangle(origin, this.dir, this.a, this.b, this.c);
-      if (hit && (!best || Math.abs(hit.t) < Math.abs(best.t))) {
+      if (hit && (!best || better(hit, best))) {
         const point: Vec3 = [origin[0], origin[1], origin[2]];
         point[this.axis] += hit.t;
         best = { ...hit, triangle: tri, point };

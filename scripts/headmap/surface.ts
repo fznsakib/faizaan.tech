@@ -25,30 +25,63 @@ export function vertexNormals(positions: Float32Array, indices: Uint32Array) {
 
 /**
  * Laplacian smoothing restricted by per-vertex weights: each pass moves a vertex `lambda · weight`
- * of the way toward its neighbours' average. Weight-0 vertices never move.
+ * of the way toward its neighbours' average. Weight-0 vertices never move. With `mu` (negative,
+ * slightly larger than `lambda`), each pass adds an inflating step: Taubin smoothing, which removes
+ * noise without shrinking the surface. With `planar`, only x and y move (z is left for re-projection).
  */
 export function smoothMasked(
   positions: Float32Array,
   rings: Set<number>[],
   weights: Float32Array,
-  { passes, lambda }: { passes: number; lambda: number }
+  { passes, lambda, mu, planar = false }: { passes: number; lambda: number; mu?: number; planar?: boolean }
 ) {
+  // Flatten the weighted vertices' rings once: hundreds of passes over Sets are slow.
+  const active: number[] = [];
+  for (let i = 0; i < weights.length; i++) if (weights[i] !== 0 && rings[i].size > 0) active.push(i);
+  const offsets = new Int32Array(active.length + 1);
+  active.forEach((v, k) => (offsets[k + 1] = offsets[k] + rings[v].size));
+  const neighbours = new Int32Array(offsets[active.length]);
+  active.forEach((v, k) => neighbours.set([...rings[v]], offsets[k]));
+  const axes = planar ? 2 : 3;
+
   let current = positions.slice();
+  let next = positions.slice();
+  const step = (factor: number) => {
+    for (let k = 0; k < active.length; k++) {
+      const i = active[k], w = weights[i] * factor, n = offsets[k + 1] - offsets[k];
+      for (let axis = 0; axis < axes; axis++) {
+        let sum = 0;
+        for (let e = offsets[k]; e < offsets[k + 1]; e++) sum += current[neighbours[e] * 3 + axis];
+        next[i * 3 + axis] = current[i * 3 + axis] + w * (sum / n - current[i * 3 + axis]);
+      }
+    }
+    [current, next] = [next, current];
+  };
+  for (let pass = 0; pass < passes; pass++) {
+    step(lambda);
+    if (mu !== undefined) step(mu);
+  }
+  return current;
+}
+
+/**
+ * Smooths a mesh's rim in 2D: each pass moves every rim vertex with two rim neighbours halfway to
+ * their midpoint. `points` holds x, y per vertex; open ends and off-rim vertices stay put.
+ */
+export function smoothRim(points: Float32Array, edges: [number, number][], passes: number) {
+  const links = new Map<number, number[]>();
+  for (const [a, b] of edges) {
+    links.set(a, [...(links.get(a) ?? []), b]);
+    links.set(b, [...(links.get(b) ?? []), a]);
+  }
+  let current = points.slice();
   for (let pass = 0; pass < passes; pass++) {
     const next = current.slice();
-    for (let i = 0; i < weights.length; i++) {
-      const w = weights[i] * lambda;
-      if (w <= 0 || rings[i].size === 0) continue;
-      let x = 0, y = 0, z = 0;
-      for (const j of rings[i]) {
-        x += current[j * 3];
-        y += current[j * 3 + 1];
-        z += current[j * 3 + 2];
-      }
-      const n = rings[i].size;
-      next[i * 3] += w * (x / n - current[i * 3]);
-      next[i * 3 + 1] += w * (y / n - current[i * 3 + 1]);
-      next[i * 3 + 2] += w * (z / n - current[i * 3 + 2]);
+    for (const [v, ns] of links) {
+      if (ns.length !== 2) continue;
+      const [a, b] = ns;
+      next[v * 2] = 0.5 * current[v * 2] + 0.25 * (current[a * 2] + current[b * 2]);
+      next[v * 2 + 1] = 0.5 * current[v * 2 + 1] + 0.25 * (current[a * 2 + 1] + current[b * 2 + 1]);
     }
     current = next;
   }

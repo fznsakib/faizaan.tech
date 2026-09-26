@@ -51,9 +51,16 @@ describe("AxisRayGrid", () => {
     expect(hit?.point[2]).toBeCloseTo(3, 12);
   });
 
+  it("finds the front-most hit (largest position along the axis) wherever the origin is", () => {
+    expect(grid.front([0.5, 0.5, 1])?.point[2]).toBeCloseTo(3, 12);
+    expect(grid.front([0.5, 0.5, -10])?.t).toBeCloseTo(13, 12);
+    expect(grid.front([0.5, 0.5, 10])?.triangle).toBeGreaterThanOrEqual(2);
+  });
+
   it("misses outside the mesh's footprint", () => {
     expect(grid.nearest([1.5, 0.5, 1])).toBeNull();
     expect(grid.nearest([-0.2, -0.2, 1])).toBeNull();
+    expect(grid.front([1.5, 0.5, 1])).toBeNull();
   });
 
   it("works along x as well", () => {
