@@ -43,51 +43,55 @@ const Transport: React.FC = () => {
   }, []);
 
   if (status === "error") {
-    return <Styled.Bar role="status">audio unavailable</Styled.Bar>;
+    return (
+      <Styled.Dock>
+        <Styled.Bar role="status">audio unavailable</Styled.Bar>
+      </Styled.Dock>
+    );
   }
 
   return (
-    <>
-    <Styled.Bar>
-      <Styled.Control
-        type="button"
-        onMouseDown={keepFocus}
-        aria-label={isPlaying ? "Pause music" : "Play music"}
-        onClick={() => engine.toggle()}
-      >
-        {isPlaying ? "pause" : "play"}
-      </Styled.Control>
-      <Styled.Label aria-live="polite">
-        {title}
-        {bpm ? ` · ${Math.round(bpm)} bpm` : ""}
-        {status === "loading" ? " · loading" : ""}
-      </Styled.Label>
-      <Styled.Control type="button" onMouseDown={keepFocus} aria-label={muted ? "Unmute music" : "Mute music"} onClick={() => engine.setMuted(!muted)}>
-        {muted ? "unmute" : "mute"}
-      </Styled.Control>
-      <Styled.Control
-        type="button"
-        onMouseDown={keepFocus}
-        aria-label="Next track"
-        onClick={() => {
-          engine.unlock();
-          engine.next();
-        }}
-      >
-        next
-      </Styled.Control>
-      <Styled.Control
-        type="button"
-        onMouseDown={keepFocus}
-        aria-label="Jam pad"
-        aria-pressed={padOpen}
-        onClick={() => setPadOpen((open) => !open)}
-      >
-        jam
-      </Styled.Control>
-    </Styled.Bar>
-    {padOpen && <DjPad />}
-    </>
+    <Styled.Dock>
+      <Styled.Bar>
+        <Styled.Control
+          type="button"
+          onMouseDown={keepFocus}
+          aria-label={isPlaying ? "Pause music" : "Play music"}
+          onClick={() => engine.toggle()}
+        >
+          {isPlaying ? "pause" : "play"}
+        </Styled.Control>
+        <Styled.Label aria-live="polite">
+          {title}
+          {bpm ? ` · ${Math.round(bpm)} bpm` : ""}
+          {status === "loading" ? " · loading" : ""}
+        </Styled.Label>
+        <Styled.Control type="button" onMouseDown={keepFocus} aria-label={muted ? "Unmute music" : "Mute music"} onClick={() => engine.setMuted(!muted)}>
+          {muted ? "unmute" : "mute"}
+        </Styled.Control>
+        <Styled.Control
+          type="button"
+          onMouseDown={keepFocus}
+          aria-label="Next track"
+          onClick={() => {
+            engine.unlock();
+            engine.next();
+          }}
+        >
+          next
+        </Styled.Control>
+        <Styled.Control
+          type="button"
+          onMouseDown={keepFocus}
+          aria-label="Jam pad"
+          aria-pressed={padOpen}
+          onClick={() => setPadOpen((open) => !open)}
+        >
+          jam
+        </Styled.Control>
+      </Styled.Bar>
+      {padOpen && <DjPad />}
+    </Styled.Dock>
   );
 };
 

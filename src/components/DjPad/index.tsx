@@ -1,5 +1,6 @@
 import * as Styled from "./DjPad.styled";
 import { engine } from "../../audio/engine";
+import { padKeyHits } from "../Transport/keys";
 
 import type { Voice } from "../../audio/types";
 
@@ -22,8 +23,13 @@ const DjPad: React.FC = () => (
           event.preventDefault(); // no focus, and pointer presses play here rather than on click
           engine.hit(pad.voice, event.timeStamp);
         }}
+        onKeyDown={(event) => {
+          if (event.key !== "Enter") return;
+          event.preventDefault(); // no implicit click: it would repeat while Enter is held
+          if (padKeyHits(event.key, event.repeat)) engine.hit(pad.voice, event.timeStamp);
+        }}
         onClick={(event) => {
-          if (event.detail === 0) engine.hit(pad.voice); // keyboard activation only
+          if (event.detail === 0) engine.hit(pad.voice); // Space (keyup) activation
         }}
       >
         <Styled.Key>{pad.key}</Styled.Key> {pad.label.toLowerCase()}

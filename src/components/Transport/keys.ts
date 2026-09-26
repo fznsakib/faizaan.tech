@@ -39,3 +39,11 @@ export function djKeyVoice(input: Omit<TransportKey, "onControl"> & { onControl?
   if (input.onTypingField) return null;
   return DJ_KEYS.get(input.key.toLowerCase()) ?? null;
 }
+
+/**
+ * Whether Enter on a focused pad button should hit. The pad handles Enter itself (and prevents the button's
+ * implicit click, which Chromium repeats while Enter is held); Space still activates once via click on keyup.
+ */
+export function padKeyHits(key: string, repeat: boolean): boolean {
+  return key === "Enter" && !repeat;
+}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { djKeyVoice, transportKeyAction } from "./keys";
+import { djKeyVoice, padKeyHits, transportKeyAction } from "./keys";
 
 import type { TransportKey } from "./keys";
 
@@ -59,5 +59,16 @@ describe("djKeyVoice", () => {
 
   it("still plays while a control has focus", () => {
     expect(djKeyVoice(press({ key: "a", onControl: true }))).toBe("kick");
+  });
+});
+
+describe("padKeyHits", () => {
+  it("hits once per Enter press and ignores a held Enter's auto-repeat", () => {
+    expect(padKeyHits("Enter", false)).toBe(true);
+    expect(padKeyHits("Enter", true)).toBe(false);
+  });
+
+  it("leaves Space to the button's own click (it activates once, on keyup)", () => {
+    expect(padKeyHits(" ", false)).toBe(false);
   });
 });

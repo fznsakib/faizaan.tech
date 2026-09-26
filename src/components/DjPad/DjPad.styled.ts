@@ -1,11 +1,9 @@
 import styled from "styled-components";
 
 export const Pad = styled.div`
-  position: fixed;
-  top: 0.75rem;
-  right: 1rem;
-  z-index: 20;
+  pointer-events: auto;
   display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
   font-family: "Doto", monospace;
   font-size: 1.1rem;
@@ -21,6 +19,14 @@ export const PadButton = styled.button`
   border-radius: 4px;
   touch-action: manipulation;
   user-select: none;
+
+  @media (pointer: coarse) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+  }
 
   &:active {
     background: rgba(255, 255, 255, 0.15);
