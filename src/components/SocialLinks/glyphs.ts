@@ -9,7 +9,7 @@ export interface Glyph {
   source: string;
   viewBox: string;
   /** The mark: drawn as dots at rest, each part resolving to its own colour. */
-  parts: GlyphPart[];
+  parts: readonly GlyphPart[];
   /** A fill under the resolved mark only, never dotted (LinkedIn's white "in"). */
   backing?: GlyphPart;
 }

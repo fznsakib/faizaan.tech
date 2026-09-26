@@ -52,12 +52,3 @@ export const SubtitleText = styled.h2<{ $bottom: number; $left: number; $width?:
   font-family: "Doto", sans-serif;
   font-variation-settings: "wght" 500, "ROND" 0;
 `;
-
-export const SocialIconsContainer = styled.div`
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  z-index: 20;
-  display: flex;
-  gap: 40px;
-`;
