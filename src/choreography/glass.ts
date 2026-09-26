@@ -6,8 +6,14 @@ export interface GlassMap {
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
-/** How hard the glass bends at depth `s` into the bevel: 0 at the rim … 1 in the flat middle. */
-const bend = (s: number) => (1 - s) ** 2;
+/**
+ * How hard the glass bends at depth `s` into the bevel (0 at the rim … 1 in the flat middle): the slope of a
+ * quarter-circle rim, so it bends gently well inside the bevel and saturates toward the edge, like a thick dome.
+ */
+const bend = (s: number) => {
+  const x = 1 - s;
+  return Math.min(1, (0.6 * x) / Math.sqrt(Math.max(1e-6, 1 - x * x)));
+};
 
 /**
  * feDisplacementMap source for a rounded slab of thick glass: flat (128, 128) in the middle, and toward the rim
@@ -217,4 +223,30 @@ export function glassPose(body: GlassBody, input: GlassInput): GlassPose {
     refraction,
     glint: clamp(Math.max(input.stab, accent), 0, 1),
   };
+}
+
+/** Specular hotspot centre (% of the pane) and strength (0..1) for a tilt, lit from the head's key light (up-right). */
+export function glassSheen(rotateX: number, rotateY: number): { x: number; y: number; intensity: number } {
+  const facing = (rotateX + rotateY) / (2 * MAX_TILT); // -1 turned away from the light … 1 facing it
+  return {
+    x: 72 - 1.5 * rotateY,
+    y: 26 + 1.5 * rotateX,
+    intensity: clamp(0.55 + 0.45 * facing, 0, 1),
+  };
+}
+
+export interface BrowserIdentity {
+  userAgent: string;
+  userAgentData?: { brands?: readonly { brand: string }[] };
+}
+
+/**
+ * Whether `backdrop-filter: url(#svg-filter)` refracts here: Chromium only. Trust the UA-CH brand list when it has
+ * entries; an empty or missing list (seen in Chrome 154) falls back to the user-agent string. iOS browsers are all
+ * WebKit, whatever their name.
+ */
+export function supportsRefraction(nav: BrowserIdentity): boolean {
+  const brands = nav.userAgentData?.brands ?? [];
+  if (brands.length > 0) return brands.some(({ brand }) => brand === "Chromium");
+  return /\b(Chrome|Chromium)\/\d/.test(nav.userAgent);
 }

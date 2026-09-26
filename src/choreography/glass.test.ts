@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createBodies, glassMap, glassPose } from "./glass";
+import { createBodies, glassMap, glassPose, glassSheen, supportsRefraction } from "./glass";
 
 import type { GlassBody, GlassInput } from "./glass";
 
@@ -214,5 +214,52 @@ describe("glassPose", () => {
       expect(transport / samples).toBeLessThanOrEqual(0.1);
       expect(icons / samples).toBeLessThanOrEqual(0.1);
     });
+  });
+});
+
+describe("supportsRefraction", () => {
+  const CHROME_UA =
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36";
+  const SAFARI_UA =
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15";
+  const FIREFOX_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:140.0) Gecko/20100101 Firefox/140.0";
+  const IOS_CHROME_UA =
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/140.0 Mobile/15E148 Safari/604.1";
+
+  it("trusts the brand list when there is one", () => {
+    const brands = [{ brand: "Not=A?Brand" }, { brand: "Chromium" }, { brand: "Google Chrome" }];
+    expect(supportsRefraction({ userAgent: SAFARI_UA, userAgentData: { brands } })).toBe(true);
+    expect(supportsRefraction({ userAgent: CHROME_UA, userAgentData: { brands: [{ brand: "Other" }] } })).toBe(false);
+  });
+
+  it("falls back to the user agent when brands are missing or empty", () => {
+    expect(supportsRefraction({ userAgent: CHROME_UA, userAgentData: { brands: [] } })).toBe(true);
+    expect(supportsRefraction({ userAgent: CHROME_UA })).toBe(true);
+    expect(supportsRefraction({ userAgent: SAFARI_UA })).toBe(false);
+    expect(supportsRefraction({ userAgent: FIREFOX_UA })).toBe(false);
+    expect(supportsRefraction({ userAgent: IOS_CHROME_UA })).toBe(false);
+  });
+});
+
+describe("glassSheen", () => {
+  it("sits up and to the right at rest, where the head's key light is", () => {
+    const rest = glassSheen(0, 0);
+    expect(rest.x).toBeGreaterThan(50);
+    expect(rest.y).toBeLessThan(50);
+  });
+
+  it("slides against the tilt and brightens as the glass turns toward the light", () => {
+    const right = glassSheen(0, 15);
+    const left = glassSheen(0, -15);
+    expect(right.x).toBeLessThan(left.x);
+    expect(right.intensity).toBeGreaterThan(left.intensity);
+    const up = glassSheen(15, 0);
+    const down = glassSheen(-15, 0);
+    expect(up.y).toBeGreaterThan(down.y);
+    expect(up.intensity).toBeGreaterThan(down.intensity);
+    for (const sheen of [right, left, up, down, glassSheen(18, 18), glassSheen(-18, -18)]) {
+      expect(sheen.intensity).toBeGreaterThanOrEqual(0);
+      expect(sheen.intensity).toBeLessThanOrEqual(1);
+    }
   });
 });
