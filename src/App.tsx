@@ -31,7 +31,7 @@ function App() {
       <Styled.AppContainer>
         <Canvas
           dpr={[1, 1.75]}
-          camera={{ position: [0, 0, fitCamera(window.innerWidth, window.innerHeight)] }}
+          camera={{ position: [0, 0, fitCamera(window.innerWidth, window.innerHeight).z] }}
           style={{
             position: "fixed",
             top: 0,

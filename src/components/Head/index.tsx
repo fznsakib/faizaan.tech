@@ -88,8 +88,8 @@ function Head() {
     let squash = 0;
     let emissive = BASE_EMISSIVE;
     let rimIntensity = BASE_RIM;
-    const fit = fitCamera(size.width, size.height); // CAMERA_Z on desktop; further back on phones
-    let cameraZ = fit;
+    const fit = fitCamera(size.width, size.height); // today's camera on desktop; back (and down) on phones
+    let cameraZ = fit.z;
 
     if (frame.isPlaying && frame.bpm > 0 && !reduced) {
       const drive = nodDrive(frame);
@@ -103,7 +103,7 @@ function Head() {
         dt
       );
       yaw = D(1.5) * Math.sin(2 * Math.PI * frame.barPhase - 0.6) * confidence;
-      cameraZ = fit - 0.35 * frame.section * (fit / CAMERA_Z);
+      cameraZ = fit.z - 0.35 * frame.section * (fit.z / CAMERA_Z);
     } else {
       const t = clock.elapsedTime;
       const breathe = reduced ? 0 : 1;
@@ -127,6 +127,7 @@ function Head() {
     material.emissiveIntensity = emissive;
     if (rim.current) rim.current.intensity = rimIntensity;
     camera.position.z = MathUtils.lerp(camera.position.z, cameraZ, 1 - Math.exp(-3 * dt));
+    camera.position.y = fit.y;
 
     choreographyProbe.headPitchDeg = MathUtils.radToDeg(pitch);
     choreographyProbe.nodCurve = curve;

@@ -22,17 +22,29 @@ export const ThreeCanvas = styled(Canvas)`
   height: 100%;
 `;
 
+/** Narrowest widths where the subtitles take the phone layout: portrait phones, and landscape phones (short). */
+const PHONE = "(max-width: 767px)";
+const SHORT = "(max-height: 500px)";
+
+/**
+ * The name is ≈ 7.1 em wide: 12.5vw on phones fits it on one line (≈ 89% of the width), rising linearly to 12rem at
+ * 1280 px wide and staying there, so desktop is untouched. Landscape phones are also capped by the height.
+ */
 export const HeaderText = styled.h1`
   position: fixed;
-  top: 2rem;
+  top: max(2rem, env(safe-area-inset-top));
   width: 110%;
   text-align: center;
-  font-size: 12rem;
+  font-size: min(12rem, max(12.5vw, calc(19.1667vw - 53.33px)));
   z-index: 1;
   font-weight: 700;
   font-family: "Golos Text", sans-serif;
   white-space: nowrap;
   color: ${colors.site.text};
+
+  @media ${SHORT} {
+    font-size: min(12.5vw, 24vh);
+  }
 `;
 
 /** One character of the name; width is locked at runtime so weight changes never reflow neighbours. */
@@ -43,7 +55,12 @@ export const Letter = styled.span`
   font-variation-settings: "wght" 700;
 `;
 
-export const SubtitleText = styled.h2<{ $bottom: number; $left: number; $width?: number }>`
+/**
+ * One subtitle line. `$index` counts up from the bottom line; on phones the lines stack from there in steps of their
+ * own size: above the link dock in portrait (below the head's chin, clear of the drawer tab), from the bottom-left
+ * corner in landscape (the dock is bottom-right).
+ */
+export const SubtitleText = styled.h2<{ $bottom: number; $left: number; $width?: number; $index: number }>`
   position: fixed;
   left: ${({ $left }) => $left}%;
   bottom: ${({ $bottom }) => $bottom}%;
@@ -55,4 +72,18 @@ export const SubtitleText = styled.h2<{ $bottom: number; $left: number; $width?:
   color: ${colors.site.text};
   font-family: "Doto", sans-serif;
   font-variation-settings: "wght" 500, "ROND" 0;
+
+  @media ${PHONE} {
+    left: max(16px, env(safe-area-inset-left));
+    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 60px + ${({ $index }) => $index} * 1.1em);
+    width: auto;
+    font-size: clamp(20px, 8vw, 40px);
+  }
+
+  @media ${SHORT} {
+    left: max(16px, env(safe-area-inset-left));
+    bottom: calc(max(16px, env(safe-area-inset-bottom)) + ${({ $index }) => $index} * 1.1em);
+    width: auto;
+    font-size: clamp(16px, 8.5vh, 40px);
+  }
 `;
