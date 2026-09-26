@@ -237,11 +237,12 @@ export class MusicEngine {
     this.set({ tracks: this.tracks.map((t) => trackInfo(t.source)) });
   }
 
-  /** Switch to a track by id; keeps playing if it was playing. */
+  /** A pick from the crate: switch to the track by id and play it (a paused pick of the current track resumes it). */
   select(id: string): void {
     const index = this.tracks.findIndex((t) => t.source.id === id);
-    if (index < 0 || index === this.current) return;
-    this.switchTo(index, this.state.isPlaying);
+    if (index < 0) return;
+    if (index !== this.current) this.switchTo(index, true);
+    else if (!this.state.isPlaying) this.play();
   }
 
   setMuted(muted: boolean): void {

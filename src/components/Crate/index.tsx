@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import * as Styled from "./Crate.styled";
 import { engine } from "../../audio/engine";
 import { useMusicState } from "../../audio/react";
+import { keepFocus } from "../keepFocus";
 
 const initials = (title: string) =>
   title
@@ -16,7 +17,7 @@ interface CrateProps {
   onClose: () => void;
 }
 
-/** The record crate: one sleeve per track; picking one switches the song that drives the page. Esc closes. */
+/** The record crate: one sleeve per track; picking one plays it, and it drives the page. Esc closes. */
 const Crate: React.FC<CrateProps> = ({ onClose }) => {
   const { tracks, track: current } = useMusicState();
 
@@ -37,6 +38,7 @@ const Crate: React.FC<CrateProps> = ({ onClose }) => {
             aria-label={`Play ${track.title}`}
             aria-current={track.id === current ? "true" : undefined}
             $current={track.id === current}
+            onMouseDown={keepFocus}
             onClick={() => {
               engine.unlock();
               engine.select(track.id);

@@ -557,6 +557,19 @@ describe("crate", () => {
     expect(ctx().lastSource.started?.offset).toBe(0);
   });
 
+  it("plays the picked track when paused, including the current one", async () => {
+    const { engine, ctx } = await playing();
+    engine.pause();
+    engine.addTrack(preview());
+    engine.select("p");
+    await engine.preload();
+    expect(engine.getSnapshot()).toMatchObject({ track: "p", isPlaying: true });
+    expect(ctx().lastSource.started?.offset).toBe(0);
+    engine.pause();
+    engine.select("p");
+    expect(engine.getSnapshot()).toMatchObject({ track: "p", isPlaying: true });
+  });
+
   it("passes the decoded audio to the beat-map loader", async () => {
     const loader = vi.fn(async () => baseMap);
     const engine = new MusicEngine([{ id: "x", title: "X", url: "/x.mp3", loadBeatMap: loader }], {

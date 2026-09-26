@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { djKeyVoice, transportKeyAction } from "./keys";
 import * as Styled from "./Transport.styled";
@@ -6,18 +6,22 @@ import { engine } from "../../audio/engine";
 import { useMusicState } from "../../audio/react";
 import Crate from "../Crate";
 import DjPad from "../DjPad";
+import { keepFocus } from "../keepFocus";
 
 const TYPING = "input, select, textarea, [contenteditable='true']";
 const CONTROLS = "a, button";
-/** Mouse clicks shouldn't leave focus on a control (Space would then re-press it instead of play/pause). */
-const keepFocus = (event: { preventDefault(): void }) => event.preventDefault();
 
 /** Always-visible Doto transport: play/pause, track · bpm, mute, next. Space = play/pause, M = mute. */
 const Transport: React.FC = () => {
   const { status, title, bpm, isPlaying, muted } = useMusicState();
   const [padOpen, setPadOpen] = useState(false);
   const [crateOpen, setCrateOpen] = useState(false);
-  const closeCrate = useCallback(() => setCrateOpen(false), []);
+  const crateToggle = useRef<HTMLButtonElement>(null);
+  const closeCrate = useCallback(() => {
+    // Closing with focus inside the crate would drop it to <body>: hand it back to the toggle.
+    if (document.activeElement?.closest("#crate")) crateToggle.current?.focus();
+    setCrateOpen(false);
+  }, []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -65,6 +69,7 @@ const Transport: React.FC = () => {
           {isPlaying ? "pause" : "play"}
         </Styled.Control>
         <Styled.Control
+          ref={crateToggle}
           type="button"
           onMouseDown={keepFocus}
           aria-expanded={crateOpen}
