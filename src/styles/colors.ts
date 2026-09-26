@@ -1,4 +1,9 @@
 export const colors = {
+  // The site's own palette: the same in light and dark mode, whatever a host page's styles say
+  site: {
+    background: "rgb(20, 61, 50)",
+    text: "#FFFFFF",
+  },
   // Primary colors
   primary: {
     main: "#1976D2",

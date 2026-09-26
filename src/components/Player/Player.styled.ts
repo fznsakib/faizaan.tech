@@ -190,13 +190,6 @@ const bevel = (light: string, dark: string, width = 1, sunk = false) => css`
   border-color: ${sunk ? `${dark} ${light} ${light} ${dark}` : `${light} ${dark} ${dark} ${light}`};
 `;
 
-/** global.ts turns every hovered button's border blue: keep a bevel's own colours under the pointer. */
-const holdBevel = (light: string, dark: string, sunk = false) => css`
-  &:hover {
-    border-color: ${sunk ? `${dark} ${light} ${light} ${dark}` : `${light} ${dark} ${dark} ${light}`};
-  }
-`;
-
 const focusRing = css`
   &:focus {
     outline: none;
@@ -267,7 +260,6 @@ export const Tab = styled.button`
   touch-action: manipulation;
   background: var(--win-bg);
   ${bevel("var(--win-light)", "var(--win-dark)", 2)}
-  ${holdBevel("var(--win-light)", "var(--win-dark)")}
   border-right: 0;
   box-shadow: -4px 4px 14px rgba(0, 0, 0, 0.35);
   color: var(--title-fg);
@@ -448,7 +440,6 @@ export const TitleButton = styled.button`
   color: var(--btn-fg);
   background: var(--btn-bg);
   ${bevel("var(--btn-light)", "var(--btn-dark)")}
-  ${holdBevel("var(--btn-light)", "var(--btn-dark)")}
   border-radius: var(--btn-radius);
 
   svg {
@@ -806,7 +797,6 @@ export const Vis = styled.button`
   cursor: pointer;
   background: var(--lcd-bg);
   ${sunkPanel}
-  ${holdBevel("var(--lcd-light)", "var(--lcd-dark)", true)}
 
   [data-skin="chrome"] &,
   [data-skin="chrome"] &:hover {
@@ -965,7 +955,6 @@ export const Button = styled.button<{ $play?: boolean }>`
   color: ${({ $play }) => ($play ? "var(--play-fg)" : "var(--btn-fg)")};
   background: ${({ $play }) => ($play ? "var(--play-bg)" : "var(--btn-bg)")};
   ${bevel("var(--btn-light)", "var(--btn-dark)")}
-  ${holdBevel("var(--btn-light)", "var(--btn-dark)")}
   border-radius: var(--btn-radius);
   font-family: var(--btn-font);
   font-size: var(--btn-size);

@@ -1,5 +1,8 @@
 import { createGlobalStyle } from "styled-components";
 
+import { colors } from "./colors";
+
+/** One palette whatever the visitor's colour scheme or a host page's styles (e.g. an embedding viewer's body colour). */
 export const GlobalStyle = createGlobalStyle`
   * {
     box-sizing: border-box;
@@ -12,9 +15,9 @@ export const GlobalStyle = createGlobalStyle`
     line-height: 1.5;
     font-weight: 400;
 
-    color-scheme: light dark;
-    color: rgba(255, 255, 255, 0.87);
-    background-color: #242424;
+    color-scheme: dark;
+    color: ${colors.site.text};
+    background-color: ${colors.site.background};
 
     font-synthesis: none;
     text-rendering: optimizeLegibility;
@@ -32,6 +35,8 @@ export const GlobalStyle = createGlobalStyle`
     display: flex;
     min-width: 320px;
     min-height: 100vh;
+    color: ${colors.site.text};
+    background-color: ${colors.site.background};
   }
 
   #root {
@@ -39,16 +44,13 @@ export const GlobalStyle = createGlobalStyle`
     flex-direction: column;
     align-items: center;
     width: 100%;
+    color: ${colors.site.text};
   }
 
   a {
     font-weight: 500;
-    color: #646cff;
+    color: inherit;
     text-decoration: inherit;
-
-    &:hover {
-      color: #535bf2;
-    }
   }
 
   h1 {
@@ -63,32 +65,11 @@ export const GlobalStyle = createGlobalStyle`
     font-size: 1em;
     font-weight: 500;
     font-family: inherit;
-    background-color: #1a1a1a;
     cursor: pointer;
-    transition: border-color 0.25s;
-
-    &:hover {
-      border-color: #646cff;
-    }
 
     &:focus,
     &:focus-visible {
       outline: 4px auto -webkit-focus-ring-color;
-    }
-  }
-
-  @media (prefers-color-scheme: light) {
-    :root {
-      color: white;
-      background-color: #ffffff;
-    }
-    
-    a:hover {
-      color: #747bff;
-    }
-    
-    button {
-      background-color: #f9f9f9;
     }
   }
 `;

@@ -1,6 +1,8 @@
 import { Canvas } from "@react-three/fiber";
 import styled from "styled-components";
 
+import { colors } from "./styles/colors";
+
 export const AppContainer = styled.div`
   width: 100%;
   max-width: 1280px;
@@ -30,6 +32,7 @@ export const HeaderText = styled.h1`
   font-weight: 700;
   font-family: "Golos Text", sans-serif;
   white-space: nowrap;
+  color: ${colors.site.text};
 `;
 
 /** One character of the name; width is locked at runtime so weight changes never reflow neighbours. */
@@ -49,6 +52,7 @@ export const SubtitleText = styled.h2<{ $bottom: number; $left: number; $width?:
   line-height: 1;
   text-align: left;
   margin: 0;
+  color: ${colors.site.text};
   font-family: "Doto", sans-serif;
   font-variation-settings: "wght" 500, "ROND" 0;
 `;
