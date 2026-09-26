@@ -38,7 +38,7 @@ You are a React/TypeScript/styled-components specialist working on faizaan.tech,
 | 1 | NameHeader, SubtitleStack |
 | 9 | GlassPanel (behind the head) |
 | 10 | Canvas (Three.js) |
-| 20 | SocialLinks, Transport (+ Crate, DjPad) |
+| 20 | SocialLinks, Player (+ DjPad) |
 | 90 | MusicDebug (`?debug`) |
 | 100 | Splash |
 
