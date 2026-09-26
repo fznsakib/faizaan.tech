@@ -5,7 +5,7 @@
 **Goal:** Replace the flat, randomly re-cut glass shards with a few beautiful pieces of thick 3D glass. They float over the whole page, genuinely refract whatever is behind them, and move smoothly with the cursor and the music.
 
 **Architecture:**
-- Glass objects are DOM elements in one fixed layer above everything interactive, with `pointer-events: none`.
+- Glass objects are DOM elements in one fixed layer just behind the head (and below the transport and icons), with `pointer-events: none`.
 - Each refracts its backdrop through an SVG displacement filter (`backdrop-filter: url(#…)`), whose map is generated per shape: flat in the middle, bending hard at the rim, like thick glass. This is the only technique that refracts *all* page content (DOM text, the grid canvas, the WebGL head); a WebGL-only material can only see the three.js scene.
 - 3D comes from perspective tilt (toward the cursor, nudged by the beat), a curved rim profile, and specular highlight layers lit from the same direction as the head's key light.
 - Motion is continuous: slow drifting orbits, beat bobs and energy-driven refraction, with no hard re-cuts.
@@ -19,9 +19,10 @@
 
 ## Global Constraints
 
-- **Layering:**
-  - The glass layer is fixed, full viewport, `z-index: 60`, above the header (1), canvas (10), social icons (20) and transport (20), but below MusicDebug (90) and Splash (100).
-  - It has `pointer-events: none` throughout: every control underneath must stay clickable.
+- **Layering** (owner change, 2026-09-26: "the glass should always be behind the head model"):
+  - The glass layer is fixed, full viewport, `z-index: 9`: directly beneath the head's three.js canvas (10), above the name/subtitles (1) and the grid (−5), so it refracts those, while the head renders in front of it, unrefracted.
+  - The transport and social icons (20), MusicDebug (90) and Splash (100) stay above the glass.
+  - It has `pointer-events: none` throughout.
   - No ancestor of a glass element may create a backdrop root. That means no `filter`, `opacity < 1`, `mask`, `clip-path`, `mix-blend-mode`, `backdrop-filter`, or `will-change` of those, otherwise the backdrop stops at that ancestor. Put per-element opacity on inner highlight layers, never on the glass element or its parents.
 - **Refraction:** in Chromium, content behind the glass is visibly displaced, and more at the rim than the centre. Elsewhere (Safari, Firefox), frosted blur. Detect Chromium via `navigator.userAgentData?.brands` containing "Chromium", falling back to a UA test.
 - **Motion:**
