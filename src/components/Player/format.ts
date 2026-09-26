@@ -1,7 +1,10 @@
 import type { TrackInfo } from "../../audio/types";
 
+/** Decoded lengths land a float's hair under a whole second (277.99997): that still reads as 4:38. */
+const EPSILON = 1e-4;
+
 const clock = (seconds: number) => {
-  const whole = Math.floor(seconds);
+  const whole = Math.floor(seconds + EPSILON);
   return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
 };
 

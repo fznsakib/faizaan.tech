@@ -723,12 +723,13 @@ export const ReadoutUnit = styled.span`
 `;
 
 export const Marquee = styled.div<{ $mini?: boolean }>`
+  --marquee-h: 11px;
   position: relative;
   overflow: hidden;
-  height: ${({ $mini }) => ($mini ? 9 : 11)}px;
+  height: var(--marquee-h);
   font-family: var(--lcd-font);
   font-size: var(--lcd-size);
-  line-height: ${({ $mini }) => ($mini ? 9 : 11)}px;
+  line-height: var(--marquee-h);
   color: var(--lcd-fg);
   white-space: pre;
   text-shadow: var(--lcd-glow);
@@ -738,30 +739,31 @@ export const Marquee = styled.div<{ $mini?: boolean }>`
   }
 
   [data-skin="chrome"] & {
-    height: ${({ $mini }) => ($mini ? 12 : 13)}px;
-    line-height: ${({ $mini }) => ($mini ? 12 : 13)}px;
+    --marquee-h: 13px;
   }
 
   [data-skin="faizaan"] & {
-    height: 14px;
-    line-height: 14px;
+    --marquee-h: 14px;
     font-weight: 700;
   }
 
   ${DRAWER} & {
-    height: 16px;
-    line-height: 16px;
+    --marquee-h: 16px;
     font-size: calc(var(--lcd-size) + 2px);
   }
 
   ${({ $mini }) =>
     $mini &&
     css`
-      flex: 1;
-      min-width: 0;
-      padding: 0 3px;
-      background: var(--lcd-bg);
-      ${bevel("var(--lcd-dark)", "var(--lcd-light)")}
+      && {
+        flex: 1;
+        min-width: 0;
+        height: 14px;
+        padding: 0 3px;
+        line-height: 12px;
+        background: var(--lcd-bg);
+        ${bevel("var(--lcd-dark)", "var(--lcd-light)")}
+      }
     `}
 `;
 
@@ -1031,7 +1033,7 @@ export const List = styled.ul`
   margin: 3px;
   padding: 2px 0;
   list-style: none;
-  height: 99px;
+  height: 100px; /* six whole rows; the seventh scrolls in */
   overflow-y: auto;
   overscroll-behavior: contain;
   background: var(--pl-bg);
@@ -1042,6 +1044,36 @@ export const List = styled.ul`
   ${sunkPanel}
   scrollbar-width: thin;
   scrollbar-color: var(--pl-dim) var(--pl-bg);
+
+  /* WebKit/Blink: a skinned bar that stays visible (overlay scrollbars would hide that the list scrolls) */
+  @supports selector(::-webkit-scrollbar) {
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+  }
+
+  &::-webkit-scrollbar {
+    width: 9px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--pl-bg);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--btn-bg);
+    ${bevel("var(--btn-light)", "var(--btn-dark)")}
+    border-radius: var(--btn-radius);
+  }
+
+  [data-skin="chrome"] &::-webkit-scrollbar-thumb {
+    border: 2px solid var(--pl-bg);
+    background: linear-gradient(90deg, #9fd3fb, #3d93e3);
+  }
+
+  [data-skin="faizaan"] &::-webkit-scrollbar-thumb {
+    background: var(--pl-dim);
+    border: 2px solid var(--pl-bg);
+  }
 
   [data-skin="chrome"] & {
     border-radius: 0 0 9px 9px;

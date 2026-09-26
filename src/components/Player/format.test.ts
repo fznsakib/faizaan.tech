@@ -22,6 +22,11 @@ describe("formatTime", () => {
     expect(formatTime(3661)).toBe("61:01");
   });
 
+  it("reads a decoded length a hair under a whole second as that second", () => {
+    expect(formatTime(277.99997732426306)).toBe("4:38");
+    expect(formatTime(0, { duration: 277.99997732426306 })).toBe("-4:38");
+  });
+
   it("counts down with a minus sign when asked for the remaining time", () => {
     expect(formatTime(60, { duration: 132 })).toBe("-1:12");
     expect(formatTime(0, { duration: 203.2 })).toBe("-3:23");
