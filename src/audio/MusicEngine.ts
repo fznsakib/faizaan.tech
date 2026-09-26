@@ -5,7 +5,7 @@ import { nearestSixteenth } from "./sampler/quantize";
 import { createNoiseBuffer, playVoice } from "./sampler/voices";
 
 import type { FrameCursors } from "./frame";
-import type { BeatMap, EngineState, MusicFrame, TrackInfo, TrackSource, Voice } from "./types";
+import type { BeatMap, EngineState, MusicFrame, TrackSource, Voice } from "./types";
 
 export interface EngineDeps {
   createContext: () => AudioContext;
@@ -18,7 +18,6 @@ const MUTE_RAMP = 0.01;
 /** DJ-mode voices sit a little under the song; the soft clipper catches what they add on top of its peaks. */
 const SAMPLER_LEVEL = 0.7;
 
-const trackInfo = ({ id, title, artwork, credit }: TrackSource): TrackInfo => ({ id, title, artwork, credit });
 /** 6 log-spaced bands, 40 Hz – 16 kHz. */
 const BAND_EDGES = Array.from(
   { length: BAND_COUNT + 1 },
@@ -95,7 +94,7 @@ export class MusicEngine {
       bpm: null,
       isPlaying: false,
       muted: false,
-      tracks: tracks.map(trackInfo),
+      tracks: tracks.map(({ id, title }) => ({ id, title })),
     };
   }
 
@@ -134,7 +133,7 @@ export class MusicEngine {
       try {
         const data = await this.deps.fetchArrayBuffer(track.source.url);
         const buffer = await ctx.decodeAudioData(data);
-        const map = await track.source.loadBeatMap(buffer).catch((err: unknown) => {
+        const map = await track.source.loadBeatMap().catch((err: unknown) => {
           console.warn(`[music] no beat map for ${track.source.id}`, err);
           return null;
         });
@@ -149,10 +148,6 @@ export class MusicEngine {
       } catch (err) {
         if (track.loading !== loading) return;
         track.loading = null; // allow a retry
-        if (track.source.loop) {
-          this.dropTrack(track, err); // a runtime preview failing is not the whole transport failing
-          return;
-        }
         console.error(`[music] failed to load ${track.source.id}`, err);
         if (this.tracks[this.current] === track) {
           this.wantsPlay = false;
@@ -227,14 +222,6 @@ export class MusicEngine {
   /** Switch to the next track (looping); keeps playing if it was playing. */
   next(): void {
     this.switchTo((this.current + 1) % this.tracks.length, this.state.isPlaying);
-  }
-
-  /** Add a track at the front of the crate (e.g. "now spinning"). It plays only when selected. */
-  addTrack(source: TrackSource): void {
-    if (this.tracks.some((t) => t.source.id === source.id)) return;
-    this.tracks.unshift({ source, buffer: null, map: null, loading: null });
-    this.current += 1;
-    this.set({ tracks: this.tracks.map((t) => trackInfo(t.source)) });
   }
 
   /** A pick from the crate: switch to the track by id and play it (a paused pick of the current track resumes it). */
@@ -376,8 +363,7 @@ export class MusicEngine {
       if (this.source !== source) return;
       this.source = null;
       this.pausedAt = 0;
-      if (this.tracks[this.current].source.loop) this.play(0); // previews loop
-      else this.switchTo(this.nextAutoIndex(), true);
+      this.switchTo((this.current + 1) % this.tracks.length, true);
     };
     this.source = source;
     this.anchorCtx = when;
@@ -445,34 +431,6 @@ export class MusicEngine {
     frame.jamming = !playing && heard - this.hits.lastHitAt(heard) < JAM_WINDOW;
     this.lastHeard = heard;
     this.hits.prune(heard);
-  }
-
-  /** Remove a runtime track that failed to load; if it was current, fall back to the next bundled track. */
-  private dropTrack(track: LoadedTrack, err: unknown): void {
-    console.info(`[music] dropped ${track.source.id}:`, err instanceof Error ? err.message : err);
-    const index = this.tracks.indexOf(track);
-    if (index < 0) return;
-    const wasCurrent = index === this.current;
-    const resume = wasCurrent && (this.state.isPlaying || this.wantsPlay);
-    this.tracks.splice(index, 1);
-    if (index < this.current) this.current -= 1;
-    this.set({ tracks: this.tracks.map((t) => trackInfo(t.source)) });
-    if (!wasCurrent) return;
-    let target = index % this.tracks.length;
-    for (let step = 0; step < this.tracks.length && this.tracks[target].source.loop; step++) {
-      target = (target + 1) % this.tracks.length;
-    }
-    this.current = target;
-    this.switchTo(target, resume);
-  }
-
-  /** The next track the playlist advances to on its own: looping tracks (previews) are skipped. */
-  private nextAutoIndex(): number {
-    for (let step = 1; step <= this.tracks.length; step++) {
-      const index = (this.current + step) % this.tracks.length;
-      if (!this.tracks[index].source.loop) return index;
-    }
-    return this.current;
   }
 
   private audibleContextTime(nowMs: number): number {

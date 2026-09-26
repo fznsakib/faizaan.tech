@@ -32,27 +32,21 @@ const Crate: React.FC<CrateProps> = ({ onClose }) => {
   return (
     <Styled.Crate id="crate" role="group" aria-label="Record crate">
       {tracks.map((track) => (
-        <Styled.Record key={track.id}>
-          <Styled.Sleeve
-            type="button"
-            aria-label={`Play ${track.title}`}
-            title={track.title}
-            aria-current={track.id === current ? "true" : undefined}
-            $current={track.id === current}
-            onMouseDown={keepFocus}
-            onClick={() => {
-              engine.unlock();
-              engine.select(track.id);
-            }}
-          >
-            {track.artwork ? <Styled.Art src={track.artwork} alt="" /> : <Styled.Initials>{initials(track.title)}</Styled.Initials>}
-          </Styled.Sleeve>
-          {track.credit && (
-            <Styled.Credit href={track.credit.url} target="_blank" rel="noopener noreferrer">
-              {track.credit.label}
-            </Styled.Credit>
-          )}
-        </Styled.Record>
+        <Styled.Sleeve
+          key={track.id}
+          type="button"
+          aria-label={`Play ${track.title}`}
+          title={track.title}
+          aria-current={track.id === current ? "true" : undefined}
+          $current={track.id === current}
+          onMouseDown={keepFocus}
+          onClick={() => {
+            engine.unlock();
+            engine.select(track.id);
+          }}
+        >
+          <Styled.Initials>{initials(track.title)}</Styled.Initials>
+        </Styled.Sleeve>
       ))}
     </Styled.Crate>
   );
