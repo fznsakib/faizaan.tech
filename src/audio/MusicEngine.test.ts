@@ -443,6 +443,17 @@ describe("DJ mode hits", () => {
     expect(ctx().oscillators[0].startAt! - ctx().currentTime).toBeLessThan(0.01);
   });
 
+  it("plays one voice when presses in the same 16th target the same moment", async () => {
+    const { engine, ctx } = await playing();
+    audibleAt(ctx(), 1.0, 1000);
+    engine.hit("kick", 1000);
+    audibleAt(ctx(), 1.005, 1005);
+    engine.hit("kick", 1005);
+    engine.hit("snare", 1005);
+    expect(ctx().oscillators.filter((o) => o.type === "sine")).toHaveLength(1);
+    expect(ctx().oscillators.filter((o) => o.type === "triangle")).toHaveLength(1);
+  });
+
   it("plays immediately when nothing is playing", async () => {
     const { engine, ctx } = await ready();
     ctx().currentTime = 3;

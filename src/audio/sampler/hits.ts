@@ -26,6 +26,11 @@ export class HitLog {
     return latest === null ? 0 : Math.exp(-(time - latest) / HIT_DECAY[voice]);
   }
 
+  /** Whether `voice` already has a hit within `epsilon` seconds of `time` (presses aimed at the same 16th). */
+  has(voice: Voice, time: number, epsilon = 0.001): boolean {
+    return this.times[voice].some((t) => Math.abs(t - time) <= epsilon);
+  }
+
   /** Whether a hit of `voice` falls in (from, to]. */
   landed(voice: Voice, from: number, to: number): boolean {
     return this.times[voice].some((t) => t > from && t <= to);

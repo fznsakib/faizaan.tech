@@ -251,6 +251,8 @@ export class MusicEngine {
       const target = this.contextTimeAtSong(nearestSixteenth(heard, map.beat0, map.bpm));
       if (target >= ctx.currentTime + 0.01) when = target;
     }
+    // Presses aimed at the same moment would sum sample-exactly (+6 dB each): one voice is the 16th roll.
+    if (this.hits.has(voice, when)) return;
     playVoice(ctx, this.sampler, voice, when, this.noise);
     this.hits.record(voice, when);
   }

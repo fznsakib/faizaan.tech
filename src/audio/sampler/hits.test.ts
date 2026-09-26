@@ -46,4 +46,12 @@ describe("HitLog", () => {
     expect(log.lastHitAt(20)).toBe(-Infinity);
     expect(log.envelope("kick", 20)).toBe(0);
   });
+
+  it("knows whether a voice already has a hit at a moment", () => {
+    const log = new HitLog();
+    log.record("kick", 1.05);
+    expect(log.has("kick", 1.0504)).toBe(true);
+    expect(log.has("kick", 1.06)).toBe(false);
+    expect(log.has("snare", 1.05)).toBe(false);
+  });
 });
