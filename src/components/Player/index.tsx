@@ -19,8 +19,9 @@ import { keepFocus } from "../keepFocus";
 import type { VisMode } from "./Visualiser";
 import type { TrackInfo } from "../../audio/types";
 
-/** Narrow screens get the drawer: phones, and touch-first tablets in portrait. */
-export const DRAWER_QUERY = "(max-width: 600px), (pointer: coarse) and (max-width: 900px)";
+/** Narrow screens get the drawer: phones (landscape ones of any width too), and touch-first tablets in portrait. */
+export const DRAWER_QUERY =
+  "(max-width: 600px), (pointer: coarse) and (max-width: 900px), (pointer: coarse) and (max-height: 500px)";
 const DRAWER_ID = "player-drawer";
 const PLAYLIST_ID = "player-playlist";
 
@@ -304,7 +305,11 @@ const Player: React.FC = () => {
                       aria-label="Jam pad"
                       aria-pressed={padOpen}
                       onMouseDown={keepFocus}
-                      onClick={() => setPadOpen((open) => !open)}
+                      onClick={() => {
+                        // on a phone the pad sits where the open drawer is: opening it tucks the drawer away
+                        if (drawer && !padOpen) closeDrawer();
+                        setPadOpen(!padOpen);
+                      }}
                     >
                       <Styled.Lamp $on={padOpen} />
                       jam
@@ -346,7 +351,7 @@ const Player: React.FC = () => {
         </Styled.VisuallyHidden>
       </Styled.Shell>
       {padOpen && (
-        <Styled.PadDock>
+        <Styled.PadDock data-layout={drawer ? "drawer" : "dock"}>
           <DjPad />
         </Styled.PadDock>
       )}

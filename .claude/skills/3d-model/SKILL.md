@@ -77,7 +77,7 @@ Pointer NDC coordinates (-1 to 1), damped with `maath/easing`'s `damp` (tau 0.35
 - `MOUSE_YAW` = 22°, `MOUSE_PITCH` = 10°
 - Combined additively with the music-driven pitch/yaw/roll for the final `head.rotation`
 - Scaled by `0.5` instead of `1` under `prefersReducedMotion()`
-- On touch devices with orientation data, `useDeviceTilt()` (`src/hooks/useDeviceTilt.ts`) stands in for the pointer: `tiltLook` (`src/choreography/tilt.ts`) maps beta/gamma relative to the attitude at the enter tap (re-levelled after a rotation, axes swapped/flipped by `screen.orientation.angle`) to the same -1..1 look; `TILT_RANGE` 25° of tilt = full range. The head looks "downhill": right when the right edge dips, up when the top tips away. No sensor, no permission (iOS asks on the Splash tap), an iframe without `allow="accelerometer; gyroscope"`, a desktop, or reduced motion → the pointer, as before.
+- On touch devices with orientation data, `useDeviceTilt()` (`src/hooks/useDeviceTilt.ts`) stands in for the pointer: `tiltLook` (`src/choreography/tilt.ts`) turns beta/gamma into gravity in the screen's axes (rotated by `screen.orientation.angle`), reads the right edge's dip and the screen's raise from it (continuous through upright, where raw beta/gamma flip), and measures them from the attitude at the enter tap (re-levelled after a rotation) as the same -1..1 look; `TILT_RANGE` 25° of tilt = full range. The head looks "downhill": right when the right edge dips, up when the top tips away. No sensor, no permission (iOS asks on the Splash tap), an iframe without `allow="accelerometer; gyroscope"`, a desktop, or reduced motion → the pointer, as before.
 - `?debug` exposes the damped look as `window.__choreo.lookYawDeg`/`lookPitchDeg`.
 
 ## Camera Fit

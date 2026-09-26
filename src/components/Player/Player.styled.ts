@@ -309,6 +309,15 @@ export const Stack = styled.div`
     overflow-y: auto;
     overscroll-behavior: contain;
   }
+
+  /* tucked away, the panel is hidden, not just pushed off: inset from a notch, it would still peek past the edge */
+  ${DRAWER}:not([data-open]) & {
+    visibility: hidden;
+
+    @media (prefers-reduced-motion: no-preference) {
+      transition: visibility 0s linear 320ms;
+    }
+  }
 `;
 
 /* ---------- windows ---------- */
@@ -1170,8 +1179,8 @@ export const VisuallyHidden = styled.p`
 
 /**
  * The jam pad keeps the top-right spot it had in the old transport row. On a portrait phone that's the name's
- * line, so it centres just under the name instead (over the head's crown at most); on a landscape phone it's a
- * 2×2 block right of the head, clear of the drawer tab.
+ * line, so it centres just under the name instead (over the head's crown at most); on a landscape phone (drawer
+ * layout, which JAM tucks away) it's a 2×2 block right of the head, clear of the drawer tab.
  */
 export const PadDock = styled.div`
   position: fixed;
@@ -1189,11 +1198,13 @@ export const PadDock = styled.div`
   }
 
   @media (max-height: 500px) {
-    top: 50%;
-    right: calc(max(16px, env(safe-area-inset-right)) + 60px);
-    left: auto;
-    transform: translateY(-50%);
-    width: auto;
-    max-width: 12rem;
+    &[data-layout="drawer"] {
+      top: 50%;
+      right: calc(max(16px, env(safe-area-inset-right)) + 60px);
+      left: auto;
+      transform: translateY(-50%);
+      width: auto;
+      max-width: 12rem;
+    }
   }
 `;

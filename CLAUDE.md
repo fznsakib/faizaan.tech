@@ -66,7 +66,7 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 - **Player skins**: each skin is a set of CSS custom properties on the Player's `Shell` (`[data-skin]`) plus a few `[data-skin="…"] &` rules; the visualiser's canvas palettes live in `Player/paint.ts`. The layout is shared; skins change look only.
 - **Three.js**: Use `useFrame` for animation loops (never raw `requestAnimationFrame`). `Head` reads `engine.frame` directly inside `useFrame` rather than via a hook. Use `useRef`/`useMemo` for mutable state and one-time objects (materials, springs).
 - **Colour**: one palette, whatever the colour scheme or a host page's styles (`colors.site` in `src/styles/colors.ts`: white text on `rgb(20, 61, 50)`). `global.ts` sets it on `:root`, `body` and `#root` with `color-scheme: dark`, and text components set their own `color`; never rely on inherited text colour. Import `colors` directly: `styled.d.ts`'s `DefaultTheme` alias doesn't type `theme.colors`.
-- **Mobile**: phones take their own layout under `(max-width: 767px)` (portrait) and `(max-height: 500px)` (landscape); desktop (≥ 1280 px wide) is untouched by them. `viewport-fit=cover`, so every edge-fixed element insets with `max(Npx, env(safe-area-inset-*))`. The camera fit (`fitCamera`) pulls back and lowers the camera in portrait (head ≤ 65% of the width, ≤ 45% of the height, centred at 40% down) and is exactly today's z = 5, y = 0 on desktop.
+- **Mobile**: phones take their own layout under `(max-width: 767px)` (portrait) and `(max-height: 500px)` (landscape); desktop windows ≥ 1280 px wide and taller than 500 px are untouched by them (a desktop window ≤ 500 px tall gets the landscape-phone name and subtitles too). `viewport-fit=cover`, so every edge-fixed element insets with `max(Npx, env(safe-area-inset-*))`. The camera fit (`fitCamera`) pulls back and lowers the camera in portrait (head ≤ 65% of the width, ≤ 45% of the height, centred at 40% down) and is exactly today's z = 5, y = 0 on desktop.
 
 ## Code Conventions
 
@@ -96,14 +96,14 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 | `src/choreography/grid.ts` | Plus-grid maths: layout, cursor turn, music pulse |
 | `src/choreography/glass.ts` | Glass outlines (new per load), displacement maps, drift/drag/throw/wall-bounce physics |
 | `src/choreography/fit.ts` | `fitCamera(width, height)` → `{ z, y }`: desktop keeps z = 5, phones pull back (and lower the camera in portrait) until the head fits |
-| `src/choreography/tilt.ts` | `tiltLook` (beta/gamma + `screen.orientation.angle` → pointer-like look, axes swapped/flipped in landscape) and `TiltCalibration` |
+| `src/choreography/tilt.ts` | `tiltLook` (beta/gamma → gravity in the screen's axes by `screen.orientation.angle` → the right edge's dip and the screen's raise → pointer-like look; continuous through upright, where the raw Euler angles flip) and `TiltCalibration` |
 | `src/hooks/useDeviceTilt.ts` | Tilt-follow on touch devices: `enableDeviceTilt()` on the enter tap (iOS permission, levels at the current attitude), `useDeviceTilt()` gives `Head` a look or null (no sensor/permission, desktop, reduced motion); re-levels on rotation |
 | `src/styles/global.ts` | Global reset and the host-independent palette |
 | `src/components/Background/index.tsx` | Canvas plus-grid: big plusses face the cursor, mini plusses pulse with the kick |
 | `src/components/Head/index.tsx` | 3D head model, beat-locked nodding; follows the mouse, or the phone's tilt on touch devices; camera from `fitCamera` |
 | `src/components/NameHeader/index.tsx` | Font-cycling, kick-shockwave name header |
 | `src/components/SubtitleStack/index.tsx` | 6-band graphic EQ / idle scan |
-| `src/components/Player/index.tsx` | Winamp-style player: artwork, LCD, visualiser, seek, transport, volume, playlist; 3 skins; docked above the links on desktop, a slide-out drawer with a tab (label stacked upright) on narrow screens; the jam pad docks top-right on desktop, under the name on portrait phones, right of the head on landscape ones. `?debug` exposes its per-frame cost as `window.__player.costs` (ms) |
+| `src/components/Player/index.tsx` | Winamp-style player: artwork, LCD, visualiser, seek, transport, volume, playlist; 3 skins; docked above the links on desktop, a slide-out drawer with a tab (label stacked upright; the panel is hidden while tucked away) on narrow screens and landscape phones of any width; the jam pad docks top-right on desktop, under the name on portrait phones, right of the head on landscape ones, and opening it from the drawer tucks the drawer away. `?debug` exposes its per-frame cost as `window.__player.costs` (ms) |
 | `src/components/Player/useGlobalKeys.ts` | Page-wide keys (Space play/pause, M mute, A S D F hits), mounted by the Player; pure logic in `Player/keys.ts` |
 | `src/components/Player/skins.ts` | Skin ids/names, cycling, `localStorage` (`player.skin`) |
 | `src/components/Player/analyser.ts` | Visualiser bar falloff and Winamp-style peak caps (pure) |
