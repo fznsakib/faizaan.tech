@@ -98,32 +98,6 @@ export function idleScanWeight(seconds: number, line: number): number {
   return 200 + 500 * wave * wave;
 }
 
-export interface FlipState {
-  level: 0 | 1;
-  /** Song time the change started animating, or null to show the level everywhere at once. */
-  changedAt: number | null;
-}
-
-export function createFlipState(): FlipState {
-  return { level: 0, changedAt: null };
-}
-
-/** Track the drop level: animate on the engine's downbeat-quantised edge, snap otherwise (seek, switch, pause). */
-export function updateFlip(state: FlipState, level: 0 | 1, changed: boolean, time: number): void {
-  // Time went backwards (next track, seek back): an old change time would invert the face below.
-  if (state.changedAt !== null && time < state.changedAt) state.changedAt = null;
-  if (level === state.level) return;
-  state.level = level;
-  state.changedAt = changed ? time : null;
-}
-
-/** Whether a letter `distance` px from the head shows the drop face at song time `time`. */
-export function letterFlipped(state: FlipState, time: number, distance: number): boolean {
-  if (state.changedAt === null) return state.level === 1;
-  const reached = time - state.changedAt >= distance / SHOCKWAVE_SPEED;
-  return state.level === 1 ? reached : !reached;
-}
-
 /** `font-variation-settings` for a header letter while jamming without the song (idle weight 700 + kick). */
 export function jamHeaderVariation(kick: number): string {
   return `"wght" ${quantise(700 + 200 * kick, HEADER_WEIGHT_STEP)}`;

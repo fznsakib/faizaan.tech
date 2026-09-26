@@ -4,28 +4,43 @@ import * as Styled from "../../App.styled";
 import { useMusicFrame } from "../../audio/react";
 import { forgetStyles, setStyle } from "../../choreography/dom";
 import {
-  createFlipState,
-  headerVariation,
-  jamHeaderVariation,
-  KickHistory,
-  letterFlipped,
-  SHOCKWAVE_SPEED,
-  updateFlip,
-} from "../../choreography/type";
+  advanceFaces,
+  createFaceWave,
+  DOTO,
+  DOTO_VARIATION,
+  fitScale,
+  GOLOS,
+  HEADER_FACES,
+  letterFace,
+} from "../../choreography/faces";
+import { headerVariation, jamHeaderVariation, KickHistory, SHOCKWAVE_SPEED } from "../../choreography/type";
 import { prefersReducedMotion } from "../../hooks/reducedMotion";
 
 const NAME = "(faiz)aan sakib";
 const LETTERS = [...NAME];
-const DROP_FONT = '"Doto", monospace';
-
-/** The name, one span per letter: weight pulses with the kick as a shockwave from the head; flips to Doto on drops. */
+/**
+ * The name, one span per letter: weight pulses with the kick as a shockwave from the head, and the face changes in
+ * the same wave: Doto when a drop hits, Golos when it ends, and the old header's fonts in between (a font a bar
+ * when calm, a beat in a drop).
+ */
 const NameHeader: React.FC = () => {
   const letters = useRef<HTMLSpanElement[]>([]);
   const centres = useRef<number[]>([]);
-  const state = useMemo(() => ({ kicks: new KickHistory(), flip: createFlipState() }), []);
+  const state = useMemo(() => ({ kicks: new KickHistory(), faces: createFaceWave() }), []);
+  /** Font size (em) per face that keeps the name at its Golos width. */
+  const scales = useRef(new Map<string, number>());
 
   useEffect(() => {
-    // Lock each letter to its Golos advance (measured with every runtime style cleared).
+    // Fetch every face up front so its first bar doesn't flash the fallback.
+    for (const family of HEADER_FACES) {
+      document.fonts.load(`700 1em ${family}`, NAME).catch(() => {});
+    }
+  }, []);
+
+  useEffect(() => {
+    const nameWidth = () => letters.current.reduce((sum, span) => sum + span.getBoundingClientRect().width, 0);
+    // Lock each letter to its Golos advance (measured with every runtime style cleared), and size every other
+    // face to the same overall width.
     const measure = () => {
       for (const span of letters.current) {
         forgetStyles(span);
@@ -34,6 +49,18 @@ const NameHeader: React.FC = () => {
         span.style.fontSize = "";
         span.style.fontVariationSettings = "";
         span.style.transform = "";
+      }
+      const golosWidth = nameWidth();
+      for (const family of HEADER_FACES) {
+        for (const span of letters.current) {
+          span.style.fontFamily = family;
+          span.style.fontVariationSettings = family === DOTO ? DOTO_VARIATION : "";
+        }
+        scales.current.set(family, fitScale(golosWidth, nameWidth()));
+      }
+      for (const span of letters.current) {
+        span.style.fontFamily = "";
+        span.style.fontVariationSettings = "";
       }
       const widths = letters.current.map((span) => span.getBoundingClientRect().width);
       letters.current.forEach((span, i) => {
@@ -64,7 +91,7 @@ const NameHeader: React.FC = () => {
     // Real time, not song time: song time is frozen while paused-and-jamming.
     const seconds = now / 1000;
     state.kicks.push(seconds, active ? frame.kick : 0);
-    updateFlip(state.flip, frame.isPlaying && !reduced ? frame.sectionLevel : 0, frame.sectionChanged, frame.time);
+    advanceFaces(state.faces, frame);
     const headX = window.innerWidth / 2;
     letters.current.forEach((span, i) => {
       if (!active) {
@@ -76,14 +103,15 @@ const NameHeader: React.FC = () => {
       }
       const distance = Math.abs((centres.current[i] ?? headX) - headX);
       const kick = state.kicks.at(seconds - distance / SHOCKWAVE_SPEED);
-      const flipped = letterFlipped(state.flip, frame.time, distance);
-      setStyle(span, "fontFamily", flipped ? DROP_FONT : "");
-      setStyle(span, "fontSize", flipped ? "0.8em" : "");
+      // Jamming without the song stays in Golos: faces follow the song's bars.
+      const face = frame.isPlaying ? letterFace(state.faces, frame.time, distance) : GOLOS;
+      setStyle(span, "fontFamily", face);
+      setStyle(span, "fontSize", face === GOLOS ? "" : `${(scales.current.get(face) ?? 1).toFixed(3)}em`);
       setStyle(
         span,
         "fontVariationSettings",
-        flipped
-          ? '"wght" 900, "ROND" 100'
+        face === DOTO
+          ? DOTO_VARIATION
           : frame.isPlaying
             ? headerVariation(frame.section, frame.energy, kick)
             : jamHeaderVariation(kick)
