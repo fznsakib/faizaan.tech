@@ -20,8 +20,11 @@ Read these files and extract current values:
 | `src/audio/frame.ts` | Onset decay constants, frame construction |
 | `src/choreography/nod.ts` | Spring/rebound/lift/accent constants |
 | `src/choreography/type.ts` | Shockwave speed, EQ ballistics, quantisation steps |
-| `src/choreography/faces.ts` | `CYCLE_FONTS`, `HISTORY` |
-| `src/choreography/shards.ts` | Shard counts, recut cadence |
+| `src/choreography/faces.ts` | `CYCLE_FONTS`, `HISTORY`, `SPREAD` |
+| `src/choreography/grid.ts` | `TURN_RADIUS`, `TURN_TAU`, `PULSE`, `KICK_HISTORY_SPAN` |
+| `src/choreography/glass.ts` | Glass shape families, physics (friction, restitution), map bevel |
+| `src/audio/bands.ts` | `BAND_RANGE`, `SILENCE_DB` |
+| `src/components/SocialLinks/*` | Links, glyphs, dot/magnet constants |
 | `src/components/Head/index.tsx` | Material config, mouse influence, lighting, nod amplitude |
 | `src/App.tsx` | Component list, z-index values, lighting setup |
 | `src/styles/theme.ts` / `src/styles/colors.ts` | Theme structure |

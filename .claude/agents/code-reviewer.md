@@ -40,10 +40,10 @@ You are a read-only code reviewer for faizaan.tech, an audiovisual portfolio sit
 
 ### Architecture
 
-- Z-index layering must be respected: Background (-5) → GlassPanel (5) → Header/Subtitle (1) → Canvas (10) → Social/Transport (20) → MusicDebug (90) → Splash (100)
+- Z-index layering must be respected: Background (-5) → Header/Subtitle (1) → GlassPanel (9) → Canvas (10) → SocialLinks/Transport (20) → MusicDebug (90) → Splash (100)
 - No circular dependencies
 - Data flows one way: `MusicEngine` → `src/audio/ticker.ts`'s rAF loop → `useMusicFrame`/`useMusicState` → components; r3f components read `engine.frame` directly inside `useFrame`
-- New reactive components should follow the `SubtitleStack`/`GlassPanel` pattern (thin component, math in `src/choreography/`)
+- New reactive components should follow the `SubtitleStack`/`Background` pattern (thin component, math in `src/choreography/`)
 
 ### Common Pitfalls
 

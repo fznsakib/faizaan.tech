@@ -37,7 +37,7 @@ Key files:
 - `src/audio/MusicEngine.ts` — Web Audio playback, transport, DJ-mode hits, live band analysis
 - `src/audio/frame.ts` — `MusicFrame` construction, beat-map-derived per-frame math
 - `src/audio/analysis/` — build-time onset/energy/section analysis (`analyzeTrack.ts`, `buildBeatMap.ts`)
-- `src/choreography/` — pure, tested per-effect math (`nod`, `type`, `faces`, `shards`, `dom`)
+- `src/choreography/` — pure, tested per-effect math (`nod`, `type`, `faces`, `grid`, `glass`, `dom`)
 - `src/components/Head/index.tsx` — 3D head, beat-locked nodding
 
 ## MusicFrame
@@ -48,8 +48,9 @@ Read via `useMusicFrame` (never re-renders) or, inside r3f, `engine.frame` direc
 
 - Head nod: `nodDrive()`/`bob()` in `src/choreography/nod.ts` — phase-locked to the beat (with anticipation lift and rebound), half-time above 135 BPM, driven through a second-order `Spring` (stiffness/damping, sub-stepped at 240Hz).
 - Header/EQ weight pulses: `src/choreography/type.ts` — VU-style attack/release ballistics, coarse `font-variation-settings` quantisation (fine steps drop frames re-rasterising large glyphs).
-- Font cycling/shockwave: `src/choreography/faces.ts`.
-- Glass shard recut timing: `src/choreography/shards.ts`.
+- Header faces/shockwave: `src/choreography/faces.ts` (per word when calm, per letter in drops).
+- Plus-grid cursor turn and music pulse: `src/choreography/grid.ts`.
+- Glass outlines, refraction maps and drag/throw/wall physics: `src/choreography/glass.ts`.
 - All of the above are pure functions with Vitest coverage — put new math there, not inline in a component.
 
 ## Three.js Patterns

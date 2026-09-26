@@ -47,11 +47,11 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 
 | Layer            | z-index | Component(s)                       |
 |-------------------|---------|------------------------------------|
-| Background        | -5      | `Background`                       |
-| GlassPanel        | 5       | `GlassPanel`                       |
+| Background        | -5      | `Background` (canvas plus-grid)    |
 | Header/Subtitle   | 1       | `NameHeader`, `SubtitleStack`      |
+| GlassPanel        | 9       | `GlassPanel` (refractive glass, always behind the head) |
 | Canvas (3D)       | 10      | Three.js `Canvas` with `Head`      |
-| Social/Transport  | 20      | `SocialIconsContainer`, `Transport` (+ `Crate`, `DjPad`) |
+| Social/Transport  | 20      | `SocialLinks`, `Transport` (+ `Crate`, `DjPad`) |
 | MusicDebug        | 90      | `MusicDebug` (`?debug`)            |
 | Splash            | 100     | `Splash`                           |
 
@@ -60,7 +60,7 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 - **Engine state**: `MusicEngine` is a plain class outside React. `useMusicState()` for coarse, re-rendering state; `useMusicFrame()` for per-frame callbacks that never re-render.
 - **Animation state**: Always `useRef`/`useMemo` for per-frame values (never `useState` — avoids re-renders).
 - **Direct DOM manipulation**: Write through `setStyle(el, prop, value)` in `src/choreography/dom.ts`, which dedupes so a redundant write never hits the DOM.
-- **Choreography module** (`src/choreography/`): pure, unit-tested per-effect math, kept separate from components — `nod` (phase-locked head nod, spring physics), `type` (header weight pulse, EQ ballistics, coarse font-variation steps), `faces` (header font cycle/shockwave), `shards` (glass shard generation/recut timing), `dom` (`setStyle`).
+- **Choreography module** (`src/choreography/`): pure, unit-tested per-effect math, kept separate from components — `nod` (phase-locked head nod, spring physics), `type` (header weight pulse, EQ ballistics, coarse font-variation steps), `faces` (per-word/per-letter header faces and their shockwave), `grid` (cursor-facing plusses, music pulses), `glass` (glass outlines, refraction maps, drift/drag/throw/wall physics), `dom` (`setStyle`).
 - **No CSS transitions** on properties written per-frame.
 - **Three.js**: Use `useFrame` for animation loops (never raw `requestAnimationFrame`). `Head` reads `engine.frame` directly inside `useFrame` rather than via a hook. Use `useRef`/`useMemo` for mutable state and one-time objects (materials, springs).
 
@@ -83,19 +83,23 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 | `src/audio/ticker.ts` | The one rAF loop that calls `engine.update` |
 | `src/audio/frame.ts` | `MusicFrame` construction and per-frame beat-map math |
 | `src/audio/react.ts` | `useMusicFrame`, `useMusicState` hooks |
+| `src/audio/bands.ts` | `BandNormaliser`: per-band adaptive dB range for the live bands |
 | `src/audio/tracks.ts` | Bundled `TrackSource[]` (the crate) |
 | `src/audio/beatmaps/*.json` | Committed per-track beat maps, from `yarn beatmap` |
 | `src/choreography/nod.ts` | Head-nod curve, spring physics |
 | `src/choreography/type.ts` | Header/EQ weight pulses, quantisation |
-| `src/choreography/faces.ts` | Header font cycling/shockwave |
-| `src/choreography/shards.ts` | Glass panel shard generation/recut timing |
+| `src/choreography/faces.ts` | Header faces: per word when calm, per letter in drops, Doto/Golos anchors, shockwave |
+| `src/choreography/grid.ts` | Plus-grid maths: layout, cursor turn, music pulse |
+| `src/choreography/glass.ts` | Glass outlines (new per load), displacement maps, drift/drag/throw/wall-bounce physics |
+| `src/components/Background/index.tsx` | Canvas plus-grid: big plusses face the cursor, mini plusses pulse with the kick |
 | `src/components/Head/index.tsx` | 3D head model, beat-locked nodding |
 | `src/components/NameHeader/index.tsx` | Font-cycling, kick-shockwave name header |
 | `src/components/SubtitleStack/index.tsx` | 6-band graphic EQ / idle scan |
 | `src/components/Transport/index.tsx` | Play/pause, crate, mute, jam pad dock |
 | `src/components/Crate/index.tsx` | Track picker sleeves |
 | `src/components/DjPad/index.tsx` | On-screen DJ-mode pad |
-| `src/components/GlassPanel/index.tsx` | Frosted-glass shard background |
+| `src/components/GlassPanel/index.tsx` | Refractive 3D glass (SVG displacement via `backdrop-filter`; frosted fallback / `?frosted`), draggable |
+| `src/components/SocialLinks/index.tsx` | Dot-matrix link dock: resolves on hover/focus, beat shimmer on touch |
 | `src/components/Splash/index.tsx` | Click-to-enter veil, unlocks audio |
 | `src/components/MusicDebug/index.tsx` | `?debug` overlay (lamps, meters, metronome) |
 
