@@ -1,55 +1,84 @@
-import styled, { keyframes } from "styled-components";
+import styled from "styled-components";
 
-const float = keyframes`
-  0% {
-    transform: translateY(0px) translateX(0px) rotateX(0deg) rotateY(0deg);
-  }
-  50% {
-    transform: translateY(-15px) translateX(5px) rotateX(5deg) rotateY(-2deg);
-  }
-  100% {
-    transform: translateY(0px) translateX(0px) rotateX(0deg) rotateY(0deg);
-  }
-`;
-
-export const GlassPanelContainer = styled.div`
+/**
+ * Full-viewport layer at z 9: just beneath the head's canvas (10), so the head stands in front of the glass, and
+ * above the name/subtitles (1) and grid, which it refracts. Transport and icons (20) sit above it. Never takes a
+ * click, and never becomes a backdrop root: no filter, opacity, mask, clip-path or blend here, or the glass would
+ * stop seeing the page behind it.
+ */
+export const GlassLayer = styled.div`
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
+  z-index: 9;
   pointer-events: none;
-  z-index: 5;
+  perspective: 1200px;
   overflow: hidden;
 `;
 
-export const GlassShape = styled.div`
+export const FilterDefs = styled.svg`
   position: absolute;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
-    inset 0 0 30px rgba(255, 255, 255, 0.05);
-  animation-name: ${float};
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
-  transform-style: preserve-3d;
-  perspective: 1000px;
+  width: 0;
+  height: 0;
+`;
 
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 40%;
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
-    pointer-events: none;
-  }
+/**
+ * One piece: moved, tilted and squashed as a whole by a per-frame transform pivoting on the body's centre. A
+ * transform is not a backdrop root, so the glass inside still sees the page.
+ */
+export const Piece = styled.div`
+  position: absolute;
+  left: 0;
+  top: 0;
+`;
 
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
+/**
+ * The glass: clipped to the outline (on itself, never an ancestor), with its backdrop-filter (refraction or frost)
+ * set inline.
+ */
+export const Pane = styled.div`
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.02) 42%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+`;
+
+/** Bevel shading and the bright edge, stroked along the outline and lit from the upper right like the head. */
+export const RimArt = styled.svg`
+  position: absolute;
+  left: 0;
+  top: 0;
+  fill: none;
+`;
+
+/**
+ * Specular hotspot, twice the pane's size so it can slide with the tilt. Moved by transform, dimmed by opacity, on
+ * its own layer so the pane (and its big shadows) never re-rasterise per frame.
+ */
+export const Sheen = styled.div`
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 200%;
+  height: 200%;
+  will-change: transform, opacity;
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 255, 255, 0.34),
+    rgba(255, 255, 255, 0.12) 30%,
+    rgba(255, 255, 255, 0.03) 62%,
+    rgba(255, 255, 255, 0) 100%
+  );
+`;
+
+/** Diagonal flare, tinted per piece, that flashes on beats, DJ stabs and wall hits; its own layer, like Sheen. */
+export const Glint = styled.div`
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  will-change: opacity;
 `;
