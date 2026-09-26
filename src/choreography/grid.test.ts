@@ -1,11 +1,44 @@
 import { describe, expect, it } from "vitest";
 
-import { CELL, cursorTurn, easeTurn, gridLayout, miniScale, TURN_RADIUS, wrapQuarter } from "./grid";
+import {
+  CELL,
+  crispOffset,
+  cursorTurn,
+  easeTurn,
+  gridLayout,
+  KICK_HISTORY_SPAN,
+  miniScale,
+  TURN_RADIUS,
+  wrapQuarter,
+} from "./grid";
+import { SHOCKWAVE_SPEED } from "./type";
 
 describe("gridLayout", () => {
   it("fits whole 40 px cells and centres the grid", () => {
     expect(CELL).toBe(40);
     expect(gridLayout(1450, 806)).toEqual({ columns: 36, rows: 20, originX: 5, originY: 3 });
+  });
+});
+
+describe("crispOffset", () => {
+  it("nudges a whole-pixel origin by 0.5 at DPR 1, so a 1 px stroke lands on a whole pixel", () => {
+    expect(crispOffset(5, 1)).toBe(0.5);
+  });
+
+  it("leaves a half-pixel origin alone at DPR 1 (it's already crisp)", () => {
+    expect(crispOffset(5.5, 1)).toBe(0);
+  });
+
+  it("never offsets above DPR 1 (the backing store already has sub-CSS-pixel resolution)", () => {
+    expect(crispOffset(5, 2)).toBe(0);
+    expect(crispOffset(5.5, 2)).toBe(0);
+  });
+});
+
+describe("KICK_HISTORY_SPAN", () => {
+  it("covers a shockwave delay to any screen corner, not just small viewports", () => {
+    // Half-diagonal of a generous ultrawide/4K desktop, px.
+    expect(KICK_HISTORY_SPAN * SHOCKWAVE_SPEED).toBeGreaterThanOrEqual(3000);
   });
 });
 

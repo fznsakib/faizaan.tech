@@ -2,7 +2,16 @@ import { useEffect, useMemo, useRef } from "react";
 
 import * as Styled from "./Background.styled";
 import { useMusicFrame } from "../../audio/react";
-import { CELL, cursorTurn, easeTurn, gridLayout, miniScale, type GridLayout } from "../../choreography/grid";
+import {
+  CELL,
+  crispOffset,
+  cursorTurn,
+  easeTurn,
+  gridLayout,
+  KICK_HISTORY_SPAN,
+  miniScale,
+  type GridLayout,
+} from "../../choreography/grid";
 import { KickHistory, SHOCKWAVE_SPEED } from "../../choreography/type";
 import { prefersReducedMotion } from "../../hooks/reducedMotion";
 
@@ -31,7 +40,7 @@ const Background: React.FC = () => {
   const view = useRef<View>({ width: 0, height: 0, dpr: 1, layout: gridLayout(0, 0) });
   const angles = useRef(new Float32Array(0));
   const pointer = useRef<{ x: number; y: number } | null>(null);
-  const kicks = useMemo(() => new KickHistory(), []);
+  const kicks = useMemo(() => new KickHistory(KICK_HISTORY_SPAN), []);
   const lastNow = useRef(0);
   const dirty = useRef(true);
   /** Whether the last *drawn* frame had any mini plus above rest scale — one more draw is owed to reset it. */
@@ -180,15 +189,17 @@ function draw(
   ctx.fillStyle = BACKGROUND;
   ctx.fillRect(0, 0, layout.originX * 2 + layout.columns * CELL, layout.originY * 2 + layout.rows * CELL);
 
-  // At DPR 1 a 1 px stroke straddles two device pixels and blurs; nudge it half a px onto the pixel grid.
-  const crisp = dpr === 1 ? 0.5 : 0;
+  // At DPR 1 a 1 px stroke straddles two device pixels and blurs; nudge it onto the pixel grid. Which way
+  // depends on whether the origin itself is already a half pixel (odd viewport dimension) or not.
+  const crispX = crispOffset(layout.originX, dpr);
+  const crispY = crispOffset(layout.originY, dpr);
   const bigHalf = (BIG.outer - BIG.inner) / 2;
   ctx.beginPath();
   for (let r = 0; r < layout.rows; r++) {
     for (let c = 0; c < layout.columns; c++) {
       const i = r * layout.columns + c;
-      const cx = layout.originX + c * CELL + CELL / 2 + crisp;
-      const cy = layout.originY + r * CELL + CELL / 2 + crisp;
+      const cx = layout.originX + c * CELL + CELL / 2 + crispX;
+      const cy = layout.originY + r * CELL + CELL / 2 + crispY;
       const a = angles[i];
       const dx = Math.cos(a) * bigHalf;
       const dy = Math.sin(a) * bigHalf;

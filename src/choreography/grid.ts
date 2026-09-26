@@ -6,6 +6,8 @@ export const TURN_RADIUS = 180;
 export const PULSE = 0.8;
 /** Time constant for plusses easing toward their target turn, s. */
 export const TURN_TAU = 0.12;
+/** Seconds of kick history to keep, so the shockwave can still reach a far corner on a large/ultrawide display. */
+export const KICK_HISTORY_SPAN = 2.5;
 
 const QUARTER = Math.PI / 2;
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
@@ -22,6 +24,16 @@ export function gridLayout(width: number, height: number): GridLayout {
   const columns = Math.floor(width / CELL);
   const rows = Math.floor(height / CELL);
   return { columns, rows, originX: (width - columns * CELL) / 2, originY: (height - rows * CELL) / 2 };
+}
+
+/**
+ * At DPR 1 an odd-width stroke needs its centre on a half-pixel to land crisply on the device pixel grid;
+ * `gridLayout`'s origin is a whole pixel for an even viewport dimension, a half-pixel for an odd one, so the
+ * offset needed flips with it. No offset is needed above DPR 1 (the backing store already oversamples).
+ */
+export function crispOffset(origin: number, dpr: number): number {
+  if (dpr !== 1) return 0;
+  return Number.isInteger(origin) ? 0.5 : 0;
 }
 
 /** Fold an angle into (-π/4, π/4]: a plus looks identical every quarter turn. */
