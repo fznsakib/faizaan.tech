@@ -154,3 +154,8 @@ export function foldedTriangles(positions: Float32Array, indices: Uint32Array, i
   }
   return folded;
 }
+
+/** A mesh's rim as 2D segments packed x0, y0, x1, y1, from per-vertex x, y points. */
+export function rimSegments(points: Float32Array, edges: [number, number][]) {
+  return new Float32Array(edges.flatMap(([a, b]) => [points[a * 2], points[a * 2 + 1], points[b * 2], points[b * 2 + 1]]));
+}

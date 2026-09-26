@@ -8,6 +8,7 @@ import {
   foldedTriangles,
   insideCrop,
   largestComponent,
+  rimSegments,
   vertexNeighbours,
   weldMap,
 } from "./mesh.ts";
@@ -134,5 +135,12 @@ describe("foldedTriangles", () => {
 
   it("only counts the triangles the filter includes", () => {
     expect(foldedTriangles(positions, tris, (t) => t < 2)).toBe(0);
+  });
+});
+
+describe("rimSegments", () => {
+  it("packs each rim edge as x0, y0, x1, y1 from per-vertex x, y points", () => {
+    const points = new Float32Array([0, 0, 1, 0, 1, 2]);
+    expect([...rimSegments(points, [[0, 1], [1, 2]])]).toEqual([0, 0, 1, 0, 1, 0, 1, 2]);
   });
 });

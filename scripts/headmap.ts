@@ -19,6 +19,7 @@ import {
   foldedTriangles,
   insideCrop,
   largestComponent,
+  rimSegments,
   vertexNeighbours,
   weldMap,
 } from "./headmap/mesh.ts";
@@ -225,9 +226,9 @@ const rimPoints = smoothRim(
   faceRim,
   flags.number("rim-smooth") ?? 20
 );
-const rim = new Float32Array(
-  faceRim.flatMap(([a, b]) => [rimPoints[a * 2], rimPoints[a * 2 + 1], rimPoints[b * 2], rimPoints[b * 2 + 1]])
-);
+const rim = rimSegments(rimPoints, faceRim);
+/** The crop's true, ragged edge: where the photo can show the room behind the face. */
+const rawRim = rimSegments(aligned.filter((_, i) => i % 3 !== 2), faceRim);
 const blend = { margin: (flags.number("margin") ?? 0.45) * headL, tolerance: (flags.number("tolerance") ?? 1.2) * headL };
 // The scan's front surface as a height field over its footprint, blurred: the transfer reads heights from it, so
 // the scan's folds (the glasses' lens over one eye) become slopes instead of cliffs, and its noise is calmed.
@@ -387,15 +388,19 @@ const photoGrid = new AxisRayGrid(photoAligned, photoCrop.indices, 2, headL / 25
 const skin = new Float32Array(TEXTURE_SIZE * TEXTURE_SIZE * 3);
 const onFace = new Uint8Array(TEXTURE_SIZE * TEXTURE_SIZE);
 const inset = 0.05 * headL; // keep clear of the crop's ragged edge, where the photo can show the room behind
+let closestToEdge = Infinity;
 for (let ty = 0; ty < TEXTURE_SIZE; ty++) {
   for (let tx = 0; tx < TEXTURE_SIZE; tx++) {
     const x = uvLeft + ((tx + 0.5) / TEXTURE_SIZE) * uvSide, y = uvTop - ((ty + 0.5) / TEXTURE_SIZE) * uvSide;
     const hit = photoGrid.front([x, y, headNose[2]]);
-    if (!hit || distanceToSegments2D(x, y, rim) < inset) continue;
+    if (!hit) continue;
+    const edge = distanceToSegments2D(x, y, rawRim);
+    if (edge < inset) continue;
     const [a, b, c] = [0, 1, 2].map((k) => photoCrop.indices[hit.triangle * 3 + k]);
     const [u, v] = interpolateCorners(photoUvs, 2, a, b, c, hit.u, hit.v);
     skin.set(sampleRgb(photo.data, photo.width, photo.height, u, v), (ty * TEXTURE_SIZE + tx) * 3);
     onFace[ty * TEXTURE_SIZE + tx] = 1;
+    closestToEdge = Math.min(closestToEdge, edge);
   }
 }
 const padded = dilate(skin, onFace, TEXTURE_SIZE, TEXTURE_SIZE, 24);
@@ -407,7 +412,7 @@ const faceJpeg = jpeg.encode({ data: rgba, width: TEXTURE_SIZE, height: TEXTURE_
 const faceTextureOut = out.replace(/\.glb$/, "") + "-face.jpg";
 console.log(
   `skin: ${pct(onFace.filter(Boolean).length, onFace.length)} of a ${TEXTURE_SIZE}² texture from the photo, ` +
-    `UVs span ${uvSide.toFixed(2)} head units`
+    `none closer than ${(closestToEdge / headL).toFixed(3)} L to the crop's edge; UVs span ${uvSide.toFixed(2)} head units`
 );
 
 // 9. Write: back to the stock scene space, quantised + meshopt like the stock file.
