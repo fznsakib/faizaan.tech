@@ -5,7 +5,7 @@ description: Step-by-step workflow for creating new music-reactive components
 
 # Create a Music-Reactive Component
 
-Follow these steps in order. Reference `src/components/SubtitleStack/index.tsx` (EQ bars) or `src/components/GlassPanel/index.tsx` (recut timing) as canonical patterns.
+Follow these steps in order. Reference `src/components/SubtitleStack/index.tsx` (EQ bars) or `src/components/Background/index.tsx` (canvas drawing from `useMusicFrame`, maths in `src/choreography/grid.ts`) as canonical patterns.
 
 ## Steps
 
@@ -73,7 +73,7 @@ export const Container = styled.div`
 
 Import and place at the correct z-index layer:
 
-Background (-5) → GlassPanel (5) → Header/Subtitle (1) → Canvas (10) → Social/Transport (20) → MusicDebug (90) → Splash (100)
+Background (-5) → Header/Subtitle (1) → GlassPanel (9) → Canvas (10) → SocialLinks/Transport (20) → MusicDebug (90) → Splash (100)
 
 ### 9. Test
 

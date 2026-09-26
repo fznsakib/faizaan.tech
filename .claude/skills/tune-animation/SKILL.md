@@ -35,17 +35,23 @@ Spring physics (stiffness, damping), sub-stepped at 240Hz: pitch `(900, 45)`, li
 
 Quantisation steps are deliberately coarse: each distinct `font-variation-settings` value forces the browser to re-rasterise 6–12rem glyphs (and re-blur the glass above them) — fine steps drop frames at high refresh rates.
 
-## Font Cycling (`src/choreography/faces.ts`)
+## Header Faces (`src/choreography/faces.ts`)
 
-- `CYCLE_FONTS`: the old header's 13 fonts, cycled a font per bar when calm, a font per beat in a drop.
+- `CYCLE_FONTS`: the old header's 13 fonts. Calm: each word — `(faiz)`, `aan`, `sakib` — gets its own font, stepping per bar. Drop: each letter gets its own font, stepping per beat.
+- `SPREAD` = 5 (coprime with 13), so neighbouring words/letters never share a font; `fitScale` sizes each face to the name's Golos width.
 - `HISTORY` = 6 steps kept, so a letter the shockwave hasn't reached yet still shows the right (older) face.
 - Drops switch to Doto (`DOTO_VARIATION`); calm returns to the name's own Golos face (empty string).
 
-## Glass Shards (`src/choreography/shards.ts`)
+## Plus Grid (`src/choreography/grid.ts`)
 
-- `shardCount`: 3–5 shards normally, 6–8 on a drop (`sectionLevel === 1`).
-- `recutDue`: re-cut every 2 bars in calm sections, every bar in a drop; `IDLE_RECUT_MS` (4000ms) when paused.
-- A DJ stab (`frame.stabHit`) always forces an immediate re-cut regardless of cadence.
+- `TURN_RADIUS` 180px: big plusses within it turn to face the cursor (smooth falloff), easing with `TURN_TAU` 0.12s.
+- `PULSE` 0.8: mini plusses grow up to 1 + 0.8 × kick × (0.5 + 0.5 × energy), delayed by distance from the head at `SHOCKWAVE_SPEED`; `KICK_HISTORY_SPAN` 2.5s covers ultrawide screens.
+
+## Glass (`src/choreography/glass.ts`, `src/components/GlassPanel`)
+
+- `createBodies()` makes new organic outlines (pebble, blob, pill, lens, shard) on every load; the displacement map, clip path, highlights, hit-testing and wall bounces all follow the real outline.
+- Physics: drift toward a moving orbit around each piece's home, drag with the pointer (window-level hit-test, since the head canvas takes events), throw with `releaseVelocity`, `applyFriction`, and `collideWalls` against the viewport edges (with a glint "ping").
+- Chromatic aberration is off (`CHROMATIC` in the component) for frame budget; `?frosted` forces the non-Chromium fallback.
 
 ## Value Ranges
 

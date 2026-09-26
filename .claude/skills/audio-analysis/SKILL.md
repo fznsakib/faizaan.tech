@@ -24,8 +24,8 @@ Almost everything visual reads from a **precomputed beat map**, not from live be
 In `MusicEngine.writeBands()`:
 - `BAND_COUNT` = 6, log-spaced 40Hz–16kHz (`BAND_EDGES`)
 - `AnalyserNode`: `fftSize` 1024, `smoothingTimeConstant` 0 (no built-in smoothing — components smooth themselves, e.g. `vuStep` in `SubtitleStack`)
-- dB range `DB_FLOOR` -90 to `DB_CEIL` -20, normalized to 0..1
-- Auto-gain via a decaying peak tracker per band (`PEAK_DECAY` 0.995, `PEAK_FLOOR` 0.25): `level = raw / max(raw, peak * decay, floor)`
+- Each band's mean dB goes through a `BandNormaliser` (`src/audio/bands.ts`): a per-band adaptive range, time-based (`dt` in seconds), so loud passages still span 0..1 instead of clipping at a fixed ceiling
+- `BAND_RANGE`: peak attacks instantly and releases over `peakRelease` 2s; the floor falls fast (`floorFall` 0.25s) and rises slowly (`floorRise` 4s); span clamped to `minSpan` 12dB…`maxSpan` 24dB; below `SILENCE_DB` (-100) a band is 0
 
 These bands are for visual texture only (`frame.bands`), not for detecting the beat.
 
