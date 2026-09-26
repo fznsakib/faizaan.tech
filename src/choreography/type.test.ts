@@ -96,6 +96,16 @@ describe("drop flip", () => {
     expect(letterFlipped(state, 20.21, 440)).toBe(false);
   });
 
+  it("forgets an old change when time goes backwards (next track, seek back)", () => {
+    const state = createFlipState();
+    updateFlip(state, 1, true, 21.3);
+    updateFlip(state, 0, true, 112.59);
+    updateFlip(state, 0, false, 0.5);
+    expect(letterFlipped(state, 0.5, 20)).toBe(false);
+    updateFlip(state, 1, false, 30);
+    expect(letterFlipped(state, 30, 20)).toBe(true);
+  });
+
   it("ignores updates that don't change the level", () => {
     const state = createFlipState();
     updateFlip(state, 1, true, 10);

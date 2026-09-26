@@ -92,6 +92,8 @@ export function createFlipState(): FlipState {
 
 /** Track the drop level: animate on the engine's downbeat-quantised edge, snap otherwise (seek, switch, pause). */
 export function updateFlip(state: FlipState, level: 0 | 1, changed: boolean, time: number): void {
+  // Time went backwards (next track, seek back): an old change time would invert the face below.
+  if (state.changedAt !== null && time < state.changedAt) state.changedAt = null;
   if (level === state.level) return;
   state.level = level;
   state.changedAt = changed ? time : null;
