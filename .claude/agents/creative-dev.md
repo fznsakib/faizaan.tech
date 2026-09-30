@@ -37,9 +37,10 @@ Key files:
 - `src/audio/MusicEngine.ts` — Web Audio playback and player operations, DJ-mode hits, live band analysis, visualiser readers (`readSpectrum`/`readWaveform`)
 - `src/audio/frame.ts` — `MusicFrame` construction, beat-map-derived per-frame math
 - `src/audio/analysis/` — build-time onset/energy/section analysis (`analyzeTrack.ts`, `buildBeatMap.ts`)
-- `src/choreography/` — pure, tested per-effect math (`nod`, `type`, `faces`, `grid`, `glass`, `fit`, `tilt`, `dom`)
+- `src/choreography/` — pure, tested per-effect math (`daylight`, `nod`, `type`, `faces`, `grid`, `glass`, `fit`, `tilt`, `dom`)
 - `src/components/Head/index.tsx` — 3D head, beat-locked nodding, mouse/tilt follow, camera from `fitCamera`
 - `src/hooks/useDeviceTilt.ts` — phone tilt feed for the head (enabled on the Splash's enter tap)
+- `src/hooks/useDaylight.ts` + `src/components/Daylight/index.tsx` — the visitor's time of day: `--day-*` palette vars on `:root`, and `<DaylightRig>` (every scene light and the head's Environment; `?hour=`, `?daycycle`)
 
 ## MusicFrame
 
@@ -52,6 +53,7 @@ Read via `useMusicFrame` (never re-renders) or, inside r3f, `engine.frame` direc
 - Header faces/shockwave: `src/choreography/faces.ts` (per word when calm, per letter in drops).
 - Plus-grid cursor turn and music pulse: `src/choreography/grid.ts`.
 - Glass outlines, refraction maps and drag/throw/wall physics: `src/choreography/glass.ts`.
+- Time-of-day lighting and palette: `src/choreography/daylight.ts` (keyframes at 02:00, 05:00, 06:30, 09:00, 13:00, 18:30, 20:00, 22:30; 13:00 is the original scene, pinned by test). Purely visual — never reads the music.
 - All of the above are pure functions with Vitest coverage — put new math there, not inline in a component.
 
 ## Three.js Patterns

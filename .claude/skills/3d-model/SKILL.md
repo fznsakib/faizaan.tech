@@ -40,14 +40,16 @@ Dispose it on unmount: `useEffect(() => () => material.dispose(), [material])`.
 
 ## Lighting Setup
 
-In `App.tsx` (Canvas-level):
-```tsx
-<ambientLight intensity={0.3} />
-<pointLight position={[10, 10, 10]} intensity={20} distance={20} decay={2} />
-<pointLight position={[-5, -5, -5]} intensity={5} />
-```
+All scene lighting comes from `<DaylightRig />` (`src/components/Daylight/index.tsx`), rendered by the head itself (`App.tsx`'s Canvas has no lights). It follows the visitor's clock via `useDaylight()` (`src/hooks/useDaylight.ts`, state from `daylight()` in `src/choreography/daylight.ts`):
 
-In `Head/index.tsx`: an `Environment` with 4 `Lightformer`s (front rect, two colored side rects, a ring below) plus one `directionalLight` rim light (`BASE_RIM` 1.5, intensity pulses with `frame.snare`).
+- `ambientLight`, a key `pointLight` (distance 20, decay 2) that follows the sun's arc (never below the horizon, out at night), a fill `pointLight` at [-5, -5, -5], and a `directionalLight` rim at [0, 2, -6];
+- an `Environment` (resolution 256) of 4 `Lightformer`s (top softbox = sky, cool left panel, warm right panel, a floor ring in the page's ground colour), turned about +y with the sun (`environmentRotation`) so reflections move through the day.
+
+At `?hour=13` it is exactly the old hard-coded scene (ambient 0.3; key [10, 10, 10] × 20; fill × 5; rim #bfe6ff × 1.5; Lightformers white 2.5, #9fd3ff 4, #ffe2b8 3, #143d32 1.5), pinned by `daylight.test.ts`. The env map is rebuilt only when the daylight state changes (once a minute; each 100 ms tick under `?daycycle`): the Lightformers are memoised on `day.env`, and drei re-renders its cube camera when the Environment's children change identity.
+
+The head's snare flash rides on top of the daylight rim: `Head` writes `10 * frame.snare` into a `rimFlash` ref it passes to `<DaylightRig rimFlash={…} />`. `variant="skin"` (for a photo-skin head) scales intensities by `VARIANT_GAIN.skin`; the chrome variant is 1 everywhere.
+
+Tuning notes: the copper chrome (`#ff8a1c`, metalness 1) absorbs blue light, so cold/violet hours only show on the head through bright environments (ACES blooms highlights toward white) and strong rims at grazing Fresnel angles.
 
 ## Animation with useFrame
 
