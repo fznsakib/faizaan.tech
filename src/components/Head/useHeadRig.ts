@@ -19,9 +19,12 @@ const MOUSE_YAW = D(22);
 const MOUSE_PITCH = D(10);
 /** Stand-in for energy when DJ hits drive the head without the song. */
 const JAM_ENERGY = 0.6;
-/** `?debug`: `window.__head.yaw` / `.pitch` (radians) turn the head for inspection, on top of everything else. */
-const inspect: { yaw: number; pitch: number } | null = new URLSearchParams(window.location.search).has("debug")
-  ? ((window as unknown as { __head: { yaw: number; pitch: number } }).__head = { yaw: 0, pitch: 0 })
+/**
+ * `?debug`: `window.__head.yaw` / `.pitch` (radians) turn the head for inspection, on top of everything else, and
+ * `.dolly` moves the camera back (world units), e.g. to see the crown with the head pitched toward it.
+ */
+const inspect: { yaw: number; pitch: number; dolly: number } | null = new URLSearchParams(window.location.search).has("debug")
+  ? ((window as unknown as { __head: { yaw: number; pitch: number; dolly: number } }).__head = { yaw: 0, pitch: 0, dolly: 0 })
   : null;
 
 /**
@@ -124,7 +127,7 @@ export function useHeadRig(rig: RefObject<Group | null>, { baseY, fit, pulse }: 
     head.position.y = baseY + lift;
     head.scale.set(1 + squash / 2, 1 - squash, 1 + squash / 2);
     pulse(accents);
-    camera.position.z = MathUtils.lerp(camera.position.z, cameraZ, 1 - Math.exp(-3 * dt));
+    camera.position.z = MathUtils.lerp(camera.position.z, cameraZ + (inspect?.dolly ?? 0), 1 - Math.exp(-3 * dt));
     camera.position.y = camera0.y;
 
     choreographyProbe.headPitchDeg = MathUtils.radToDeg(pitch);
