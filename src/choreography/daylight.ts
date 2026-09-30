@@ -67,7 +67,7 @@ const GROUND_GLOW = 1.5;
 /** How much of the chrome head's light a head variant takes: the photo-skin head is lit more gently. */
 export const VARIANT_GAIN = {
   chrome: { key: 1, fill: 1, ambient: 1, rim: 1, env: 1 },
-  skin: { key: 0.6, fill: 0.6, ambient: 1, rim: 0.6, env: 0.6 },
+  skin: { key: 0.7, fill: 0.5, ambient: 2.2, rim: 0.6, env: 0.9 },
 } as const;
 
 export type DaylightVariant = keyof typeof VARIANT_GAIN;
