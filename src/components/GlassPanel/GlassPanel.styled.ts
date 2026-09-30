@@ -31,6 +31,11 @@ export const Piece = styled.div`
   top: 0;
 `;
 
+/** The time of day's tints (see `startDaylight`): the glass's body takes the sky, its highlights the light. White at midday. */
+const TINT = "var(--day-glass-tint, #fff)";
+const LIGHT = "var(--day-accent, #fff)";
+const tint = (colour: string, percent: number) => `color-mix(in srgb, ${colour} ${percent}%, transparent)`;
+
 /**
  * The glass: clipped to the outline (on itself, never an ancestor), with its backdrop-filter (refraction or frost)
  * set inline.
@@ -41,9 +46,9 @@ export const Pane = styled.div`
   overflow: hidden;
   background: linear-gradient(
     145deg,
-    rgba(255, 255, 255, 0.1) 0%,
-    rgba(255, 255, 255, 0.02) 42%,
-    rgba(255, 255, 255, 0.05) 100%
+    ${tint(TINT, 10)} 0%,
+    ${tint(TINT, 2)} 42%,
+    ${tint(TINT, 5)} 100%
   );
 `;
 
@@ -53,6 +58,15 @@ export const RimArt = styled.svg`
   left: 0;
   top: 0;
   fill: none;
+
+  /* the bright edge takes the light's colour, the bevel glow the glass's (over the stops' white) */
+  & stop[data-tint="light"] {
+    stop-color: ${LIGHT};
+  }
+
+  & stop[data-tint="glass"] {
+    stop-color: ${TINT};
+  }
 `;
 
 /**
@@ -68,10 +82,10 @@ export const Sheen = styled.div`
   will-change: transform, opacity;
   background: radial-gradient(
     closest-side,
-    rgba(255, 255, 255, 0.34),
-    rgba(255, 255, 255, 0.12) 30%,
-    rgba(255, 255, 255, 0.03) 62%,
-    rgba(255, 255, 255, 0) 100%
+    ${tint(LIGHT, 34)},
+    ${tint(LIGHT, 12)} 30%,
+    ${tint(LIGHT, 3)} 62%,
+    transparent 100%
   );
 `;
 

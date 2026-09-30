@@ -12,6 +12,7 @@ import {
   SUNRISE,
   SUNSET,
   VARIANT_GAIN,
+  withAlpha,
 } from "./daylight";
 
 import type { Daylight } from "./daylight";
@@ -279,5 +280,12 @@ describe("paletteVars", () => {
       "--day-glass-tint": "#ffffff",
       "--day-accent": "#ffffff",
     });
+  });
+});
+
+describe("withAlpha", () => {
+  it("turns a palette colour into a canvas rgba() at an opacity", () => {
+    expect(withAlpha("#8ab1ee", 0.5)).toBe("rgba(138, 177, 238, 0.5)"); // today's mini plus
+    expect(withAlpha("#143d32", 1)).toBe("rgba(20, 61, 50, 1)");
   });
 });

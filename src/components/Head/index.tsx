@@ -1,4 +1,4 @@
-import { Environment, Lightformer, useGLTF, useTexture } from "@react-three/drei";
+import { useGLTF, useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { damp } from "maath/easing";
 import { useEffect, useMemo, useRef } from "react";
@@ -13,12 +13,12 @@ import { bob, nodDrive, Spring } from "../../choreography/nod";
 import { choreographyProbe } from "../../choreography/probe";
 import { prefersReducedMotion } from "../../hooks/reducedMotion";
 import { useDeviceTilt } from "../../hooks/useDeviceTilt";
+import DaylightRig from "../Daylight";
 
-import type { DirectionalLight, Object3D } from "three";
+import type { Object3D } from "three";
 
 const D = MathUtils.degToRad;
 const BASE_EMISSIVE = 0.04;
-const BASE_RIM = 1.5;
 const MOUSE_YAW = D(22);
 const MOUSE_PITCH = D(10);
 /** Stand-in for energy when DJ hits drive the head without the song. */
@@ -71,7 +71,7 @@ function Head() {
   }, [skin]);
   const model = useMemo(() => prepareModel(scene, material), [scene, material]);
   const rig = useRef<Group>(null);
-  const rim = useRef<DirectionalLight>(null);
+  const rimFlash = useRef(0);
   const springs = useMemo(
     () => ({ pitch: new Spring(900, 45), lift: new Spring(900, 45), roll: new Spring(120, 18) }),
     []
@@ -99,7 +99,7 @@ function Head() {
     let yaw = 0;
     let squash = 0;
     let emissive = BASE_EMISSIVE;
-    let rimIntensity = BASE_RIM;
+    let flash = 0;
     const fit = fitCamera(size.width, size.height); // today's camera on desktop; back (and down) on phones
     let cameraZ = fit.z;
 
@@ -130,14 +130,14 @@ function Head() {
       const drive = frame.isPlaying ? frame.energy : JAM_ENERGY;
       squash = 0.012 * frame.kick;
       emissive = BASE_EMISSIVE + 0.2 * frame.kick * drive;
-      rimIntensity = BASE_RIM + 10 * frame.snare;
+      flash = 10 * frame.snare;
     }
 
     head.rotation.set(mouse.current.pitch + pitch, mouse.current.yaw + yaw, roll);
     head.position.y = model.baseY + lift;
     head.scale.set(1 + squash / 2, 1 - squash, 1 + squash / 2);
     material.emissiveIntensity = emissive;
-    if (rim.current) rim.current.intensity = rimIntensity;
+    rimFlash.current = flash;
     camera.position.z = MathUtils.lerp(camera.position.z, cameraZ, 1 - Math.exp(-3 * dt));
     camera.position.y = fit.y;
 
@@ -150,34 +150,7 @@ function Head() {
 
   return (
     <>
-      <Environment resolution={256}>
-        <Lightformer form="rect" intensity={2.5} position={[0, 5, 2]} scale={[10, 3, 1]} rotation-x={Math.PI / 2} />
-        <Lightformer
-          form="rect"
-          intensity={4}
-          color="#9fd3ff"
-          position={[-5, 1, -3]}
-          scale={[2, 8, 1]}
-          rotation-y={Math.PI / 3}
-        />
-        <Lightformer
-          form="rect"
-          intensity={3}
-          color="#ffe2b8"
-          position={[5, 0, 1]}
-          scale={[3, 6, 1]}
-          rotation-y={-Math.PI / 2}
-        />
-        <Lightformer
-          form="ring"
-          intensity={1.5}
-          color="#143d32"
-          position={[0, -4, 0]}
-          scale={8}
-          rotation-x={-Math.PI / 2}
-        />
-      </Environment>
-      <directionalLight ref={rim} position={[0, 2, -6]} intensity={BASE_RIM} color="#bfe6ff" />
+      <DaylightRig rimFlash={rimFlash} />
       <group ref={rig} position-y={model.baseY}>
         <primitive object={model.holder} />
       </group>

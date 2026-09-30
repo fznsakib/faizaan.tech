@@ -245,6 +245,12 @@ export function paletteVars(palette: Palette): Record<string, string> {
   };
 }
 
+/** A `#rrggbb` palette colour as a canvas `rgba()` at `alpha`. */
+export function withAlpha(hex: string, alpha: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}
+
 /** The keyframes either side of `hour` and the eased position between them. At a keyframe, t is exactly 0. */
 function segment(hour: number): { from: number; to: number; t: number } {
   const n = KEYFRAMES.length;
