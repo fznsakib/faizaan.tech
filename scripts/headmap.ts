@@ -8,6 +8,7 @@ import jpeg from "jpeg-js";
 import { MeshoptDecoder, MeshoptEncoder } from "meshoptimizer";
 
 import { isInside, parseFlags } from "./headmap/cli.ts";
+import { directionalCoverage, FULL_DEFAULTS, fullCapture, headBounds, headLandmarks } from "./headmap/full.ts";
 import { skinHeadDocument } from "./headmap/glb.ts";
 import { distanceToSegments2D } from "./headmap/mesh.ts";
 import { AxisRayGrid } from "./headmap/ray.ts";
@@ -15,8 +16,9 @@ import { applySimilarity } from "./headmap/similarity.ts";
 import { buildSkinHead, SKIN_DEFAULTS, SKIN_TRANSFER } from "./headmap/skin.ts";
 import { quantizeNormals, quantizePositions } from "./headmap/surface.ts";
 import { dilate, interpolateCorners, normalizedUint, sampleRgb } from "./headmap/texture.ts";
-import { bounds, count, COPPER_TRANSFER, pct, point, toFace, transferFace } from "./headmap/transfer.ts";
+import { bounds, count, COPPER_TRANSFER, pct, point, stockLandmarks, toFace, transferFace } from "./headmap/transfer.ts";
 
+import type { FullParams } from "./headmap/full.ts";
 import type { Vec3 } from "./headmap/ray.ts";
 import type { SkinHead, SkinParams } from "./headmap/skin.ts";
 import type { MeshData, Transfer, TransferParams } from "./headmap/transfer.ts";
@@ -34,6 +36,10 @@ import type { MeshData, Transfer, TransferParams } from "./headmap/transfer.ts";
 const USAGE = `usage: yarn headmap <capture.glb> [flags]
   Builds the skin head (src/assets/skin-head.glb + skin-head.jpg): the whole head in the owner's skin and hair.
   --copper            build the copper head instead (src/assets/head.glb + head-face.jpg): the face on chrome
+  --full              treat the capture as a full 360° head scan: use its own geometry and texture, synthesize nothing
+                      (automatic when the capture surrounds the head; see "Regenerating the Head" in CLAUDE.md)
+  --neck k            full: crop k·L below the chin (0.9)
+  --radius k          full: crop beyond k·L from the head's centre, 2.4 L behind the nose tip (3.3)
   --nose x,y,z        capture nose tip (default: most forward point near the middle)
   --chin y            capture chin height (default: where the midline falls away below the nose)
   --chin-depth d      capture units: how far behind the nose tip counts as "under the chin" (0.03)
@@ -88,6 +94,9 @@ const FLAGS = {
   curl: "number",
   quality: "count",
   copper: "switch",
+  full: "switch",
+  neck: "number",
+  radius: "number",
   debug: "path",
   out: "path",
 } as const;
@@ -110,6 +119,8 @@ const io = new NodeIO()
   .registerDependencies({ "meshopt.decoder": MeshoptDecoder, "meshopt.encoder": MeshoptEncoder });
 
 const identity = (p: Vec3) => p;
+/** Share of the directions around the head a capture must surround to count as a full (360°) scan. */
+const CLOSED_COVERAGE = 0.85;
 
 // 1. Read both meshes into the face frame.
 const captureDoc = await io.read(flags.capture);
@@ -140,19 +151,37 @@ const params: TransferParams = {
   faceSmooth: flags.number("face-smooth") ?? defaults.faceSmooth,
   smooth: flags.number("smooth") ?? defaults.smooth,
 };
-let transfer: Transfer;
+// A capture that closes around the head (a 360° scan) is the skin head as it is; a single view gets the rest synthesized.
+let closed: { full: boolean; coverage: number };
 try {
-  transfer = transferFace(capture, head, readNormals(headDoc), params, (line) => console.log(line));
+  const { nose, L } = headLandmarks(capture.positions, capture.indices, params);
+  const { centre, radius } = headBounds(nose, L, flags.number("radius") ?? FULL_DEFAULTS.radius);
+  const coverage = directionalCoverage(capture.positions, capture.indices, centre, radius);
+  closed = { full: !copper && (flags.on("full") || coverage >= CLOSED_COVERAGE), coverage };
 } catch (error) {
   fail((error as Error).message);
 }
-const { headNose, headL, align, aligned, face, photoCrop, rawRim, erasedHead: base, canon, positions: smoothed, weights, normals } = transfer;
+console.log(
+  `coverage: the capture surrounds ${(closed.coverage * 100).toFixed(0)}% of the directions around the head` +
+    (copper ? "" : closed.full ? " — a full capture: using its own geometry and texture" : " — a single view: synthesizing the rest")
+);
 
-if (copper) await writeCopper();
-else await writeSkin();
+if (closed.full) {
+  await writeFull();
+} else {
+  let transfer: Transfer;
+  try {
+    transfer = transferFace(capture, head, readNormals(headDoc), params, (line) => console.log(line));
+  } catch (error) {
+    fail((error as Error).message);
+  }
+  if (copper) await writeCopper(transfer);
+  else await writeSkin(transfer);
+}
 
 /** The copper head: the stock head with the face transferred, its photo skin in a front-projected face texture. */
-async function writeCopper() {
+async function writeCopper(transfer: Transfer) {
+  const { headNose, headL, align, aligned, face, photoCrop, rawRim, erasedHead: base, canon, positions: smoothed, weights, normals } = transfer;
   // 8. The face's skin. Every head vertex gets a UV from a front projection of the face (x, y), which is how the phone
   //    saw it: seamless, and no stretch the photo doesn't already have. The texture is re-baked texel by texel through
   //    the aligned scan's own triangles and their UVs, so the capture's atlas seams never smear across the face, and
@@ -257,12 +286,48 @@ async function writeCopper() {
   }
 }
 
+/** The skin head from a full (360°) capture: its own geometry and texture, cropped and placed (scripts/headmap/full.ts). */
+async function writeFull() {
+  const texture = captureDoc.getRoot().listMaterials()[0]?.getBaseColorTexture();
+  const uvs = captureDoc.getRoot().listMeshes()[0].listPrimitives()[0].getAttribute("TEXCOORD_0");
+  if (!texture || !uvs) fail("the capture has no base-colour texture and TEXCOORD_0 to take the skin from");
+  const image = jpegOrFail(texture.getImage()!, texture.getMimeType());
+  const { nose, L } = stockLandmarks(head.positions);
+  const fullParams: FullParams = {
+    ...FULL_DEFAULTS,
+    nose: flags.vec("nose"),
+    chin: flags.number("chin"),
+    chinDepth: flags.number("chin-depth") ?? FULL_DEFAULTS.chinDepth,
+    neck: flags.number("neck") ?? FULL_DEFAULTS.neck,
+    radius: flags.number("radius") ?? FULL_DEFAULTS.radius,
+  };
+  let result: Awaited<ReturnType<typeof fullCapture>>;
+  try {
+    result = await fullCapture({ ...capture, uvs: new Float32Array(uvs.getArray()!), image }, { nose, L }, fullParams, (line) => console.log(line));
+  } catch (error) {
+    fail((error as Error).message);
+  }
+  const quality = flags.number("quality") ?? SKIN_DEFAULTS.quality;
+  const atlasJpeg = jpeg.encode({ data: result.atlas, width: result.atlasSize, height: result.atlasHeight }, quality).data;
+  const atlasOut = out.replace(/\.glb$/, "") + ".jpg";
+  writeAtomically(out, await io.writeBinary(skinHeadDocument(result)));
+  writeAtomically(atlasOut, atlasJpeg);
+  console.log(`wrote ${out}: ${result.indices.length / 3} triangles, ${count(result.positions)} vertices, ${(statSync(out).size / 1024).toFixed(1)} KB`);
+  console.log(`wrote ${atlasOut}: ${result.atlasSize}×${result.atlasHeight}, ${(statSync(atlasOut).size / 1024).toFixed(1)} KB`);
+}
+
+/** The capture's photo as RGBA; the scanning apps export JPEG. */
+function jpegOrFail(bytes: Uint8Array, mimeType: string) {
+  if (mimeType !== "image/jpeg") fail(`the capture's texture is ${mimeType}; export it with a JPEG texture`);
+  return jpeg.decode(bytes, { useTArray: true, maxMemoryUsageInMB: 1024 });
+}
+
 /** The skin head: the whole head in the owner's skin and hair, one atlas (scripts/headmap/skin.ts). */
-async function writeSkin() {
+async function writeSkin(transfer: Transfer) {
   const texture = captureDoc.getRoot().listMaterials()[0]?.getBaseColorTexture();
   const photoUvs = captureDoc.getRoot().listMeshes()[0].listPrimitives()[0].getAttribute("TEXCOORD_0");
   if (!texture || !photoUvs) fail("the capture has no base-colour texture and TEXCOORD_0 to take the skin from");
-  const image = jpeg.decode(texture.getImage()!, { useTArray: true, maxMemoryUsageInMB: 1024 });
+  const image = jpegOrFail(texture.getImage()!, texture.getMimeType());
   const skinParams: SkinParams = {
     ...SKIN_DEFAULTS,
     hairline: flags.vec("hairline") ?? SKIN_DEFAULTS.hairline,

@@ -113,25 +113,8 @@ export const toFace = ([x, y, z]: Vec3): Vec3 => [-x, z, y];
  */
 export function transferFace(capture: MeshData, head: MeshData, headNormals: Float32Array, p: TransferParams, log: (line: string) => void): Transfer {
   // 2. Landmarks: nose tip, chin, and L on each mesh.
-  const capBox = bounds(capture.positions);
-  const capNose =
-    p.nose ??
-    findNoseTip(capture.positions, {
-      centre: [(capBox.min[0] + capBox.max[0]) / 2, (capBox.min[1] + capBox.max[1]) / 2],
-      radii: [(capBox.max[0] - capBox.min[0]) / 4, (capBox.max[1] - capBox.min[1]) / 2],
-    });
-  const capChinY = p.chin ?? findChinY(capture.positions, capNose, { halfWidth: 0.004, depth: p.chinDepth, step: 0.0025 });
-  const capL = capNose[1] - capChinY;
-  if (!capNose.every(Number.isFinite)) throw new Error("found no nose tip in the capture; pass --nose x,y,z");
-  if (!(capL > 0)) throw new Error(`the capture's chin (y ${capChinY}) isn't below its nose tip (y ${capNose[1]}); pass --chin y`);
-  const headBox = bounds(head.positions);
-  const headNose = findNoseTip(head.positions, {
-    centre: [0, (headBox.min[1] + headBox.max[1]) / 2],
-    radii: [(headBox.max[0] - headBox.min[0]) / 4, (headBox.max[1] - headBox.min[1]) / 2],
-  });
-  const headChinY = findChinY(head.positions, headNose, { halfWidth: 0.3, depth: 3, step: 0.1 });
-  const headL = headNose[1] - headChinY;
-  if (!(headL > 0)) throw new Error(`couldn't find the base head's nose and chin (L ${headL}); is the base head intact?`);
+  const { nose: capNose, chinY: capChinY, L: capL } = captureLandmarks(capture.positions, p);
+  const { nose: headNose, chinY: headChinY, L: headL } = stockLandmarks(head.positions);
   log(`capture landmarks: nose ${fmt(capNose)}, chin y ${capChinY.toFixed(4)}, L ${capL.toFixed(4)}`);
   log(`head landmarks:    nose ${fmt(headNose)}, chin y ${headChinY.toFixed(3)}, L ${headL.toFixed(3)}`);
 
@@ -331,6 +314,35 @@ export function transferFace(capture: MeshData, head: MeshData, headNormals: Flo
   if (movedCount === 0) throw new Error("no head vertex moved: the aligned capture doesn't cover the head's face");
 
   return { capNose, capL, headNose, headL, align, face, photoCrop, aligned, rawRim, erasedHead: base, positions: smoothed, weights, normals, canon, welded, rings };
+}
+
+/** The capture's nose tip (the most forward point near the middle), its chin height and L, unless given. */
+export function captureLandmarks(positions: Float32Array, p: Pick<TransferParams, "nose" | "chin" | "chinDepth">) {
+  const box = bounds(positions);
+  const nose =
+    p.nose ??
+    findNoseTip(positions, {
+      centre: [(box.min[0] + box.max[0]) / 2, (box.min[1] + box.max[1]) / 2],
+      radii: [(box.max[0] - box.min[0]) / 4, (box.max[1] - box.min[1]) / 2],
+    });
+  const chinY = p.chin ?? findChinY(positions, nose, { halfWidth: 0.004, depth: p.chinDepth, step: 0.0025 });
+  const L = nose[1] - chinY;
+  if (!nose.every(Number.isFinite)) throw new Error("found no nose tip in the capture; pass --nose x,y,z");
+  if (!(L > 0)) throw new Error(`the capture's chin (y ${chinY}) isn't below its nose tip (y ${nose[1]}); pass --chin y`);
+  return { nose, chinY, L };
+}
+
+/** The stock head's nose tip, chin height and L (in its face frame and units). */
+export function stockLandmarks(positions: Float32Array) {
+  const box = bounds(positions);
+  const nose = findNoseTip(positions, {
+    centre: [0, (box.min[1] + box.max[1]) / 2],
+    radii: [(box.max[0] - box.min[0]) / 4, (box.max[1] - box.min[1]) / 2],
+  });
+  const chinY = findChinY(positions, nose, { halfWidth: 0.3, depth: 3, step: 0.1 });
+  const L = nose[1] - chinY;
+  if (!(L > 0)) throw new Error(`couldn't find the base head's nose and chin (L ${L}); is the base head intact?`);
+  return { nose, chinY, L };
 }
 
 /** The front-most point on a mesh at face-relative offset (x, y)·L from the nose tip. */
