@@ -103,6 +103,11 @@ export const Molten = styled.span`
   @media ${LITE} {
     filter: none;
   }
+
+  /* Firefox: no feImage of an element, so no ramp; without it the warp would shift the letters, not melt them. */
+  @supports (-moz-appearance: none) {
+    filter: none;
+  }
 `;
 
 /** Plate blue, perforated with the grid's plusses: what shatters. */

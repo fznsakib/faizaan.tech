@@ -22,6 +22,10 @@ export interface LetterPieces {
   shards: HTMLElement[];
   drips: HTMLElement[];
   sparkles: HTMLElement[];
+  /** Opacity last written to the glyph, chrome, molten, shatter and frost (thousandths; -1 before any). */
+  shown: Int16Array;
+  /** Whether its drips, shards and sparkles were out last frame (they're hidden once, as they stop). */
+  moving: { drips: boolean; shards: boolean; sparkles: boolean };
 }
 
 /** Letter `index`'s shards, drips and sparkles: the same every load. */
@@ -42,4 +46,6 @@ export const emptyPieces = (): LetterPieces => ({
   shards: [],
   drips: [],
   sparkles: [],
+  shown: new Int16Array(5).fill(-1),
+  moving: { drips: false, shards: false, sparkles: false },
 });

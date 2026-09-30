@@ -57,11 +57,21 @@ export interface MatterProbe {
   run: () => boolean;
 }
 
-const show = (el: HTMLElement | null, opacity: number) => {
-  if (!el) return;
-  setStyle(el, "visibility", opacity > 0 ? "visible" : "hidden");
-  setStyle(el, "opacity", opacity.toFixed(3));
-};
+/** `LetterPieces.shown` slots. */
+const GLYPH = 0;
+const CHROME = 1;
+const MOLTEN = 2;
+const SHATTER = 3;
+const FROST = 4;
+
+/** Show a layer at `opacity`; nothing is written while it stays the same to a thousandth. */
+function show(letter: LetterPieces, slot: number, el: HTMLElement | null, opacity: number) {
+  const level = Math.round(opacity * 1000);
+  if (!el || letter.shown[slot] === level) return;
+  letter.shown[slot] = level;
+  setStyle(el, "visibility", level > 0 ? "visible" : "hidden");
+  setStyle(el, "opacity", String(level / 1000));
+}
 const hide = (els: HTMLElement[]) => {
   for (const el of els) setStyle(el, "opacity", "0");
 };
@@ -149,33 +159,34 @@ export function useMatter(
     const lite = liteQuery?.matches ?? false;
     const { sample, shard: shardOut, drip: dripOut, sparkle: sparkleOut } = scratch;
     let meltPeak = 0;
-    pieces.forEach((letter, i) => {
+    for (let i = 0; i < pieces.length; i++) {
+      const letter = pieces[i];
       const plan = plans[i];
-      if (!letter || !plan) return;
+      if (!letter || !plan) continue;
       const centre = geometry.centres[i] ?? geometry.headX;
       const delay = run && !reduced ? sweepDelay(centre, run.origin) : 0;
       matterAt(run, (seconds ?? 0) - delay, sample);
       const { state, t } = sample;
 
-      show(letter.glyph, layerOpacity(sample, "plain"));
+      show(letter, GLYPH, letter.glyph, layerOpacity(sample, "plain"));
 
       const chrome = layerOpacity(sample, "chrome");
-      show(letter.chrome, chrome);
+      show(letter, CHROME, letter.chrome, chrome);
       if (chrome > 0 && letter.chrome) {
         const sweep = reduced ? 50 : chromeSweep(tOf(sample, "chrome"));
         setStyle(letter.chrome, "backgroundPosition", `${sweep.toFixed(1)}% 0%, 0% 0%`);
       }
 
       const molten = layerOpacity(sample, "molten");
-      show(letter.molten, molten);
+      show(letter, MOLTEN, letter.molten, molten);
       const melted = molten > 0 && !reduced ? meltAmount(tOf(sample, "molten")) : 0;
       meltPeak = Math.max(meltPeak, melted);
       if (letter.molten) setStyle(letter.molten, "transform", melted > 0 ? `scaleY(${(1 + SAG * melted).toFixed(3)})` : "none");
 
       const shattering = state === "shatter" && !reduced;
-      show(letter.shatter, layerOpacity(sample, "shatter") * (shattering ? shatterGlyph(t) : 1));
+      show(letter, SHATTER, letter.shatter, layerOpacity(sample, "shatter") * (shattering ? shatterGlyph(t) : 1));
 
-      show(letter.frost, layerOpacity(sample, "frost"));
+      show(letter, FROST, letter.frost, layerOpacity(sample, "frost"));
 
       if (state === "molten" && !reduced) {
         const count = lite ? LITE_COUNT.drips : plan.drips.length;
@@ -186,8 +197,10 @@ export function useMatter(
           setStyle(el, "transform", `translateY(${dripOut.y.toFixed(3)}em) scaleY(${dripOut.stretch.toFixed(3)})`);
           setStyle(el, "opacity", dripOut.opacity.toFixed(3));
         }
-      } else {
+        letter.moving.drips = true;
+      } else if (letter.moving.drips) {
         hide(letter.drips);
+        letter.moving.drips = false;
       }
 
       if (shattering) {
@@ -204,8 +217,10 @@ export function useMatter(
           );
           setStyle(el, "opacity", shardOut.opacity.toFixed(3));
         }
-      } else {
+        letter.moving.shards = true;
+      } else if (letter.moving.shards) {
         hide(letter.shards);
+        letter.moving.shards = false;
       }
 
       if (state === "frost" && !reduced) {
@@ -217,10 +232,12 @@ export function useMatter(
           setStyle(el, "transform", `rotate(${(45 + sparkleOut.rotate).toFixed(1)}deg) scale(${sparkleOut.scale.toFixed(3)})`);
           setStyle(el, "opacity", sparkleOut.opacity.toFixed(3));
         }
-      } else {
+        letter.moving.sparkles = true;
+      } else if (letter.moving.sparkles) {
         hide(letter.sparkles);
+        letter.moving.sparkles = false;
       }
-    });
+    }
 
     // One melt filter for the whole name: its warp follows the most melted letter.
     const warp = (meltPeak * WARP * geometry.fontSize).toFixed(1);
