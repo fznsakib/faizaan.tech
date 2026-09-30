@@ -1,9 +1,26 @@
 import { describe, expect, it } from "vitest";
 
-import { BLEND, layerOpacity, MATTERS, matterAt, MAX_SWEEP, RUN_LENGTH, runEnd, STAGES, sweepDelay } from "./matter";
+import {
+  AMBIENT_GAP,
+  BLEND,
+  createSchedule,
+  isRunning,
+  layerOpacity,
+  MATTERS,
+  matterAt,
+  MAX_SWEEP,
+  mulberry32,
+  requestRun,
+  RETRIGGER_COOLDOWN,
+  RUN_LENGTH,
+  runEnd,
+  STAGES,
+  sweepDelay,
+  tickSchedule,
+} from "./matter";
 import { SHOCKWAVE_SPEED } from "./type";
 
-import type { Matter, MatterRun, MatterSample } from "./matter";
+import type { Matter, MatterRun, MatterSample, MatterSchedule } from "./matter";
 
 const run: MatterRun = { start: 10, origin: 0 };
 /** When stage `index` of the run begins, s. */
@@ -121,5 +138,99 @@ describe("matter sweep", () => {
     expect(runEnd(run) - run.start).toBeCloseTo(RUN_LENGTH + MAX_SWEEP, 9);
     expect(RUN_LENGTH + MAX_SWEEP).toBeLessThanOrEqual(7);
     expect(matterAt(run, runEnd(run) - MAX_SWEEP).state).toBe("plain"); // the farthest letter is done by then
+  });
+});
+
+const FRAME = 1 / 60;
+const HEAD_X = 720;
+
+/** Tick `schedule` at 60 fps from `from` to `to` s; returns the start times of the runs that began. */
+function tickThrough(schedule: MatterSchedule, from: number, to: number, ambient = true): number[] {
+  const starts: number[] = [];
+  for (let now = from; now < to; now += FRAME) {
+    const before = schedule.run;
+    tickSchedule(schedule, now, ambient, HEAD_X);
+    if (schedule.run !== before && schedule.run) starts.push(schedule.run.start);
+  }
+  return starts;
+}
+
+describe("matter schedule", () => {
+  it("never runs by itself before the visitor has entered (or while reduced motion holds ambient runs off)", () => {
+    const schedule = createSchedule(mulberry32(1));
+    expect(tickThrough(schedule, 0, 300, false)).toEqual([]);
+    expect(schedule.run).toBeNull();
+  });
+
+  it("runs from the head 40–70 s after entering, then every 40–70 s", () => {
+    const schedule = createSchedule(mulberry32(7));
+    tickThrough(schedule, 0, 5, false);
+    const starts = tickThrough(schedule, 5, 1200);
+    expect(starts.length).toBeGreaterThan(10);
+    const gaps = starts.map((start, i) => start - (i === 0 ? 5 : starts[i - 1]));
+    for (const gap of gaps) {
+      expect(gap).toBeGreaterThanOrEqual(AMBIENT_GAP[0]);
+      expect(gap).toBeLessThanOrEqual(AMBIENT_GAP[1] + FRAME);
+    }
+    expect(Math.max(...gaps) - Math.min(...gaps)).toBeGreaterThan(10); // randomised, not a metronome
+    expect(schedule.run?.origin).toBe(HEAD_X);
+  });
+
+  it("is reproducible for a seed", () => {
+    const times = (seed: number) => tickThrough(createSchedule(mulberry32(seed)), 0, 600);
+    expect(times(3)).toEqual(times(3));
+    expect(times(3)).not.toEqual(times(4));
+  });
+
+  it("never starts while the tab is hidden, and doesn't fire a missed run on return", () => {
+    const schedule = createSchedule(mulberry32(2));
+    tickThrough(schedule, 0, 30);
+    expect(tickThrough(schedule, 30, 200, false)).toEqual([]); // hidden: ticks without ambient
+    const back = tickThrough(schedule, 200, 300);
+    expect(back[0] - 200).toBeGreaterThanOrEqual(AMBIENT_GAP[0]);
+
+    // A hidden tab's rAF stops altogether: a long gap between ticks restarts the wait instead of firing at once.
+    const stalled = createSchedule(mulberry32(2));
+    tickThrough(stalled, 0, 30);
+    const returned = tickThrough(stalled, 500, 600);
+    expect(returned[0] - 500).toBeGreaterThanOrEqual(AMBIENT_GAP[0]);
+  });
+
+  it("starts a run from the pointer on hover or tap", () => {
+    const schedule = createSchedule(mulberry32(1));
+    expect(requestRun(schedule, 10, 300)).toBe(true);
+    expect(schedule.run).toEqual({ start: 10, origin: 300 });
+    expect(isRunning(schedule, 10)).toBe(true);
+  });
+
+  it("doesn't restart a run that is still going", () => {
+    const schedule = createSchedule(mulberry32(1));
+    requestRun(schedule, 10, 300);
+    const first = schedule.run!;
+    for (const now of [10.2, 13, runEnd(first) - 0.01]) {
+      expect(requestRun(schedule, now, 900)).toBe(false);
+      expect(schedule.run).toBe(first);
+    }
+  });
+
+  it("takes a new hover once the last run has ended and a short cooldown has passed", () => {
+    const schedule = createSchedule(mulberry32(1));
+    requestRun(schedule, 10, 300);
+    const end = runEnd(schedule.run!);
+    tickThrough(schedule, 10, end + 0.1);
+    expect(isRunning(schedule, end + 0.1)).toBe(false);
+    expect(requestRun(schedule, end + 0.1, 900)).toBe(false);
+    expect(requestRun(schedule, end + RETRIGGER_COOLDOWN + 0.01, 900)).toBe(true);
+    expect(schedule.run?.origin).toBe(900);
+  });
+
+  it("pushes the next ambient run back after a hover run", () => {
+    const schedule = createSchedule(mulberry32(5));
+    tickThrough(schedule, 0, 1);
+    const due = schedule.nextAmbient!;
+    expect(tickThrough(schedule, 1, due - 1)).toEqual([]);
+    expect(requestRun(schedule, due - 1, 300)).toBe(true);
+    expect(tickThrough(schedule, due - 1 + FRAME, due - 1 + AMBIENT_GAP[0] - FRAME)).toEqual([]);
+    expect(schedule.nextAmbient!).toBeGreaterThanOrEqual(due - 1 + AMBIENT_GAP[0]);
   });
 });

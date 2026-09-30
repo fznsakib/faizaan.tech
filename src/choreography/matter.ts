@@ -96,3 +96,71 @@ export function layerOpacity(sample: MatterSample, matter: Matter): number {
   const upper = MATTERS.indexOf(matter) > MATTERS.indexOf(other);
   return upper ? weight : weight > 0 ? 1 : 0;
 }
+
+/** Seconds between ambient runs, start to start. */
+export const AMBIENT_GAP: readonly [number, number] = [40, 70];
+/** Seconds after a run ends before a hover or tap can start another, so a jittery pointer edge doesn't chain runs. */
+export const RETRIGGER_COOLDOWN = 0.5;
+/** A gap between frames longer than this, s, means the tab was hidden (rAF stops) or the page stalled. */
+const STALL = 1;
+
+export interface MatterSchedule {
+  /** The latest run, finished or not; null before the first. */
+  run: MatterRun | null;
+  /** When the next ambient run is due, s; null while ambient runs are off. */
+  nextAmbient: number | null;
+  lastTick: number | null;
+  random: () => number;
+}
+
+/** A small seeded PRNG (mulberry32), 0..1, for reproducible schedules in tests. */
+export function mulberry32(seed: number): () => number {
+  let state = seed >>> 0;
+  return () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let x = state;
+    x = Math.imul(x ^ (x >>> 15), x | 1);
+    x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
+    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+export function createSchedule(random: () => number = Math.random): MatterSchedule {
+  return { run: null, nextAmbient: null, lastTick: null, random };
+}
+
+const ambientGap = (schedule: MatterSchedule) =>
+  AMBIENT_GAP[0] + (AMBIENT_GAP[1] - AMBIENT_GAP[0]) * schedule.random();
+
+export const isRunning = (schedule: MatterSchedule, now: number): boolean =>
+  schedule.run !== null && now < runEnd(schedule.run);
+
+function startRun(schedule: MatterSchedule, now: number, origin: number): void {
+  schedule.run = { start: now, origin };
+  // Any run resets the ambient wait: no ambient run right after a hover.
+  if (schedule.nextAmbient !== null) schedule.nextAmbient = now + ambientGap(schedule);
+}
+
+/** Hover or tap: start a run from `origin` (px) unless one is still going or has only just ended. */
+export function requestRun(schedule: MatterSchedule, now: number, origin: number): boolean {
+  if (schedule.run && now < runEnd(schedule.run) + RETRIGGER_COOLDOWN) return false;
+  startRun(schedule, now, origin);
+  return true;
+}
+
+/**
+ * Every frame: start an ambient run from the head (at `headX`) when one is due. `ambient` is false before the
+ * visitor has entered, while the tab is hidden and under reduced motion; turning it on (or coming back from a
+ * stall) starts a fresh wait rather than firing a missed run.
+ */
+export function tickSchedule(schedule: MatterSchedule, now: number, ambient: boolean, headX: number): void {
+  const stalled = schedule.lastTick !== null && now - schedule.lastTick > STALL;
+  schedule.lastTick = now;
+  if (!ambient) {
+    schedule.nextAmbient = null;
+  } else if (schedule.nextAmbient === null || stalled) {
+    schedule.nextAmbient = now + ambientGap(schedule);
+  } else if (now >= schedule.nextAmbient && !isRunning(schedule, now)) {
+    startRun(schedule, now, headX);
+  }
+}
