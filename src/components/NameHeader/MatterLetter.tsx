@@ -1,5 +1,4 @@
 import * as Styled from "./NameHeader.styled";
-import { LITE_COUNT } from "./pieces";
 
 import type { LetterPieces, LetterPlan } from "./pieces";
 
@@ -47,7 +46,6 @@ const MatterLetter: React.FC<{ letter: string; plan: LetterPlan; pieces: LetterP
     {plan.drips.map((drip, j) => (
       <Styled.Drip
         key={`drip${j}`}
-        $extra={j >= LITE_COUNT.drips}
         ref={(el) => {
           if (el) pieces.drips[j] = el;
         }}
@@ -63,7 +61,6 @@ const MatterLetter: React.FC<{ letter: string; plan: LetterPlan; pieces: LetterP
       <Styled.Shard
         key={`shard${j}`}
         $blue={shard.blue}
-        $extra={j >= LITE_COUNT.shards}
         ref={(el) => {
           if (el) pieces.shards[j] = el;
         }}
@@ -73,7 +70,6 @@ const MatterLetter: React.FC<{ letter: string; plan: LetterPlan; pieces: LetterP
     {plan.sparkles.map((sparkle, j) => (
       <Styled.Sparkle
         key={`sparkle${j}`}
-        $extra={j >= LITE_COUNT.sparkles}
         ref={(el) => {
           if (el) pieces.sparkles[j] = el;
         }}

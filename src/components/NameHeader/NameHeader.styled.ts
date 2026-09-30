@@ -54,7 +54,10 @@ export const Matter = styled.span`
   }
 `;
 
-/** A copy of the glyph, filled with a material (the fill is clipped to the glyph). Shown per frame. */
+/**
+ * A copy of the glyph, filled with a material (the fill is clipped to the glyph). Out of the render tree unless it's
+ * showing, so the kick's per-frame font changes don't restyle and reshape four hidden copies of every letter.
+ */
 const layer = css`
   position: absolute;
   inset: 0;
@@ -65,8 +68,7 @@ const layer = css`
   -webkit-background-clip: text;
   background-clip: text;
   background-repeat: no-repeat;
-  visibility: hidden;
-  opacity: 0;
+  display: none;
 `;
 
 /** Mirror chrome, like the head: sky above a hard horizon, warm ground below, and a moving highlight. */
@@ -126,46 +128,37 @@ export const Frost = styled.span`
   background-repeat: repeat, no-repeat;
 `;
 
-/** Pieces beyond the phone's share are hidden there (and skipped by the painter). */
-const extra = ({ $extra }: { $extra: boolean }) =>
-  $extra &&
-  css`
-    @media ${LITE} {
-      display: none;
-    }
-  `;
-
-/** A shard of the shatter, in the grid's plus look. Its home and size are set inline; it moves by transform only. */
-export const Shard = styled.span<{ $blue: boolean; $extra: boolean }>`
+/**
+ * A shard of the shatter, in the grid's plus look. Its home and size are set inline; it moves by transform only.
+ * Shards, drips and sparkles are out of the render tree until the painter shows them (phones use only a share).
+ */
+export const Shard = styled.span<{ $blue: boolean }>`
   position: absolute;
-  opacity: 0;
+  display: none;
   color: ${({ $blue }) => ($blue ? "#8AB1EE" : "#555555")};
   background:
     linear-gradient(currentColor, currentColor) center / 100% max(1.5px, 0.022em) no-repeat,
     linear-gradient(currentColor, currentColor) center / max(1.5px, 0.022em) 100% no-repeat;
-  ${extra}
 `;
 
 /** A drop of molten copper at the letter's foot. */
-export const Drip = styled.span<{ $extra: boolean }>`
+export const Drip = styled.span`
   position: absolute;
   top: 0.8em;
-  opacity: 0;
+  display: none;
   border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
   background: radial-gradient(circle at 40% 35%, #ffe08a, #ff8a1c 45%, #b53b12);
   transform-origin: 50% 0;
-  ${extra}
 `;
 
 /** A glint on the frost. */
-export const Sparkle = styled.span<{ $extra: boolean }>`
+export const Sparkle = styled.span`
   position: absolute;
-  opacity: 0;
+  display: none;
   background:
     radial-gradient(circle, #ffffff 0 8%, rgba(210, 235, 255, 0.7) 16%, transparent 42%),
     linear-gradient(90deg, transparent, #ffffff 50%, transparent) center / 100% 9% no-repeat,
     linear-gradient(0deg, transparent, #ffffff 50%, transparent) center / 9% 100% no-repeat;
-  ${extra}
 `;
 
 /** Holds the header's SVG filters; takes no space. */

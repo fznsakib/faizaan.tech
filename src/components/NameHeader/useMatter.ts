@@ -83,16 +83,20 @@ const MOLTEN = 2;
 const SHATTER = 3;
 const FROST = 4;
 
-/** Show a layer at `opacity`; nothing is written while it stays the same to a thousandth. */
+/**
+ * Show a layer at `opacity`; nothing is written while it stays the same to a thousandth. A hidden material layer
+ * leaves the render tree; the glyph only turns invisible, since it holds the letter's box open.
+ */
 function show(letter: LetterPieces, slot: number, el: HTMLElement | null, opacity: number) {
   const level = Math.round(opacity * 1000);
   if (!el || letter.shown[slot] === level) return;
   letter.shown[slot] = level;
-  setStyle(el, "visibility", level > 0 ? "visible" : "hidden");
+  if (slot === GLYPH) setStyle(el, "visibility", level > 0 ? "visible" : "hidden");
+  else setStyle(el, "display", level > 0 ? "block" : "none");
   setStyle(el, "opacity", String(level / 1000));
 }
 const hide = (els: HTMLElement[]) => {
-  for (const el of els) setStyle(el, "opacity", "0");
+  for (const el of els) setStyle(el, "display", "none");
 };
 /** A state's own t for this sample: its t while it's current, 0 before it, 1 after. */
 const tOf = (sample: MatterSample, matter: Matter) =>
@@ -216,6 +220,7 @@ export function useMatter(
           if (!el) continue;
           dripPose(plan.drips[j], t, dripOut);
           setStyle(el, "transform", `translateY(${dripOut.y.toFixed(3)}em) scaleY(${dripOut.stretch.toFixed(3)})`);
+          setStyle(el, "display", "block");
           setStyle(el, "opacity", dripOut.opacity.toFixed(3));
         }
         letter.moving.drips = true;
@@ -236,6 +241,7 @@ export function useMatter(
             "transform",
             `translate(${shardOut.x.toFixed(3)}em, ${shardOut.y.toFixed(3)}em) rotate(${shardOut.rotate.toFixed(1)}deg) scale(${shardOut.scale.toFixed(3)})`
           );
+          setStyle(el, "display", "block");
           setStyle(el, "opacity", shardOut.opacity.toFixed(3));
         }
         letter.moving.shards = true;
@@ -251,6 +257,7 @@ export function useMatter(
           if (!el) continue;
           sparklePose(plan.sparkles[j], t, sparkleOut);
           setStyle(el, "transform", `rotate(${(45 + sparkleOut.rotate).toFixed(1)}deg) scale(${sparkleOut.scale.toFixed(3)})`);
+          setStyle(el, "display", "block");
           setStyle(el, "opacity", sparkleOut.opacity.toFixed(3));
         }
         letter.moving.sparkles = true;

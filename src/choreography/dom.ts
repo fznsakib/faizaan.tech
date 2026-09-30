@@ -5,7 +5,8 @@ export type StyleProp =
   | "fontSize"
   | "opacity"
   | "backgroundPosition"
-  | "visibility";
+  | "visibility"
+  | "display";
 
 const written = new WeakMap<HTMLElement, Partial<Record<StyleProp, string>>>();
 
