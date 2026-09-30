@@ -7,7 +7,8 @@ import { ALL_EXTENSIONS, EXTMeshoptCompression, KHRMeshQuantization } from "@glt
 import jpeg from "jpeg-js";
 import { MeshoptDecoder, MeshoptEncoder } from "meshoptimizer";
 
-import { isInside, parseFlags } from "./headmap/cli.ts";
+import { readCapture, readMesh } from "./headmap/capture.ts";
+import { chooseHead, isInside, parseFlags } from "./headmap/cli.ts";
 import { directionalCoverage, FULL_DEFAULTS, fullCapture, headBounds, headLandmarks } from "./headmap/full.ts";
 import { skinHeadDocument } from "./headmap/glb.ts";
 import { distanceToSegments2D } from "./headmap/mesh.ts";
@@ -19,9 +20,8 @@ import { dilate, interpolateCorners, normalizedUint, sampleRgb } from "./headmap
 import { bounds, count, COPPER_TRANSFER, pct, point, stockLandmarks, toFace, transferFace } from "./headmap/transfer.ts";
 
 import type { FullParams } from "./headmap/full.ts";
-import type { Vec3 } from "./headmap/ray.ts";
 import type { SkinHead, SkinParams } from "./headmap/skin.ts";
-import type { MeshData, Transfer, TransferParams } from "./headmap/transfer.ts";
+import type { Transfer, TransferParams } from "./headmap/transfer.ts";
 
 /*
  * Everything below works in the "face frame": x = the viewer's right, y = up, +z = toward the camera.
@@ -118,13 +118,22 @@ const io = new NodeIO()
   .registerExtensions(ALL_EXTENSIONS)
   .registerDependencies({ "meshopt.decoder": MeshoptDecoder, "meshopt.encoder": MeshoptEncoder });
 
-const identity = (p: Vec3) => p;
 /** Share of the directions around the head a capture must surround to count as a full (360°) scan. */
 const CLOSED_COVERAGE = 0.85;
 
 // 1. Read both meshes into the face frame.
-const captureDoc = await io.read(flags.capture);
-const capture = readMesh(captureDoc, identity);
+let capture: ReturnType<typeof readCapture>;
+try {
+  capture = readCapture(await io.read(flags.capture));
+} catch (error) {
+  fail((error as Error).message);
+}
+/** The capture's UVs and its photo decoded to RGBA, or a message naming what's missing. */
+function capturePhoto() {
+  if (!capture.photo || !capture.uvs) fail("the capture has no base-colour texture and TEXCOORD_0 to take the skin from");
+  if (capture.photo.mimeType !== "image/jpeg") fail(`the capture's texture is ${capture.photo.mimeType}; export it with a JPEG texture`);
+  return { uvs: capture.uvs, image: jpeg.decode(capture.photo.image, { useTArray: true, maxMemoryUsageInMB: 1024 }) };
+}
 const headDoc = await io.read(basePath);
 const head = readMesh(headDoc, toFace);
 console.log(`capture: ${count(capture.positions)} vertices, ${capture.indices.length / 3} triangles`);
@@ -152,21 +161,24 @@ const params: TransferParams = {
   smooth: flags.number("smooth") ?? defaults.smooth,
 };
 // A capture that closes around the head (a 360° scan) is the skin head as it is; a single view gets the rest synthesized.
-let closed: { full: boolean; coverage: number };
+let chosen: ReturnType<typeof chooseHead>;
 try {
-  const { nose, L } = headLandmarks(capture.positions, capture.indices, params);
-  const { centre, radius } = headBounds(nose, L, flags.number("radius") ?? FULL_DEFAULTS.radius);
-  const coverage = directionalCoverage(capture.positions, capture.indices, centre, radius);
-  closed = { full: !copper && (flags.on("full") || coverage >= CLOSED_COVERAGE), coverage };
+  chosen = chooseHead({ copper, full: flags.on("full") }, () => {
+    const { nose, L } = headLandmarks(capture.positions, capture.indices, params);
+    const { centre, radius } = headBounds(nose, L, flags.number("radius") ?? FULL_DEFAULTS.radius);
+    return directionalCoverage(capture.positions, capture.indices, centre, radius);
+  }, CLOSED_COVERAGE);
 } catch (error) {
   fail((error as Error).message);
 }
-console.log(
-  `coverage: the capture surrounds ${(closed.coverage * 100).toFixed(0)}% of the directions around the head` +
-    (copper ? "" : closed.full ? " — a full capture: using its own geometry and texture" : " — a single view: synthesizing the rest")
-);
+if (chosen.coverage !== undefined) {
+  console.log(
+    `coverage: the capture surrounds ${(chosen.coverage * 100).toFixed(0)}% of the directions around the head — ` +
+      (chosen.head === "full" ? "a full capture: using its own geometry and texture" : "a single view: synthesizing the rest")
+  );
+}
 
-if (closed.full) {
+if (chosen.head === "full") {
   await writeFull();
 } else {
   let transfer: Transfer;
@@ -197,10 +209,9 @@ async function writeCopper(transfer: Transfer) {
     uvs[i * 2] = (smoothed[i * 3] - uvLeft) / uvSide;
     uvs[i * 2 + 1] = (uvTop - smoothed[i * 3 + 1]) / uvSide;
   }
-  const photoTexture = captureDoc.getRoot().listMaterials()[0]?.getBaseColorTexture();
-  const photoUvs = pickUvs(photoCrop.sourceIndex);
-  if (!photoTexture || !photoUvs) fail("the capture has no base-colour texture and TEXCOORD_0 to take the skin from");
-  const photo = jpeg.decode(photoTexture.getImage()!, { useTArray: true, maxMemoryUsageInMB: 1024 });
+  const { uvs: captureUvs, image: photo } = capturePhoto();
+  const photoUvs = new Float32Array(photoCrop.sourceIndex.length * 2);
+  photoCrop.sourceIndex.forEach((src, i) => photoUvs.set(captureUvs.subarray(src * 2, src * 2 + 2), i * 2));
   const photoAligned = new Float32Array(photoCrop.positions.length);
   for (let i = 0; i < count(photoCrop.positions); i++) photoAligned.set(applySimilarity(align, point(photoCrop.positions, i)), i * 3);
   const photoGrid = new AxisRayGrid(photoAligned, photoCrop.indices, 2, headL / 25);
@@ -288,10 +299,7 @@ async function writeCopper(transfer: Transfer) {
 
 /** The skin head from a full (360°) capture: its own geometry and texture, cropped and placed (scripts/headmap/full.ts). */
 async function writeFull() {
-  const texture = captureDoc.getRoot().listMaterials()[0]?.getBaseColorTexture();
-  const uvs = captureDoc.getRoot().listMeshes()[0].listPrimitives()[0].getAttribute("TEXCOORD_0");
-  if (!texture || !uvs) fail("the capture has no base-colour texture and TEXCOORD_0 to take the skin from");
-  const image = jpegOrFail(texture.getImage()!, texture.getMimeType());
+  const { uvs, image } = capturePhoto();
   const { nose, L } = stockLandmarks(head.positions);
   const fullParams: FullParams = {
     ...FULL_DEFAULTS,
@@ -303,7 +311,7 @@ async function writeFull() {
   };
   let result: Awaited<ReturnType<typeof fullCapture>>;
   try {
-    result = await fullCapture({ ...capture, uvs: new Float32Array(uvs.getArray()!), image }, { nose, L }, fullParams, (line) => console.log(line));
+    result = await fullCapture({ positions: capture.positions, indices: capture.indices, uvs, image }, { nose, L }, fullParams, (line) => console.log(line));
   } catch (error) {
     fail((error as Error).message);
   }
@@ -316,18 +324,9 @@ async function writeFull() {
   console.log(`wrote ${atlasOut}: ${result.atlasSize}×${result.atlasHeight}, ${(statSync(atlasOut).size / 1024).toFixed(1)} KB`);
 }
 
-/** The capture's photo as RGBA; the scanning apps export JPEG. */
-function jpegOrFail(bytes: Uint8Array, mimeType: string) {
-  if (mimeType !== "image/jpeg") fail(`the capture's texture is ${mimeType}; export it with a JPEG texture`);
-  return jpeg.decode(bytes, { useTArray: true, maxMemoryUsageInMB: 1024 });
-}
-
 /** The skin head: the whole head in the owner's skin and hair, one atlas (scripts/headmap/skin.ts). */
 async function writeSkin(transfer: Transfer) {
-  const texture = captureDoc.getRoot().listMaterials()[0]?.getBaseColorTexture();
-  const photoUvs = captureDoc.getRoot().listMeshes()[0].listPrimitives()[0].getAttribute("TEXCOORD_0");
-  if (!texture || !photoUvs) fail("the capture has no base-colour texture and TEXCOORD_0 to take the skin from");
-  const image = jpegOrFail(texture.getImage()!, texture.getMimeType());
+  const { uvs: photoUvs, image } = capturePhoto();
   const skinParams: SkinParams = {
     ...SKIN_DEFAULTS,
     hairline: flags.vec("hairline") ?? SKIN_DEFAULTS.hairline,
@@ -337,7 +336,7 @@ async function writeSkin(transfer: Transfer) {
   };
   let result: SkinHead;
   try {
-    result = buildSkinHead(transfer, head, { mesh: capture, uvs: new Float32Array(photoUvs.getArray()!), image }, skinParams, (line) => console.log(line));
+    result = buildSkinHead(transfer, head, { mesh: capture, uvs: photoUvs, image }, skinParams, (line) => console.log(line));
   } catch (error) {
     fail((error as Error).message);
   }
@@ -371,42 +370,11 @@ function writeAtomically(path: string, bytes: Uint8Array) {
 
 // ————————————————————————————————————————————————————————————————————————————————————————————
 
-/** The first mesh's positions with its node transform applied, mapped into the face frame. */
-function readMesh(doc: Document, frame: (p: Vec3) => Vec3): MeshData {
-  const node = doc.getRoot().listNodes().find((n) => n.getMesh())!;
-  const m = node.getWorldMatrix();
-  const prim = node.getMesh()!.listPrimitives()[0];
-  const attr = prim.getAttribute("POSITION")!;
-  const positions = new Float32Array(attr.getCount() * 3);
-  const el: number[] = [];
-  for (let i = 0; i < attr.getCount(); i++) {
-    const [x, y, z] = attr.getElement(i, el);
-    positions.set(
-      frame([
-        m[0] * x + m[4] * y + m[8] * z + m[12],
-        m[1] * x + m[5] * y + m[9] * z + m[13],
-        m[2] * x + m[6] * y + m[10] * z + m[14],
-      ]),
-      i * 3
-    );
-  }
-  return { positions, indices: new Uint32Array(prim.getIndices()!.getArray()!) };
-}
-
 function readNormals(doc: Document) {
   const attr = doc.getRoot().listMeshes()[0].listPrimitives()[0].getAttribute("NORMAL")!;
   const out = new Float32Array(attr.getCount() * 3);
   const el: number[] = [];
   for (let i = 0; i < attr.getCount(); i++) out.set(attr.getElement(i, el), i * 3);
-  return out;
-}
-
-function pickUvs(sourceIndex: Uint32Array) {
-  const attr = captureDoc.getRoot().listMeshes()[0].listPrimitives()[0].getAttribute("TEXCOORD_0");
-  if (!attr) return undefined;
-  const out = new Float32Array(sourceIndex.length * 2);
-  const el: number[] = [];
-  sourceIndex.forEach((src, i) => out.set(attr.getElement(src, el), i * 2));
   return out;
 }
 
@@ -421,9 +389,8 @@ async function writeDebug(path: string, positions: Float32Array, indices: Uint32
   if (extra.colors) prim.setAttribute("COLOR_0", doc.createAccessor().setType("VEC3").setArray(extra.colors).setBuffer(buf));
   if (extra.uvs) {
     prim.setAttribute("TEXCOORD_0", doc.createAccessor().setType("VEC2").setArray(extra.uvs).setBuffer(buf));
-    const photo = captureDoc.getRoot().listMaterials()[0]?.getBaseColorTexture();
-    if (photo) {
-      const tex = doc.createTexture().setImage(photo.getImage()!).setMimeType(photo.getMimeType());
+    if (capture.photo) {
+      const tex = doc.createTexture().setImage(capture.photo.image).setMimeType(capture.photo.mimeType);
       prim.setMaterial(doc.createMaterial().setBaseColorTexture(tex));
     }
   }

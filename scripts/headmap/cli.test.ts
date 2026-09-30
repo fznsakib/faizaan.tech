@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isInside, parseFlags } from "./cli.ts";
+import { chooseHead, isInside, parseFlags } from "./cli.ts";
 
 const spec = { depth: "number", window: "pair", nose: "vec3", icp: "count", out: "path", copper: "switch" } as const;
 
@@ -62,5 +62,28 @@ describe("isInside", () => {
     expect(isInside("/repo-debug", "/repo")).toBe(false);
     expect(isInside("/", "/repo")).toBe(false);
     expect(isInside("/tmp/x", "/repo")).toBe(false);
+  });
+});
+
+describe("chooseHead", () => {
+  const never = () => {
+    throw new Error("measured the coverage");
+  };
+
+  it("builds the copper head on --copper without measuring the capture's coverage", () => {
+    expect(chooseHead({ copper: true, full: false }, never, 0.85)).toEqual({ head: "copper" });
+  });
+
+  it("takes --full at its word", () => {
+    expect(chooseHead({ copper: false, full: true }, never, 0.85)).toEqual({ head: "full" });
+  });
+
+  it("refuses --full with --copper: the full path builds the skin head", () => {
+    expect(() => chooseHead({ copper: true, full: true }, never, 0.85)).toThrow(/--full/);
+  });
+
+  it("otherwise builds from the capture as it is when it surrounds the head, and synthesizes the rest when it doesn't", () => {
+    expect(chooseHead({ copper: false, full: false }, () => 0.9, 0.85)).toEqual({ head: "full", coverage: 0.9 });
+    expect(chooseHead({ copper: false, full: false }, () => 0.62, 0.85)).toEqual({ head: "skin", coverage: 0.62 });
   });
 });

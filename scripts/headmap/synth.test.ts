@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { sampleWrapped } from "./colour.ts";
-import { splatTexture, tangentFrame } from "./synth.ts";
+import { keepOnly, splatTexture, tangentFrame } from "./synth.ts";
 
 import type { Vec3 } from "./ray.ts";
 
@@ -50,5 +50,22 @@ describe("splatTexture", () => {
     expect(splatted.mean).toBeGreaterThan(90);
     expect(splatted.mean).toBeLessThan(110);
     expect(splatted.sd).toBeGreaterThan(0.85 * plain.sd);
+  });
+});
+
+describe("keepOnly", () => {
+  // Three hair texels and one pale wall texel between curls.
+  const patch = new Float32Array([40, 30, 25, 50, 40, 30, 220, 212, 200, 30, 20, 15]);
+  const hairLike = (rgb: number[]) => (rgb[0] < 100 ? 1 : 0);
+
+  it("replaces every texel that isn't hair with the mean of those that are, and counts them", () => {
+    const { rgb, replaced } = keepOnly(patch, hairLike, 0.5);
+    expect(replaced).toBe(1);
+    expect([...rgb.subarray(6, 9)]).toEqual([40, 30, 23.333333969116211]);
+    expect([...rgb.subarray(0, 6)]).toEqual([40, 30, 25, 50, 40, 30]);
+  });
+
+  it("refuses a patch with no hair in it", () => {
+    expect(() => keepOnly(new Float32Array([220, 212, 200]), hairLike, 0.5)).toThrow(/hair/);
   });
 });

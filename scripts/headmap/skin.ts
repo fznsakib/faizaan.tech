@@ -1,13 +1,13 @@
 import { azimuth, layoutAtlas, rasterizeTriangle, splitCorners, unwrapTriangle } from "./atlas.ts";
 import { colourDistance, fitColourModel, hairness, makeTileable, toYcc } from "./colour.ts";
 import { smoothstep } from "./falloff.ts";
-import { geodesicDistance, harmonicFill, smoothScalar } from "./field.ts";
+import { copyToTwins, geodesicDistance, harmonicFill, smoothScalar } from "./field.ts";
 import { scalpPrior } from "./hair.ts";
 import { fractalNoise, valueNoise } from "./noise.ts";
 import { AxisRayGrid } from "./ray.ts";
 import { applySimilarity } from "./similarity.ts";
 import { smoothMasked, vertexNormals } from "./surface.ts";
-import { splatTexture } from "./synth.ts";
+import { keepOnly, splatTexture } from "./synth.ts";
 import { dilate, interpolateCorners, sampleRgb } from "./texture.ts";
 import { COPPER_TRANSFER, count, point } from "./transfer.ts";
 
@@ -254,18 +254,14 @@ export function buildSkinHead(t: Transfer, head: MeshData, photo: Photo, p: Skin
   }
   const shellBand = hair.map((h) => 4 * h * (1 - h));
   const positions = smoothMasked(shelled, t.rings, shellBand, { passes: 3, lambda: 0.5 });
-  for (let i = 0; i < n; i++) {
-    const c = t.canon[i];
-    positions.set(positions.subarray(c * 3, c * 3 + 3), i * 3);
-    for (const field of [photoWeight, hair, core, zone]) field[i] = field[c];
-    skinFill.set(skinFill.subarray(c * 3, c * 3 + 3), i * 3);
-    hairFill.set(hairFill.subarray(c * 3, c * 3 + 3), i * 3);
-  }
+  // Seam duplicates take their canonical twin's values, so both sides of every stock seam paint the same.
+  for (const field of [positions, skinFill, hairFill]) copyToTwins(field, t.canon, 3);
+  for (const field of [photoWeight, hair, core, zone]) copyToTwins(field, t.canon, 1);
   log(`hair volume: up to ${(maxOffset / L).toFixed(3)} L over the scalp`);
 
   // 7. Charts: the face where the photo reaches (the front-most layer only, so the projection never overlaps), the
   //    crown where the surface faces up, the neck's underside where it faces down, the band everywhere else.
-  const normals = vertexNormals(positions, t.welded);
+  const normals = copyToTwins(vertexNormals(positions, t.welded), t.canon, 3);
   const finalFront = new AxisRayGrid(positions, t.welded, 2, L / 25);
   const finalTop = new AxisRayGrid(positions, t.welded, 1, L / 25);
   const flipped = positions.map((v, i) => (i % 3 === 1 ? -v : v));
@@ -350,7 +346,11 @@ export function buildSkinHead(t: Transfer, head: MeshData, photo: Photo, p: Skin
   // 9. Bake.
   const paint: VertexPaint = { photoWeight, hair, skinFill, hairFill, core, zone };
   const exemplar = hairExemplar(photoAt, finalFront, nose, L, (rgb) => hairness(rgb, skinModel, hairModel));
-  log(`hair tile: ${exemplar.size}² px of his curls from (${exemplar.at.map((v) => v.toFixed(2)).join(", ")}), ${exemplar.tile.toFixed(2)} units a tile`);
+  log(
+    `hair tile: ${exemplar.size}² px of his curls from (${exemplar.at.map((v) => v.toFixed(2)).join(", ")}), ` +
+      `${exemplar.tile.toFixed(2)} units a tile; ${exemplar.clean ? "every sample hair" : "no square was all hair"}, ` +
+      `${exemplar.replaced} non-hair texels replaced by the hair's mean`
+  );
   const rgb = new Float32Array(S * S * 3);
   const filled = new Uint8Array(S * S);
   const skinLow = valueNoise(p.seed + 1), skinFine = valueNoise(p.seed + 2), hairLow = valueNoise(p.seed + 3);
@@ -437,8 +437,10 @@ function earMidZ(ears: { centre: Vec3 }[]) {
 }
 
 /**
- * A seamless tile of the owner's curls, cut from the photo where the front hair is thickest: the square (in head
- * units) with the most hair-coloured, front-facing samples above the forehead.
+ * A seamless tile of the owner's curls, cut from the photo where the front hair is thickest: of the squares (in head
+ * units) above the forehead whose samples are all on the head and all hair-coloured, the most hair-coloured one. Any
+ * texel of it that still isn't hair (a speck of the wall between curls) is replaced by the hair's mean before tiling,
+ * since the tile is splatted over the whole head.
  */
 function hairExemplar(
   photoAt: (x: number, y: number) => { z: number; rgb: Vec3 } | null,
@@ -448,22 +450,26 @@ function hairExemplar(
   hairLike: (rgb: number[]) => number
 ) {
   const tile = 0.62 * L, size = 256;
-  let best = { score: -Infinity, at: [nose[0], nose[1] + 1.5 * L] as [number, number] };
+  let best = { score: -Infinity, at: [nose[0], nose[1] + 1.5 * L] as [number, number], clean: false };
   for (let cy = nose[1] + 1.25 * L; cy <= nose[1] + 1.75 * L; cy += 0.05 * L) {
     for (let cx = nose[0] - 0.6 * L; cx <= nose[0] + 0.6 * L; cx += 0.05 * L) {
-      let score = 0;
+      let score = 0, clean = true;
       for (let j = 0; j < 8; j++) {
         for (let i = 0; i < 8; i++) {
           const x = cx + ((i + 0.5) / 8 - 0.5) * tile, y = cy + ((j + 0.5) / 8 - 0.5) * tile;
           const seen = photoAt(x, y);
           if (!seen || !front.front([x, y, nose[2]])) {
             score -= 10;
+            clean = false;
             continue;
           }
-          score += hairLike(seen.rgb);
+          const h = hairLike(seen.rgb);
+          if (h < 0.5) clean = false;
+          score += h;
         }
       }
-      if (score > best.score) best = { score, at: [cx, cy] };
+      // A square that is all hair beats any that isn't; among equals, the more hair-coloured.
+      if ((clean && !best.clean) || (clean === best.clean && score > best.score)) best = { score, at: [cx, cy], clean };
     }
   }
   const patch = new Float32Array(size * size * 3);
@@ -473,9 +479,10 @@ function hairExemplar(
       patch.set(photoAt(x, y)?.rgb ?? [0, 0, 0], (j * size + i) * 3);
     }
   }
-  const tiled = makeTileable(patch, size);
+  const { rgb: hairOnly, replaced } = keepOnly(patch, hairLike, 0.5);
+  const tiled = makeTileable(hairOnly, size);
   const mean = [0, 1, 2].map((k) => tiled.filter((_, i) => i % 3 === k).reduce((s, v) => s + v, 0) / (size * size));
-  return { rgb: tiled, size, tile, mean, at: best.at };
+  return { rgb: tiled, size, tile, mean, at: best.at, clean: best.clean, replaced };
 }
 
 function triangleNormal([a, b, c]: Vec3[]): Vec3 {

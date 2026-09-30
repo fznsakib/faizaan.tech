@@ -53,3 +53,16 @@ export function isInside(path: string, dir: string) {
   const rel = relative(resolve(dir), resolve(path));
   return rel === "" || (!rel.startsWith("..") && !rel.startsWith("/"));
 }
+
+/**
+ * Which head a run builds: the copper head on --copper (the capture's coverage never measured), the full-capture skin
+ * head on --full or when the capture surrounds at least `closedAt` of the directions around the head, and otherwise
+ * the skin head with the rest synthesized.
+ */
+export function chooseHead({ copper, full }: { copper: boolean; full: boolean }, coverage: () => number, closedAt: number) {
+  if (copper && full) throw new Error("--full builds the skin head from a 360° capture; drop --copper");
+  if (copper) return { head: "copper" as const };
+  if (full) return { head: "full" as const };
+  const measured = coverage();
+  return { head: measured >= closedAt ? ("full" as const) : ("skin" as const), coverage: measured };
+}

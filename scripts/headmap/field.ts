@@ -120,3 +120,11 @@ export function geodesicDistance(positions: Float32Array, rings: Set<number>[], 
   }
   return dist;
 }
+
+/** Copies each vertex's canonical twin's `stride` values onto it (seam duplicates share a position, so a value). */
+export function copyToTwins(values: Float32Array, canon: Uint32Array, stride: number) {
+  for (let i = 0; i < canon.length; i++) {
+    if (canon[i] !== i) values.set(values.subarray(canon[i] * stride, canon[i] * stride + stride), i * stride);
+  }
+  return values;
+}

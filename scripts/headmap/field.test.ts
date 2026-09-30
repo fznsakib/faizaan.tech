@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { geodesicDistance, harmonicFill, smoothScalar } from "./field.ts";
+import { copyToTwins, geodesicDistance, harmonicFill, smoothScalar } from "./field.ts";
 
 /** A path graph 0 – 1 – 2 – … – (n − 1). */
 function path(n: number) {
@@ -63,5 +63,14 @@ describe("geodesicDistance", () => {
   it("leaves what no source reaches at infinity", () => {
     const rings = [new Set([1]), new Set([0]), new Set<number>()];
     expect(geodesicDistance(new Float32Array(9), rings, new Uint8Array([1, 0, 0]))[2]).toBe(Infinity);
+  });
+});
+
+describe("copyToTwins", () => {
+  it("gives each seam duplicate its canonical vertex's values, every component", () => {
+    // vertex 2 is a twin of 0, vertex 3 of 1
+    const values = new Float32Array([1, 2, 3, 4, 0, 0, 9, 9]);
+    copyToTwins(values, new Uint32Array([0, 1, 0, 1]), 2);
+    expect([...values]).toEqual([1, 2, 3, 4, 1, 2, 3, 4]);
   });
 });

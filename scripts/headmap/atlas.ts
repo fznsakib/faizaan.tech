@@ -74,16 +74,21 @@ export function layoutAtlas(
   const sF = Math.min(frontDensity, (size - 3 * g - minBand) / front.h, (size - 3 * g - minBand) / front.w);
   const fw = Math.ceil(front.w * sF), fh = Math.ceil(front.h * sF);
   const columnX = g + fw + g, columnW = size - g - columnX;
-  const sT = Math.min(maxDensity, columnW / top.w, fh / top.h);
-  const th = Math.min(fh, Math.ceil(top.h * sT));
+  // The crown takes at most three quarters of the column, so the underside of the neck always has room below it.
+  const sT = Math.min(maxDensity, columnW / top.w, (0.75 * fh - g) / top.h);
+  const th = Math.ceil(top.h * sT);
   const sB = Math.min(maxDensity, columnW / bottom.w, (fh - th - g) / bottom.h);
   const bandY = g + fh + g, bandH = size - g - bandY, bandW = size - 2 * g;
-  return {
+  const layout = {
     front: { x: g, y: g, w: fw, h: fh, scaleU: sF, scaleV: sF },
     top: { x: columnX, y: g, w: Math.min(columnW, Math.ceil(top.w * sT)), h: th, scaleU: sT, scaleV: sT },
     bottom: { x: columnX, y: g + th + g, w: Math.min(columnW, Math.ceil(bottom.w * sB)), h: Math.floor(bottom.h * sB), scaleU: sB, scaleV: sB },
     band: { x: g, y: bandY, w: bandW, h: bandH, scaleU: bandW / band.w, scaleV: bandH / band.h },
   } satisfies Record<string, ChartRect>;
+  for (const [name, r] of Object.entries(layout)) {
+    if (!(r.w > 0 && r.h > 0 && r.scaleU > 0 && r.scaleV > 0)) throw new Error(`the ${size}² atlas has no room for the ${name} chart (${r.w}×${r.h} px)`);
+  }
+  return layout;
 }
 
 /**

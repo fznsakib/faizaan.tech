@@ -78,6 +78,22 @@ describe("layoutAtlas", () => {
     expect(layout.band.scaleU * 44).toBeLessThanOrEqual(layout.band.w + 1e-9);
   });
 
+  it("keeps room for the under-neck chart when the crown is taller than the face chart", () => {
+    const tall = layoutAtlas(2048, { w: 13, h: 10 }, { w: 5, h: 30 }, { w: 44, h: 16 }, { w: 7, h: 6 }, options);
+    for (const r of [tall.front, tall.top, tall.band, tall.bottom]) {
+      expect(r.w).toBeGreaterThan(0);
+      expect(r.h).toBeGreaterThan(0);
+      expect(r.scaleU).toBeGreaterThan(0);
+      expect(r.scaleV).toBeGreaterThan(0);
+    }
+    expect(tall.bottom.y).toBeGreaterThanOrEqual(tall.top.y + tall.top.h + 8);
+    expect(tall.bottom.y + tall.bottom.h).toBeLessThanOrEqual(tall.front.y + tall.front.h);
+  });
+
+  it("refuses a layout with no room for a chart instead of overlapping them", () => {
+    expect(() => layoutAtlas(64, { w: 13, h: 14 }, { w: 13, h: 15 }, { w: 44, h: 16 }, { w: 7, h: 6 }, { ...options, minBand: 60 })).toThrow(/atlas/);
+  });
+
   it("gives up face density before the band's minimum when the face is too big", () => {
     const tight = layoutAtlas(2048, { w: 18, h: 18 }, { w: 13, h: 15 }, { w: 44, h: 16 }, { w: 7, h: 6 }, options);
     expect(tight.front.scaleU).toBeLessThan(88);

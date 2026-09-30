@@ -74,3 +74,24 @@ export function splatTexture(tile: Tile, { seed, spacing, turn = 0.5 }: { seed: 
     return [mean[0] + sum[0] * scale, mean[1] + sum[1] * scale, mean[2] + sum[2] * scale];
   };
 }
+
+/**
+ * A patch with every texel that isn't `wanted` enough (below `threshold`) replaced by the mean of those that are — so
+ * a speck of the wall between two curls can never be splatted over the whole head. Throws if nothing is wanted.
+ */
+export function keepOnly(rgb: Float32Array, wanted: (rgb: number[]) => number, threshold: number) {
+  const n = rgb.length / 3;
+  const keep = new Uint8Array(n);
+  const mean = [0, 0, 0];
+  let kept = 0;
+  for (let i = 0; i < n; i++) {
+    if (wanted([rgb[i * 3], rgb[i * 3 + 1], rgb[i * 3 + 2]]) < threshold) continue;
+    keep[i] = 1;
+    kept++;
+    for (let k = 0; k < 3; k++) mean[k] += rgb[i * 3 + k];
+  }
+  if (kept === 0) throw new Error("the hair tile has no hair in it; check the landmarks (--nose, --chin)");
+  const out = rgb.slice();
+  for (let i = 0; i < n; i++) if (!keep[i]) out.set(mean.map((v) => v / kept), i * 3);
+  return { rgb: out, replaced: n - kept };
+}
