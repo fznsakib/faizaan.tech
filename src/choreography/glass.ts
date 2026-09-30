@@ -583,16 +583,17 @@ export function collideHead(
   head.normal(at.x, at.y, n);
   const approach = Math.max(0, -(state.vx * n.x + state.vy * n.y));
   // touching: this step's own motion made the overlap, so it's a contact at the outline, resolved at once; anything
-  // deeper was already there and glides out along the way out of the head, leaving the velocity alone
+  // deeper was already there and glides out along the way out of the head, no longer heading further in
   const touching = depth <= approach * h + 2;
   if (!touching) leave(head, state.x, state.y, n);
   const push = touching ? depth : Math.min(depth, DEPENETRATE * h);
   const moved = shove(state, state.x, state.y, n.x * push, n.y * push, glassExtent(body, width, height), width, height, head);
   let { vx, vy } = state;
-  if (touching && approach > 0) {
-    const bounce = 1 + (state.mode === "thrown" ? HEAD_RESTITUTION : 0);
-    vx += bounce * approach * n.x;
-    vy += bounce * approach * n.y;
+  const inward = Math.max(0, -(vx * n.x + vy * n.y));
+  if (inward > 0) {
+    const bounce = 1 + (touching && state.mode === "thrown" ? HEAD_RESTITUTION : 0);
+    vx += bounce * inward * n.x;
+    vy += bounce * inward * n.y;
   }
   // only a throw knocks: drift is ambient, and a head that flinched at nobody's throw would read as a glitch
   const knock = touching && approach >= PING_MIN && state.mode === "thrown";

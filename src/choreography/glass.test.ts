@@ -789,6 +789,22 @@ describe("head collisions", () => {
     });
   });
 
+  it("stops a piece flung from behind the head ploughing on through it: it comes straight out", () => {
+    everyBody((body) => {
+      const flung = release({ ...initialState(body, 0, W, H, false), x: 600, y: 470 }, { vx: 1300, vy: 0 }, W, H, false);
+      // (by its centre: a piece straddling the head's middle can get "deeper" by its outline while backing out)
+      const start = head.distance(flung.x, flung.y);
+      let deepest = start;
+      let clearAt = Infinity;
+      simulate(body, flung, 1, { head }, (state, t) => {
+        deepest = Math.min(deepest, head.distance(state.x, state.y));
+        if (clearAt === Infinity && headClearance(body, state, head, W, H, spinAt(body, state, t)) >= -1) clearAt = t;
+      });
+      expect(deepest).toBeGreaterThan(start - 12); // at most a frame's worth deeper before it turns
+      expect(clearAt).toBeLessThan(0.5);
+    });
+  });
+
   it("bounces a hard throw off the head, then keeps it out", () => {
     everyBody((body) => {
       const thrown = release({ ...initialState(body, 0, W, H, false), x: 200, y: 450 }, { vx: 2600, vy: 0 }, W, H, false);
