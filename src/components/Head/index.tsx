@@ -9,6 +9,8 @@ import headFaceUrl from "../../assets/head-face.jpg?url";
 import headModelUrl from "../../assets/head.glb?url";
 import { engine } from "../../audio/engine";
 import { CAMERA_Z, fitCamera } from "../../choreography/fit";
+import { trackHead } from "../../choreography/headShape";
+import { impact } from "../../choreography/impact";
 import { bob, nodDrive, Spring } from "../../choreography/nod";
 import { choreographyProbe } from "../../choreography/probe";
 import { prefersReducedMotion } from "../../hooks/reducedMotion";
@@ -77,6 +79,7 @@ function Head() {
     []
   );
   const mouse = useRef({ yaw: 0, pitch: 0 });
+  const flinch = useMemo(() => ({ yaw: 0, pitch: 0, roll: 0, squash: 0 }), []); // glass knocking into the head
   const tilt = useDeviceTilt(); // on phones, the tilt stands in for the mouse
 
   useEffect(() => () => material.dispose(), [material]);
@@ -133,13 +136,16 @@ function Head() {
       rimIntensity = BASE_RIM + 10 * frame.snare;
     }
 
-    head.rotation.set(mouse.current.pitch + pitch, mouse.current.yaw + yaw, roll);
+    impact.sample(performance.now() / 1000, flinch);
+    head.rotation.set(mouse.current.pitch + pitch + flinch.pitch, mouse.current.yaw + yaw + flinch.yaw, roll + flinch.roll);
     head.position.y = model.baseY + lift;
+    squash += flinch.squash;
     head.scale.set(1 + squash / 2, 1 - squash, 1 + squash / 2);
     material.emissiveIntensity = emissive;
     if (rim.current) rim.current.intensity = rimIntensity;
     camera.position.z = MathUtils.lerp(camera.position.z, cameraZ, 1 - Math.exp(-3 * dt));
     camera.position.y = fit.y;
+    trackHead(head, camera); // for the glass and caustics
 
     choreographyProbe.headPitchDeg = MathUtils.radToDeg(pitch);
     choreographyProbe.nodCurve = curve;

@@ -5,6 +5,7 @@ import { ThemeProvider } from "styled-components";
 import * as Styled from "./App.styled";
 import { fitCamera } from "./choreography/fit";
 import Background from "./components/Background";
+import Caustics from "./components/Caustics";
 import GlassPanel from "./components/GlassPanel";
 import Head from "./components/Head";
 import NameHeader from "./components/NameHeader";
@@ -21,6 +22,8 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <Background />
+      {/* z 0 like the grid, and after it: light on the grid, under the name */}
+      <Caustics />
       <GlassPanel />
       <NameHeader />
       <SubtitleStack />
