@@ -155,9 +155,8 @@ export function buildSkinHead(t: Transfer, head: MeshData, photo: Photo, p: Skin
   if (skinSamples.length < 50 || hairSamples.length < 50)
     throw new Error(`found ${skinSamples.length} skin and ${hairSamples.length} hair samples in the photo; check the landmarks (--nose, --chin)`);
   const meanOf = (samples: number[][]) => [0, 1, 2].map((k) => samples.reduce((sum, c) => sum + c[k], 0) / samples.length);
-  const skinTone = meanOf(skinSamples.slice(Math.floor(skinSamples.length * 0.1), Math.ceil(skinSamples.length * 0.9)));
   const hairTone = meanOf(hairSamples);
-  log(`colour: skin ${fmtRgb(skinTone)} from ${skinSamples.length} samples, hair ${fmtRgb(hairTone)} from ${hairSamples.length}`);
+  log(`colour: skin ${fmtRgb(meanOf(skinSamples))} from ${skinSamples.length} samples, hair ${fmtRgb(hairTone)} from ${hairSamples.length}`);
 
   // 3. Where the photo is used: the geometric weight, and outside the face proper only where the colour is plausibly
   //    his skin or hair (never the wall, the window or the shirt) — in the hair, only where it is plausibly hair, since
@@ -208,6 +207,13 @@ export function buildSkinHead(t: Transfer, head: MeshData, photo: Photo, p: Skin
     const num = smoothScalar(channel, t.rings, 8), den = smoothScalar(mask, t.rings, 8);
     for (let i = 0; i < n; i++) lowPass[i * 3 + k] = den[i] > 1e-3 ? num[i] / den[i] : 0;
   }
+  // His overall skin tone: the well-lit half of all the skin the photo shows (stubble and all), since the renderer
+  // shades the synthesized skin itself and it should start from skin as it looks in the light.
+  const visibleSkin: number[][] = [];
+  for (let i = 0; i < n; i++) if (canonical(i) && photoWeight[i] > 0.9 && smoothPhotoHair[i] < 0.3) visibleSkin.push([...rgbAt.subarray(i * 3, i * 3 + 3)]);
+  visibleSkin.sort(byLuma);
+  const skinTone = meanOf(visibleSkin.slice(Math.floor(visibleSkin.length * 0.5), Math.ceil(visibleSkin.length * 0.95)));
+  log(`tones: skin ${fmtRgb(skinTone)} from ${visibleSkin.length} vertices of the face, hair ${fmtRgb(hairTone)}`);
   const skinKnown = new Uint8Array(n), hairKnown = new Uint8Array(n);
   for (let i = 0; i < n; i++) {
     if (!canonical(i) || photoWeight[i] < 0.9) continue;
@@ -359,7 +365,11 @@ export function buildSkinHead(t: Transfer, head: MeshData, photo: Photo, p: Skin
       const q: Vec3 = [at(positions, 3, 0), at(positions, 3, 1), at(positions, 3, 2)];
       const nq = normalise([at(normals, 3, 0), at(normals, 3, 1), at(normals, 3, 2)]);
       const skin = [0, 1, 2].map((k) => at(paint.skinFill, 3, k));
-      const shade = 1 + 0.05 * skinLow(q[0] / (0.5 * L), q[1] / (0.5 * L), q[2] / (0.5 * L)) + 0.025 * skinFine(q[0] / (0.03 * L), q[1] / (0.03 * L), q[2] / (0.03 * L));
+      const shade =
+        1 +
+        0.05 * skinLow(q[0] / (0.5 * L), q[1] / (0.5 * L), q[2] / (0.5 * L)) +
+        0.03 * skinLow(q[0] / (0.08 * L), q[1] / (0.08 * L), q[2] / (0.08 * L)) +
+        0.04 * skinFine(q[0] / (0.02 * L), q[1] / (0.02 * L), q[2] / (0.02 * L));
       const skinColour = skin.map((c) => c * shade);
       const h = at(paint.hair, 1, 0);
       let hairColour = skinColour;
