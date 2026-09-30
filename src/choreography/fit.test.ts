@@ -1,13 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { CAMERA_Z, fitCamera, HEAD_CENTRE, HEAD_HEIGHT, HEAD_WIDTH, TAN_HALF_FOV } from "./fit";
+import { CAMERA_Z, COPPER_FIT, fitCamera, HEAD_CENTRE, HEAD_HEIGHT, HEAD_WIDTH, SKIN_FIT, TAN_HALF_FOV } from "./fit";
+
+import type { HeadFit } from "./fit";
 
 /** The head's on-screen share of the viewport's width and height, and its centre (from the top), for a fit. */
-function onScreen(width: number, height: number, fit = fitCamera(width, height)) {
+function onScreen(width: number, height: number, head: HeadFit = COPPER_FIT, fit = fitCamera(width, height, head)) {
   const scale = CAMERA_Z / fit.z;
-  const centreY = (0.5 - HEAD_CENTRE) * 2 * CAMERA_Z * TAN_HALF_FOV; // world height of the head's centre
+  const centreY = (0.5 - head.centre) * 2 * CAMERA_Z * TAN_HALF_FOV; // world height of the head's centre
   const centre = 0.5 - (centreY - fit.y) / (2 * fit.z * TAN_HALF_FOV);
-  return { w: (HEAD_WIDTH * height * scale) / width, h: HEAD_HEIGHT * scale, centre };
+  return { w: (head.width * height * scale) / width, h: head.height * scale, centre };
 }
 
 describe("fitCamera", () => {
@@ -67,6 +69,28 @@ describe("fitCamera", () => {
       expect(Math.abs(fit.z - last.z)).toBeLessThan(0.05);
       expect(Math.abs(fit.y - last.y)).toBeLessThan(0.05);
       last = fit;
+    }
+  });
+
+  it("fits the copper head by default, from the measured constants", () => {
+    expect(COPPER_FIT).toEqual({ width: HEAD_WIDTH, height: HEAD_HEIGHT, centre: HEAD_CENTRE });
+    expect(fitCamera(393, 852)).toEqual(fitCamera(393, 852, COPPER_FIT));
+  });
+
+  it.each([
+    ["iPhone 15", 393, 852],
+    ["iPhone SE", 375, 667],
+    ["Android", 412, 915],
+  ])("fits the skin head by its own measurements on %s", (_, width, height) => {
+    const { w, h, centre } = onScreen(width, height, SKIN_FIT);
+    expect(w).toBeLessThanOrEqual(0.651);
+    expect(h).toBeLessThanOrEqual(0.451);
+    expect(centre).toBeCloseTo(0.4, 2);
+  });
+
+  it("keeps desktop at today's camera for the skin head too", () => {
+    for (const [width, height] of [[1440, 900], [1280, 800], [1920, 1080], [2560, 1440]]) {
+      expect(fitCamera(width, height, SKIN_FIT)).toEqual({ z: CAMERA_Z, y: 0 });
     }
   });
 

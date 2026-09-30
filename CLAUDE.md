@@ -11,7 +11,7 @@ yarn lint         # eslint .
 yarn preview      # Preview production build
 yarn test         # vitest run
 yarn beatmap <file.mp3> [--id <id>]  # generate a beat map into src/audio/beatmaps/
-yarn headmap <capture.glb> [--flags]  # regenerate src/assets/head.glb from a face capture (see below)
+yarn headmap <capture.glb> [--flags]  # regenerate the skin head (src/assets/skin-head.*) from a capture; --copper for the copper head (see below)
 ```
 
 ## Audio Pipeline
@@ -52,7 +52,7 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 | Background        | 0       | `Background` (canvas plus-grid); 0, not below, so a body background (ours or a host page's) can't paint over it |
 | Header/Subtitle   | 1       | `NameHeader`, `SubtitleStack`      |
 | GlassPanel        | 9       | `GlassPanel` (refractive glass, always behind the head) |
-| Canvas (3D)       | 10      | Three.js `Canvas` with `Head`      |
+| Canvas (3D)       | 10      | Three.js `Canvas` with `SkinHead` (`Head` at `?head=copper`) |
 | Social/Player     | 20      | `SocialLinks`, `Player` (+ `DjPad`) |
 | MusicDebug        | 90      | `MusicDebug` (`?debug`)            |
 | Splash            | 100     | `Splash`                           |
@@ -65,10 +65,10 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 - **Choreography module** (`src/choreography/`): pure, unit-tested per-effect math, kept separate from components — `daylight` (time of day → lights, environment, palette), `nod` (phase-locked head nod, spring physics), `type` (header weight pulse, EQ ballistics, coarse font-variation steps), `faces` (per-word/per-letter header faces and their shockwave), `grid` (cursor-facing plusses, music pulses), `glass` (glass outlines, refraction maps, drift/drag/throw/wall physics), `fit` (camera distance/height so the head suits the viewport), `tilt` (phone tilt → pointer-like look, calibration), `dom` (`setStyle`).
 - **No CSS transitions** on properties written per-frame.
 - **Player skins**: each skin is a set of CSS custom properties on the Player's `Shell` (`[data-skin]`) plus a few `[data-skin="…"] &` rules; the visualiser's canvas palettes live in `Player/paint.ts`. The layout is shared; skins change look only.
-- **Three.js**: Use `useFrame` for animation loops (never raw `requestAnimationFrame`). `Head` reads `engine.frame` directly inside `useFrame` rather than via a hook. Use `useRef`/`useMemo` for mutable state and one-time objects (materials, springs).
+- **Three.js**: Use `useFrame` for animation loops (never raw `requestAnimationFrame`). Both heads move through the shared `useHeadRig` (`src/components/Head/useHeadRig.ts`), which reads `engine.frame` directly inside `useFrame` rather than via a hook and hands each head a `pulse` (kick, snare, drive) for its own look. Use `useRef`/`useMemo` for mutable state and one-time objects (materials, springs).
 - **Colour**: one palette, whatever the colour scheme or a host page's styles (`colors.site` in `src/styles/colors.ts`: white text on `rgb(20, 61, 50)`). `global.ts` sets it on `:root`, `body` and `#root` with `color-scheme: dark`, and text components set their own `color`; never rely on inherited text colour. Import `colors` directly: `styled.d.ts`'s `DefaultTheme` alias doesn't type `theme.colors`.
 - **Daylight**: the lighting and page colours follow the visitor's local time (`daylight()` in `src/choreography/daylight.ts`: 8 keyframes, OKLab + smoothstep, wraps at midnight; 13:00 is exactly the site's original scene). `startDaylight()` (called in `main.tsx` before render; `src/hooks/useDaylight.ts`) re-evaluates each minute and on tab return, writes `--day-ground`, `--day-grid-big`, `--day-grid-mini`, `--day-glass-tint`, `--day-accent` (`#rrggbb`) on `:root`, and serves `useDaylight()`. DOM layers read the vars with a fallback (`var(--day-ground, rgb(20, 61, 50))`; alpha via `color-mix(in srgb, var(--x) N%, transparent)`); the grid canvas reads `useDaylight().palette`. Consumers: body/html, `Background`, `GlassPanel` (body/bevel tint, lit edge + sheen in the accent; never the refraction filter), the Splash veil and the link pools (both ground-coloured). Text, the Player skins and the link glyphs don't change. `?hour=18.5` previews a time, `?daycycle` sweeps 24 h in 60 s (not under reduced motion); `?debug` exposes `window.__daylight` (`day`, per-update `costs` in ms).
-- **Mobile**: phones take their own layout under `(max-width: 767px)` (portrait) and `(max-height: 500px)` (landscape); desktop windows ≥ 1280 px wide and taller than 500 px are untouched by them (a desktop window ≤ 500 px tall gets the landscape-phone name and subtitles too). `viewport-fit=cover`, so every edge-fixed element insets with `max(Npx, env(safe-area-inset-*))`. The camera fit (`fitCamera`) pulls back and lowers the camera in portrait (head ≤ 65% of the width, ≤ 45% of the height, centred at 40% down) and is exactly today's z = 5, y = 0 on desktop.
+- **Mobile**: phones take their own layout under `(max-width: 767px)` (portrait) and `(max-height: 500px)` (landscape); desktop windows ≥ 1280 px wide and taller than 500 px are untouched by them (a desktop window ≤ 500 px tall gets the landscape-phone name and subtitles too). `viewport-fit=cover`, so every edge-fixed element insets with `max(Npx, env(safe-area-inset-*))`. The camera fit (`fitCamera`, per head: `COPPER_FIT`/`SKIN_FIT`) pulls back and lowers the camera in portrait (head ≤ 65% of the width, ≤ 45% of the height, centred at 40% down) and is exactly today's z = 5, y = 0 on desktop.
 
 ## Code Conventions
 
@@ -77,13 +77,13 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 - **Imports**: React/libraries first, then local (`../../App.styled`), then audio/choreography (`../../audio/react`, `../../choreography/dom`)
 - **Type imports**: Use `import type { ... }` for type-only imports
 - **Theme**: `src/styles/theme.ts` exports `theme` with `colors` and `spacing`
-- **Testing**: Vitest (`yarn test`, node environment, `*.test.ts` only); choreography math, audio internals, the Player's pure helpers (`format`, `analyser`, `skins`, `keys`) and the `scripts/headmap/` geometry helpers each have a `*.test.ts` sibling. Components are checked in the browser.
+- **Testing**: Vitest (`yarn test`, node environment, `*.test.ts` only); choreography math, audio internals, the Player's pure helpers (`format`, `analyser`, `skins`, `keys`), the heads' shader patches (`faceSkin`, `skinMaterial`) and the `scripts/headmap/` helpers (geometry, atlas, colour, synthesis, the full-capture path) each have a `*.test.ts` sibling. Components are checked in the browser.
 
 ## Key Files
 
 | File | Purpose |
 |------|---------|
-| `src/App.tsx` | Root layout, component composition, Canvas setup (lights live in `DaylightRig`) |
+| `src/App.tsx` | Root layout, component composition, Canvas setup (no lights: each head renders `<DaylightRig>`), the `?head` switch (each head lazy-loaded) |
 | `src/audio/MusicEngine.ts` | Web Audio playback and player operations, volume, DJ-mode hits, live bands, visualiser readers |
 | `src/audio/engine.ts` | The single app-wide `MusicEngine` instance |
 | `src/audio/ticker.ts` | The one rAF loop that calls `engine.update` |
@@ -97,19 +97,24 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 | `src/choreography/faces.ts` | Header faces: per word when calm, per letter in drops, Doto/Golos anchors, shockwave |
 | `src/choreography/grid.ts` | Plus-grid maths: layout, cursor turn, music pulse |
 | `src/choreography/glass.ts` | Glass outlines (new per load), displacement maps, drift/drag/throw/wall-bounce physics |
-| `src/choreography/fit.ts` | `fitCamera(width, height)` → `{ z, y }`: desktop keeps z = 5, phones pull back (and lower the camera in portrait) until the head fits |
+| `src/choreography/fit.ts` | `fitCamera(width, height, head)` → `{ z, y }`: desktop keeps z = 5, phones pull back (and lower the camera in portrait) until the head fits; each head's measured silhouette (`COPPER_FIT`, `SKIN_FIT`) |
 | `src/choreography/daylight.ts` | `daylight(date, override?)` → sun, key/fill/rim/ambient lights, Lightformer colours + env rotation, page palette; `?hour`/`?daycycle` parsing, `paletteVars`, `VARIANT_GAIN` |
 | `src/hooks/useDaylight.ts` | `startDaylight()` (the page's daylight clock, writes `--day-*` on `:root`) and `useDaylight()` |
 | `src/components/Daylight/index.tsx` | `<DaylightRig variant rimFlash />`: all scene lights + the head's Environment, from `useDaylight()`; rendered by each head |
 | `src/choreography/tilt.ts` | `tiltLook` (beta/gamma → gravity in the screen's axes by `screen.orientation.angle` → the right edge's dip and the screen's raise → pointer-like look; continuous through upright, where the raw Euler angles flip) and `TiltCalibration` |
-| `src/hooks/useDeviceTilt.ts` | Tilt-follow on touch devices: `enableDeviceTilt()` on the enter tap (iOS permission, levels at the current attitude), `useDeviceTilt()` gives `Head` a look or null (no sensor/permission, desktop, reduced motion); re-levels on rotation |
+| `src/hooks/useDeviceTilt.ts` | Tilt-follow on touch devices: `enableDeviceTilt()` on the enter tap (iOS permission, levels at the current attitude), `useDeviceTilt()` gives the head rig a look or null (no sensor/permission, desktop, reduced motion); re-levels on rotation |
 | `src/styles/global.ts` | Global reset and the host-independent palette |
 | `src/components/Background/index.tsx` | Canvas plus-grid: big plusses face the cursor, mini plusses pulse with the kick; ground and plus colours from the daylight palette |
-| `src/components/Head/index.tsx` | 3D head model, beat-locked nodding; follows the mouse, or the phone's tilt on touch devices; camera from `fitCamera`; lit by `<DaylightRig>` (its snare flash via `rimFlash`) |
-| `src/assets/head.glb` | The head mesh: stock head with the owner's face, generated by `yarn headmap` (UVs + `_FACEWEIGHT`) |
-| `src/assets/head-face.jpg` | The face's photo skin (face crop only, no room), generated beside `head.glb` |
+| `src/components/SkinHead/index.tsx` | The default head: the owner's whole head (photo face and front hair, synthesized skin and curls), non-metallic, lit by `<DaylightRig variant="skin">` (its snare flash via `rimFlash`) |
+| `src/components/SkinHead/skinMaterial.ts` | Shader patch: `_hairweight` roughens the hair; the atlas glows a little |
+| `src/assets/skin-head.glb` | The skin head mesh, generated by `yarn headmap` (atlas UVs + `_HAIRWEIGHT`) |
+| `src/assets/skin-head.jpg` | Its 2048² atlas: face chart (photo), crown, band around the head, under the neck; no room, window or shirt pixels |
+| `src/components/Head/index.tsx` | The copper head (`?head=copper`): chrome with the owner's photo face; chrome glows with the kick; lit by `<DaylightRig>` (its snare flash via `rimFlash`) |
+| `src/components/Head/useHeadRig.ts` | The rig both heads share: beat-locked nod, sway, squash, mouse/tilt look, idle breath, camera from `fitCamera`, `prepareModel`; `?debug` `window.__head.yaw/pitch/dolly` turn the head for inspection |
+| `src/assets/head.glb` | The copper head mesh: stock head with the owner's face, generated by `yarn headmap --copper` (UVs + `_FACEWEIGHT`) |
+| `src/assets/head-face.jpg` | The copper head's photo skin (face crop only, no room), generated beside `head.glb` |
 | `src/components/Head/faceSkin.ts` | Shader patch blending the chrome into the photo skin by `_faceweight` |
-| `scripts/headmap.ts` | Face capture → head pipeline (crop, align, transfer, meshopt write); helpers in `scripts/headmap/` |
+| `scripts/headmap.ts` | Capture → head pipeline: the skin head by default (`scripts/headmap/skin.ts`, or `full.ts` for a 360° scan), `--copper` for the copper head; shared crop/align/transfer in `scripts/headmap/transfer.ts` |
 | `scripts/assets/base-head.glb` | The untouched stock head every `yarn headmap` run starts from |
 | `src/components/NameHeader/index.tsx` | Font-cycling, kick-shockwave name header |
 | `src/components/SubtitleStack/index.tsx` | 6-band graphic EQ / idle scan |
@@ -133,13 +138,17 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 
 ## Regenerating the Head
 
-`src/assets/head.glb` and `src/assets/head-face.jpg` are generated output: the stock "11091_FemaleHead" (`scripts/assets/base-head.glb`) with the owner's face shape and photo skin transferred onto it from a single-view phone capture. To take a new capture:
+Both heads are generated output from a phone capture of the owner, and every run starts from the untouched stock head (`scripts/assets/base-head.glb`, "11091_FemaleHead"), so reruns never compound and the same inputs (with the locked dependencies) give byte-identical files. Keep the capture outside the repo: it holds the owner's room and the full photo, and neither it nor its original texture is ever committed.
 
-1. Keep the capture outside the repo (it holds the owner's room and the full photo) and run `yarn headmap <capture.glb>`. It prints the landmarks it found (nose tip, chin, L), the alignment, how many head vertices moved and how much of the texture came from the photo; every run starts from the base head, so reruns never compound, and the same inputs (with the locked dependencies) give byte-identical files.
-2. Open `head-face.jpg` and check its rim holds nothing but face (the run prints how close the photo comes to the crop's edge), then check the head on the site from several angles. `--debug <dir>` (refused inside the repo) writes `crop.glb` (the cropped capture with its photo), `aligned.glb`, `erased.glb` (the stock head with its own features erased) and a `weights.glb` blend map for a viewer.
-3. Tune with flags (`yarn headmap` alone prints them). Crop and blend sizes are in units of L, the nose-tip-to-chin height of each mesh, so they carry across capture scales; `--nose`/`--chin` override landmark detection when a capture confuses it. Bake flags you keep into the defaults in `scripts/headmap.ts`, so the no-flag run reproduces the committed files.
+- **The skin head** (default, `src/assets/skin-head.glb` + `skin-head.jpg`): `yarn headmap <capture.glb>`. From a single-view capture it transfers the face and front hair onto the stock head (a wider crop than the copper head's), grows a thin lumpy hair shell over the scalp, and bakes one 2048² atlas: the photo where the head faces the camera and the colour is plausibly his skin or hair (never below the chin — the collar and necklace — and in the hair only hair-coloured pixels, since the wall behind the curls is close to skin), skin continued from the photo's edges fading to his overall tone, and curls splatted from a tileable patch of his own hair everywhere the camera never saw. The run prints the colour models, the photo's share, the atlas layout and densities, and where the hair tile came from.
+- **The copper head** (`src/assets/head.glb` + `head-face.jpg`): `yarn headmap <capture.glb> --copper`. The face-only transfer onto chrome, as before.
+- **A full 360° capture**: `yarn headmap` measures how much of the directions around the head the capture surrounds (it prints it). At 85% or more (or with `--full`) it skips the synthesis: crops the head and neck (`--neck`, `--radius`), simplifies past 100k triangles, places it on the stock head's nose tip and scale, and ships the capture's own texture (≤ 2048², masked to the kept triangles, so nothing of the room or shirt ships). The scan must be upright and facing +z, as the apps export it. After a new full capture, re-measure `SKIN_FIT` (its silhouette changes).
 
-The skin texture is re-baked from the photo only where the cropped face covers it (the rest is face colour dilated outward), so the room never ships; the raw capture and its original texture are never committed. The mesh keeps the stock file's conventions (one node, z up, face toward +y, stock units, meshopt + quantised positions/normals), which is what `prepareModel` in `Head` assumes, and adds front-projected `TEXCOORD_0` plus a per-vertex `_FACEWEIGHT` (1 on the face, 0 on the chrome); the material is set in code.
+**Taking a 360° capture** (to replace the synthesis with the real back of the head): use a 360° scanning app (Polycam, Scaniverse, RealityScan, or a TrueDepth head-scan app); sit on a swivel chair and turn slowly while the phone stays still (or have someone walk around you); use even light and keep your hair still; export GLB (or OBJ + texture, converted to GLB) as one mesh with one JPEG texture (`yarn headmap` refuses a scan split over several parts rather than read a fragment of it), in metres.
+
+Then check the result: open the atlas (or `head-face.jpg`) and make sure it holds nothing but face, hair and skin; check the head on the site from every angle (`?debug` and `window.__head.yaw` / `.pitch` / `.dolly`). `--debug <dir>` (refused inside the repo) writes debug GLBs: for the copper head `crop.glb` (the cropped capture with its photo), `aligned.glb`, `erased.glb` and a `weights.glb` blend map; for the skin head `hair.glb` (the hair weight) and `hair-tile.jpg`. Tune with flags (`yarn headmap` alone prints them); sizes are in units of L, the nose-tip-to-chin height of each mesh, so they carry across capture scales; `--nose`/`--chin` override landmark detection. Bake flags you keep into the defaults (`SKIN_DEFAULTS`/`SKIN_TRANSFER` in `scripts/headmap/skin.ts`, `COPPER_TRANSFER` in `scripts/headmap/transfer.ts`, `FULL_DEFAULTS` in `scripts/headmap/full.ts`), so the no-flag run reproduces the committed files.
+
+Both meshes keep the stock file's conventions (one node, z up, face toward +y, stock units, meshopt + quantised positions/normals), which is what `prepareModel` assumes. The copper head adds front-projected `TEXCOORD_0` and a per-vertex `_FACEWEIGHT` (1 on the face, 0 on the chrome); the skin head adds atlas `TEXCOORD_0` and `_HAIRWEIGHT` (1 on hair). Materials are set in code.
 
 ## Deployment
 

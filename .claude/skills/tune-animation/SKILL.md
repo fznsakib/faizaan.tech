@@ -64,7 +64,7 @@ Quantisation steps are deliberately coarse: each distinct `font-variation-settin
 
 ## Head Fit and Tilt (`src/choreography/fit.ts`, `src/choreography/tilt.ts`)
 
-- `fitCamera`: `MAX_WIDTH` 0.65 of the width; `PORTRAIT_HEIGHT` 0.45 of the height and `PORTRAIT_CENTRE` 0.4 down, easing off between aspect `EASE_FROM` 0.75 and `EASE_TO` 1.25; desktop exactly z = 5, y = 0.
+- `fitCamera(width, height, head)`: each head's measured `HeadFit` (`COPPER_FIT` 0.41 × 0.654 at 0.489; `SKIN_FIT` 0.439 × 0.701 at 0.484 — its hair makes it bigger); `MAX_WIDTH` 0.65 of the width; `PORTRAIT_HEIGHT` 0.45 of the height and `PORTRAIT_CENTRE` 0.4 down, easing off between aspect `EASE_FROM` 0.75 and `EASE_TO` 1.25; desktop exactly z = 5, y = 0.
 - `tiltLook`: `TILT_RANGE` 25° of phone tilt from the calibration = the full mouse-follow range (22° yaw / 10° pitch); smoothing is the head's own damp (tau 0.35).
 
 ## Value Ranges
