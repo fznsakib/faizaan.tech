@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 
 import { LITE } from "./NameHeader.styled";
 import { LITE_COUNT } from "./pieces";
+import { hovers, presses } from "./pointer";
 import { engine } from "../../audio/engine";
 import { useMusicFrame } from "../../audio/react";
 import { setStyle } from "../../choreography/dom";
@@ -24,6 +25,7 @@ import { prefersReducedMotion } from "../../hooks/reducedMotion";
 
 import type { MeltFilter } from "./MatterFilters";
 import type { LetterPieces, LetterPlan } from "./pieces";
+import type { NameBounds, NamePointer } from "./pointer";
 import type { Matter, MatterSample } from "../../choreography/matter";
 
 /** The name's measured layout, filled in by the header's measure. */
@@ -31,7 +33,7 @@ export interface NameGeometry {
   /** Each letter's centre x, px. */
   centres: number[];
   /** The name's box, for hover and tap. */
-  bounds: { left: number; right: number; top: number; bottom: number } | null;
+  bounds: NameBounds | null;
   /** The header's font size, px. */
   fontSize: number;
   /** The head's x (the viewport's centre), px: kept from resize, since reading `innerWidth` mid-frame forces layout. */
@@ -55,6 +57,23 @@ export interface MatterProbe {
   hold: number | null;
   /** Start a run from the head now, as an ambient run would. */
   run: () => boolean;
+}
+
+/** Controls that take their own presses where they're drawn over the name's band (GlassPanel's list). */
+const CONTROLS = 'a, button, input, select, textarea, [role="dialog"], [aria-modal="true"]';
+
+/**
+ * Whether a pointer event landed on the page itself: the head's canvas covers the viewport, so bare page is that
+ * canvas (or the body); the jam pad, player, links, splash and ?debug panel are drawn over it and are not.
+ */
+function onPage(target: EventTarget | null): boolean {
+  if (!(target instanceof Element) || target.closest(CONTROLS)) return false;
+  if (target === document.body || target === document.documentElement) return true;
+  return (
+    target instanceof HTMLCanvasElement &&
+    target.clientWidth >= window.innerWidth - 2 &&
+    target.clientHeight >= window.innerHeight - 2
+  );
 }
 
 /** `LetterPieces.shown` slots. */
@@ -124,22 +143,24 @@ export function useMatter(
 
   useEffect(() => {
     let inside = false;
-    const hit = (x: number, y: number) => {
-      const box = geometry.bounds;
-      return box !== null && x >= box.left && x <= box.right && y >= box.top && y <= box.bottom;
-    };
+    const pointer = (event: PointerEvent): NamePointer => ({
+      x: event.clientX,
+      y: event.clientY,
+      pointerType: event.pointerType,
+      button: event.button,
+      onPage: onPage(event.target),
+    });
     const trigger = (event: PointerEvent) => {
       if (engine.getSnapshot().unlocked) requestRun(schedule, event.timeStamp / 1000, event.clientX);
     };
-    // Hover: entering the name starts a run (a touch's move is a drag, not a hover).
+    // Hover: entering the name starts a run.
     const move = (event: PointerEvent) => {
-      if (event.pointerType === "touch") return;
-      const over = hit(event.clientX, event.clientY);
+      const over = hovers(pointer(event), geometry.bounds);
       if (over && !inside) trigger(event);
       inside = over;
     };
     const down = (event: PointerEvent) => {
-      if (hit(event.clientX, event.clientY)) trigger(event);
+      if (presses(pointer(event), geometry.bounds)) trigger(event);
     };
     const out = (event: PointerEvent) => {
       if (!event.relatedTarget) inside = false;
