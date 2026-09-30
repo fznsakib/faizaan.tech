@@ -164,3 +164,196 @@ export function tickSchedule(schedule: MatterSchedule, now: number, ambient: boo
     startRun(schedule, now, headX);
   }
 }
+
+// Effects within a state: pure poses of `t` (0..1 through the state), in em where they're distances.
+
+const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
+const easeOut = (x: number) => 1 - (1 - clamp01(x)) ** 3;
+const easeIn = (x: number) => clamp01(x) ** 3;
+
+/**
+ * Chrome: the highlight's background-position x (%) on a 300%-wide highlight image; 100 puts its band just left of
+ * the letter and 0 just right of it, so it crosses each letter once, left to right.
+ */
+export function chromeSweep(t: number): number {
+  return 100 * (1 - smoothstep((t - 0.08) / 0.72));
+}
+
+/** Molten: how melted the letter is, 0..1: it softens, runs, and sets again before the shatter fades in. */
+export function meltAmount(t: number): number {
+  return smoothstep(t / 0.4) * (1 - smoothstep((t - 0.6) / 0.18));
+}
+
+export interface Drip {
+  /** Across the letter box, 0..1. */
+  x: number;
+  /** When it starts to swell, as molten's t. */
+  born: number;
+  /** Width, em. */
+  size: number;
+}
+
+export interface DripPose {
+  /** Below where it formed, em. */
+  y: number;
+  /** Vertical stretch from its top. */
+  stretch: number;
+  opacity: number;
+}
+
+const DRIP_GROW = 0.18;
+const DRIP_FALL = 0.3;
+/** How far a drip falls before it has gone, em. */
+const DRIP_DROP = 0.9;
+
+export function dripsFor(seed: number, count: number): Drip[] {
+  const random = mulberry32(seed);
+  return Array.from({ length: count }, () => ({
+    x: 0.25 + 0.5 * random(),
+    born: 0.08 + 0.2 * random(),
+    size: 0.07 + 0.04 * random(),
+  }));
+}
+
+/** A drip swells from the letter's foot, stretches, lets go and falls away (transform and opacity only). */
+export function dripPose(drip: Drip, t: number, out: DripPose = { y: 0, stretch: 0, opacity: 0 }): DripPose {
+  const age = t - drip.born;
+  if (age < 0) {
+    out.y = 0;
+    out.stretch = 0;
+    out.opacity = 0;
+  } else if (age < DRIP_GROW) {
+    const grow = age / DRIP_GROW;
+    out.y = 0;
+    out.stretch = 0.2 + 1.8 * easeOut(grow);
+    out.opacity = clamp01(grow * 4);
+  } else {
+    const fall = clamp01((age - DRIP_GROW) / DRIP_FALL);
+    out.y = DRIP_DROP * fall * fall;
+    out.stretch = 2 - easeOut(fall);
+    out.opacity = 1 - smoothstep((fall - 0.6) / 0.4);
+  }
+  return out;
+}
+
+export interface Shard {
+  /** Home across and down the letter box, 0..1. */
+  x: number;
+  y: number;
+  /** Flight out from home, em. */
+  dx: number;
+  dy: number;
+  /** Turn at full flight, degrees. */
+  spin: number;
+  /** Arm span, em. */
+  size: number;
+  /** The grid's mini-plus blue, or its big-plus grey. */
+  blue: boolean;
+}
+
+export interface ShardPose {
+  x: number;
+  y: number;
+  rotate: number;
+  scale: number;
+  opacity: number;
+}
+
+/** Extra flight away from the run's origin, em, so the burst reads as the sweep hitting the letter. */
+const SHARD_PUSH = 0.2;
+
+export function shardsFor(seed: number, count: number): Shard[] {
+  const random = mulberry32(seed);
+  const turn = random();
+  return Array.from({ length: count }, (_, i) => {
+    // Evenly spread round the letter (jittered), so the burst is balanced and the push away from the origin shows.
+    const angle = 2 * Math.PI * ((i + turn + (random() - 0.5) * 0.5) / count);
+    const reach = 0.4 + 0.6 * random();
+    const distance = 0.4 + 0.3 * random();
+    return {
+      x: 0.5 + 0.28 * reach * Math.cos(angle),
+      y: 0.52 + 0.22 * reach * Math.sin(angle),
+      dx: Math.cos(angle) * distance,
+      dy: Math.sin(angle) * distance,
+      spin: (random() < 0.5 ? -1 : 1) * (90 + 180 * random()),
+      size: 0.12 + 0.06 * random(),
+      blue: i % 5 !== 2 && i % 5 !== 4, // three blue to two grey
+    };
+  });
+}
+
+/** How far out the shards are, 0..1: burst out, hang, snap back home. */
+function shardFlight(t: number): number {
+  if (t < 0.1 || t >= 0.62) return 0;
+  if (t < 0.4) return easeOut((t - 0.1) / 0.3);
+  if (t < 0.48) return 1;
+  return 1 - easeIn((t - 0.48) / 0.14);
+}
+
+/**
+ * Shatter: a shard's offset from its home (em), turn, scale and opacity. `side` is +1 when the letter is right of
+ * the run's origin, -1 left of it.
+ */
+export function shardPose(
+  shard: Shard,
+  t: number,
+  side: number,
+  out: ShardPose = { x: 0, y: 0, rotate: 0, scale: 0, opacity: 0 }
+): ShardPose {
+  const flight = shardFlight(t);
+  out.x = flight === 0 ? 0 : (shard.dx + side * SHARD_PUSH) * flight;
+  out.y = flight === 0 ? 0 : shard.dy * flight;
+  out.rotate = shard.spin * flight;
+  out.scale = 0.6 + 0.4 * flight;
+  out.opacity = t < 0.1 || t >= 0.68 ? 0 : smoothstep((t - 0.1) / 0.05) * (1 - smoothstep((t - 0.62) / 0.06));
+  return out;
+}
+
+/** Shatter: the glyph's own opacity, out while its shards are. */
+export function shatterGlyph(t: number): number {
+  return (1 - smoothstep((t - 0.12) / 0.06)) + smoothstep((t - 0.6) / 0.06);
+}
+
+export interface Sparkle {
+  /** Across and down the letter box, 0..1. */
+  x: number;
+  y: number;
+  /** Where in its twinkle it starts, 0..1. */
+  phase: number;
+  /** Span, em. */
+  size: number;
+}
+
+export interface SparklePose {
+  scale: number;
+  rotate: number;
+  opacity: number;
+}
+
+/** Twinkles per frost state: three, so every sparkle peaks at least once while the frost is fully in. */
+const TWINKLES = 3;
+
+export function sparklesFor(seed: number, count: number): Sparkle[] {
+  const random = mulberry32(seed);
+  return Array.from({ length: count }, () => ({
+    x: 0.15 + 0.7 * random(),
+    y: 0.2 + 0.5 * random(),
+    phase: random(),
+    size: 0.12 + 0.08 * random(),
+  }));
+}
+
+/** Frost: a sparkle's glint, sharp peaks while the frost is in, dark as it arrives and leaves. */
+export function sparklePose(
+  sparkle: Sparkle,
+  t: number,
+  out: SparklePose = { scale: 0, rotate: 0, opacity: 0 }
+): SparklePose {
+  const envelope = smoothstep((t - 0.05) / 0.15) * (1 - smoothstep((t - 0.55) / 0.12));
+  const cycle = (t * TWINKLES + sparkle.phase) % 1;
+  const glint = Math.sin(Math.PI * cycle) ** 6;
+  out.scale = glint * envelope;
+  out.rotate = 90 * t;
+  out.opacity = Math.min(1, 2 * glint) * envelope;
+  return out;
+}

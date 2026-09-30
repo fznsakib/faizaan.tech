@@ -3,17 +3,26 @@ import { describe, expect, it } from "vitest";
 import {
   AMBIENT_GAP,
   BLEND,
+  chromeSweep,
   createSchedule,
+  dripPose,
+  dripsFor,
   isRunning,
   layerOpacity,
   MATTERS,
   matterAt,
   MAX_SWEEP,
+  meltAmount,
   mulberry32,
   requestRun,
   RETRIGGER_COOLDOWN,
   RUN_LENGTH,
   runEnd,
+  shardPose,
+  shardsFor,
+  shatterGlyph,
+  sparklePose,
+  sparklesFor,
   STAGES,
   sweepDelay,
   tickSchedule,
@@ -232,5 +241,92 @@ describe("matter schedule", () => {
     expect(requestRun(schedule, due - 1, 300)).toBe(true);
     expect(tickThrough(schedule, due - 1 + FRAME, due - 1 + AMBIENT_GAP[0] - FRAME)).toEqual([]);
     expect(schedule.nextAmbient!).toBeGreaterThanOrEqual(due - 1 + AMBIENT_GAP[0]);
+  });
+});
+
+/** Where state `matter`'s blend into the next begins, as its t. */
+const blendStart = (matter: Matter) => {
+  const { duration } = STAGES.find((stage) => stage.matter === matter)!;
+  return 1 - BLEND / duration;
+};
+const ts = Array.from({ length: 1001 }, (_, i) => i / 1000);
+
+describe("matter effects", () => {
+  it("sweeps the chrome highlight across each letter once, left to right, off the letter at both ends", () => {
+    // 300%-wide highlight image: 100% puts its band left of the letter, 0% right of it.
+    expect(chromeSweep(0)).toBe(100);
+    expect(chromeSweep(1)).toBe(0);
+    for (let i = 1; i < ts.length; i++) expect(chromeSweep(ts[i])).toBeLessThanOrEqual(chromeSweep(ts[i - 1]));
+  });
+
+  it("melts in, holds, and sets again before the shatter fades in", () => {
+    expect(meltAmount(0)).toBe(0);
+    expect(meltAmount(0.55)).toBe(1);
+    expect(meltAmount(blendStart("molten"))).toBe(0);
+    expect(meltAmount(1)).toBe(0);
+  });
+
+  it("drips grow from the letter, fall away downward and are gone before the molten state ends", () => {
+    const drips = dripsFor(3, 2);
+    expect(dripsFor(3, 2)).toEqual(drips);
+    for (const drip of drips) {
+      expect(dripPose(drip, 0).opacity).toBe(0);
+      expect(dripPose(drip, blendStart("molten")).opacity).toBe(0);
+      let lowest = 0;
+      let longest = 0;
+      for (const t of ts) {
+        const pose = dripPose(drip, t);
+        expect(pose.y).toBeGreaterThanOrEqual(lowest);
+        lowest = pose.y;
+        longest = Math.max(longest, pose.stretch);
+      }
+      expect(lowest).toBeGreaterThan(0.5); // em: falls well clear of the letter
+      expect(longest).toBeGreaterThan(1.5); // elongates before it lets go
+    }
+  });
+
+  it("shatters each letter into plusses that fly out and snap back before the frost fades in", () => {
+    const shards = shardsFor(5, 6);
+    expect(shardsFor(5, 6)).toEqual(shards);
+    for (const shard of shards) {
+      for (const t of [0, blendStart("shatter"), 1]) {
+        const pose = shardPose(shard, t, 1);
+        expect(pose.opacity).toBe(0);
+        expect([pose.x, pose.y]).toEqual([0, 0]);
+      }
+      const out = shardPose(shard, 0.45, 1);
+      expect(Math.hypot(out.x, out.y)).toBeGreaterThan(0.15); // em
+    }
+    expect(shatterGlyph(0)).toBe(1);
+    expect(shatterGlyph(0.3)).toBe(0);
+    expect(shatterGlyph(blendStart("shatter"))).toBe(1);
+  });
+
+  it("never leaves a letter blank mid-shatter: the glyph or its shards always show", () => {
+    const shards = shardsFor(5, 6);
+    for (const t of ts) {
+      const shown = Math.max(shatterGlyph(t), ...shards.map((shard) => shardPose(shard, t, 1).opacity));
+      expect(shown).toBeGreaterThan(0.5);
+    }
+  });
+
+  it("blows the shards away from the run's origin, for every letter's seed and shard count", () => {
+    for (let seed = 0; seed < 40; seed++) {
+      for (const count of [3, 6]) {
+        const shards = shardsFor(seed, count);
+        const meanX = (side: number) => shards.reduce((sum, shard) => sum + shardPose(shard, 0.45, side).x, 0) / count;
+        expect(meanX(1)).toBeGreaterThan(0.05);
+        expect(meanX(-1)).toBeLessThan(-0.05);
+        for (const shard of shards) expect(Math.hypot(shardPose(shard, 0.45, 1).x, shardPose(shard, 0.45, 1).y)).toBeGreaterThan(0.15);
+      }
+    }
+  });
+
+  it("twinkles frost sparkles in the middle of the state, dark at both ends", () => {
+    for (const sparkle of sparklesFor(4, 2)) {
+      expect(sparklePose(sparkle, 0).opacity).toBe(0);
+      expect(sparklePose(sparkle, blendStart("frost")).opacity).toBe(0);
+      expect(Math.max(...ts.map((t) => sparklePose(sparkle, t).scale))).toBeGreaterThan(0.9);
+    }
   });
 });
