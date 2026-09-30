@@ -38,7 +38,7 @@ Key files:
 - `src/audio/frame.ts` — `MusicFrame` construction, beat-map-derived per-frame math
 - `src/audio/analysis/` — build-time onset/energy/section analysis (`analyzeTrack.ts`, `buildBeatMap.ts`)
 - `src/choreography/` — pure, tested per-effect math (`nod`, `type`, `faces`, `grid`, `glass`, `fit`, `tilt`, `dom`)
-- `src/components/Head/index.tsx` — 3D head, beat-locked nodding, mouse/tilt follow, camera from `fitCamera`
+- `src/components/SkinHead/index.tsx` — the default 3D head (the owner's whole head: photo face, synthesized skin and curls); `src/components/Head/index.tsx` — the copper head (`?head=copper`); both on `src/components/Head/useHeadRig.ts` (beat-locked nodding, mouse/tilt follow, camera from `fitCamera` with the head's `HeadFit`)
 - `src/hooks/useDeviceTilt.ts` — phone tilt feed for the head (enabled on the Splash's enter tap)
 
 ## MusicFrame
@@ -56,9 +56,9 @@ Read via `useMusicFrame` (never re-renders) or, inside r3f, `engine.frame` direc
 
 ## Three.js Patterns
 
-- Use `useFrame` for animation (never raw `requestAnimationFrame`); `Head` reads `engine.frame` directly since it's already inside the r3f loop.
+- Use `useFrame` for animation (never raw `requestAnimationFrame`); `useHeadRig` reads `engine.frame` directly since it's already inside the r3f loop, and hands each head a `pulse` (kick, snare, drive) for its look.
 - Use `useRef`/`useMemo` for mutable state and one-time objects (materials, springs) between frames.
-- Current head: chrome/orange metallic material (`metalness: 1`, `roughness: 0.22`, emissive pulses with kick).
+- Current head: the skin head — non-metallic (roughness 0.55, hair 0.85 by `_hairweight`, a little atlas glow), its own soft lighting, rim light flashes with the snare. The copper head (`?head=copper`): chrome/orange metallic (`metalness: 1`, `roughness: 0.22`, emissive pulses with kick).
 - Beat sync: phase-locked to the beat map's `beat`/`barPhase`, not a free-running sine wave.
 
 ## Testing

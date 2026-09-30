@@ -20,7 +20,7 @@ You are a read-only code reviewer for faizaan.tech, an audiovisual portfolio sit
 - Per-effect math (curves, envelopes, quantisation) belongs in `src/choreography/*`, not inline in components
 - No object allocations inside animation loops or `useFrame`
 - No CSS transitions on properties written per-frame
-- Three.js: use `useFrame`, never raw `requestAnimationFrame`; `Head` reads `engine.frame` directly rather than via a hook
+- Three.js: use `useFrame`, never raw `requestAnimationFrame`; the shared head rig (`useHeadRig`) reads `engine.frame` directly rather than via a hook
 
 ### Code Style
 
