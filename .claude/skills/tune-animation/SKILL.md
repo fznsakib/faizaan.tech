@@ -54,6 +54,14 @@ Quantisation steps are deliberately coarse: each distinct `font-variation-settin
 - Chromatic aberration is off (`CHROMATIC` in the component) for frame budget; `?frosted` forces the non-Chromium fallback.
 - `glassScale`: width / 1440 clamped to `MIN_SCALE` 0.38 .. 1.25 (and ≤ 60% of the width / 45% of the height): on phones a piece covers at most ~1.5× the share of the width it does on desktop (tested).
 
+## Daylight (`src/choreography/daylight.ts`, `src/components/Daylight`)
+
+- `KEYFRAMES`: one row per keyframe (02:00, 05:00, 06:30 `SUNRISE`, 09:00, 13:00 `NOON`, 18:30, 20:00, 22:30) of lamp `[colour, intensity]`s (key, fill, rim, ambient, sky, cool, warm) and palette tokens; mixed in OKLab with a smoothstep per segment. The 13:00 row is the site's original scene and is pinned by `daylight.test.ts`: never edit it.
+- Sun: rises `SUNRISE` at front-left (azimuth −45°), peaks at `NOON` at today's key angle ([10, 10, 10]), sets `SUNSET` 19:30 back-right; the key never goes below the horizon; the environment turns with the sun's azimuth.
+- Guard-rail tests: no step > ΔE 0.015 or 2% of a lamp's peak between minutes; neighbouring keyframes ΔE > 0.06 apart, and > 0.08 from noon; the ground stays the site's green (OKLCH L 0.22–0.38, C 0.03–0.07, hue 140–215°, ΔE < 0.1 from `rgb(20, 61, 50)`).
+- Preview with `?hour=18.5`; sweep with `?daycycle` (24 h in `CYCLE_SECONDS` 60, 100 ms ticks; each tick is ~0.4 ms JS plus one `:root` custom-property style recalc).
+- The copper chrome swallows blue: cold and violet hours show on the head through brighter environments and strong rims, not through colour alone.
+
 ## Head Fit and Tilt (`src/choreography/fit.ts`, `src/choreography/tilt.ts`)
 
 - `fitCamera`: `MAX_WIDTH` 0.65 of the width; `PORTRAIT_HEIGHT` 0.45 of the height and `PORTRAIT_CENTRE` 0.4 down, easing off between aspect `EASE_FROM` 0.75 and `EASE_TO` 1.25; desktop exactly z = 5, y = 0.

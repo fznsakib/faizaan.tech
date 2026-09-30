@@ -62,11 +62,12 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 - **Engine state**: `MusicEngine` is a plain class outside React. `useMusicState()` for coarse, re-rendering state; `useMusicFrame()` for per-frame callbacks that never re-render.
 - **Animation state**: Always `useRef`/`useMemo` for per-frame values (never `useState` — avoids re-renders).
 - **Direct DOM manipulation**: Write through `setStyle(el, prop, value)` in `src/choreography/dom.ts`, which dedupes so a redundant write never hits the DOM.
-- **Choreography module** (`src/choreography/`): pure, unit-tested per-effect math, kept separate from components — `nod` (phase-locked head nod, spring physics), `type` (header weight pulse, EQ ballistics, coarse font-variation steps), `faces` (per-word/per-letter header faces and their shockwave), `grid` (cursor-facing plusses, music pulses), `glass` (glass outlines, refraction maps, drift/drag/throw/wall physics), `fit` (camera distance/height so the head suits the viewport), `tilt` (phone tilt → pointer-like look, calibration), `dom` (`setStyle`).
+- **Choreography module** (`src/choreography/`): pure, unit-tested per-effect math, kept separate from components — `daylight` (time of day → lights, environment, palette), `nod` (phase-locked head nod, spring physics), `type` (header weight pulse, EQ ballistics, coarse font-variation steps), `faces` (per-word/per-letter header faces and their shockwave), `grid` (cursor-facing plusses, music pulses), `glass` (glass outlines, refraction maps, drift/drag/throw/wall physics), `fit` (camera distance/height so the head suits the viewport), `tilt` (phone tilt → pointer-like look, calibration), `dom` (`setStyle`).
 - **No CSS transitions** on properties written per-frame.
 - **Player skins**: each skin is a set of CSS custom properties on the Player's `Shell` (`[data-skin]`) plus a few `[data-skin="…"] &` rules; the visualiser's canvas palettes live in `Player/paint.ts`. The layout is shared; skins change look only.
 - **Three.js**: Use `useFrame` for animation loops (never raw `requestAnimationFrame`). `Head` reads `engine.frame` directly inside `useFrame` rather than via a hook. Use `useRef`/`useMemo` for mutable state and one-time objects (materials, springs).
 - **Colour**: one palette, whatever the colour scheme or a host page's styles (`colors.site` in `src/styles/colors.ts`: white text on `rgb(20, 61, 50)`). `global.ts` sets it on `:root`, `body` and `#root` with `color-scheme: dark`, and text components set their own `color`; never rely on inherited text colour. Import `colors` directly: `styled.d.ts`'s `DefaultTheme` alias doesn't type `theme.colors`.
+- **Daylight**: the lighting and page colours follow the visitor's local time (`daylight()` in `src/choreography/daylight.ts`: 8 keyframes, OKLab + smoothstep, wraps at midnight; 13:00 is exactly the site's original scene). `startDaylight()` (called in `main.tsx` before render; `src/hooks/useDaylight.ts`) re-evaluates each minute and on tab return, writes `--day-ground`, `--day-grid-big`, `--day-grid-mini`, `--day-glass-tint`, `--day-accent` (`#rrggbb`) on `:root`, and serves `useDaylight()`. DOM layers read the vars with a fallback (`var(--day-ground, rgb(20, 61, 50))`; alpha via `color-mix(in srgb, var(--x) N%, transparent)`); the grid canvas reads `useDaylight().palette`. Consumers: body/html, `Background`, `GlassPanel` (body/bevel tint, lit edge + sheen in the accent; never the refraction filter), the Splash veil and the link pools (both ground-coloured). Text, the Player skins and the link glyphs don't change. `?hour=18.5` previews a time, `?daycycle` sweeps 24 h in 60 s (not under reduced motion); `?debug` exposes `window.__daylight` (`day`, per-update `costs` in ms).
 - **Mobile**: phones take their own layout under `(max-width: 767px)` (portrait) and `(max-height: 500px)` (landscape); desktop windows ≥ 1280 px wide and taller than 500 px are untouched by them (a desktop window ≤ 500 px tall gets the landscape-phone name and subtitles too). `viewport-fit=cover`, so every edge-fixed element insets with `max(Npx, env(safe-area-inset-*))`. The camera fit (`fitCamera`) pulls back and lowers the camera in portrait (head ≤ 65% of the width, ≤ 45% of the height, centred at 40% down) and is exactly today's z = 5, y = 0 on desktop.
 
 ## Code Conventions
@@ -82,7 +83,7 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 
 | File | Purpose |
 |------|---------|
-| `src/App.tsx` | Root layout, component composition, Canvas/lighting setup |
+| `src/App.tsx` | Root layout, component composition, Canvas setup (lights live in `DaylightRig`) |
 | `src/audio/MusicEngine.ts` | Web Audio playback and player operations, volume, DJ-mode hits, live bands, visualiser readers |
 | `src/audio/engine.ts` | The single app-wide `MusicEngine` instance |
 | `src/audio/ticker.ts` | The one rAF loop that calls `engine.update` |
@@ -97,11 +98,14 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 | `src/choreography/grid.ts` | Plus-grid maths: layout, cursor turn, music pulse |
 | `src/choreography/glass.ts` | Glass outlines (new per load), displacement maps, drift/drag/throw/wall-bounce physics |
 | `src/choreography/fit.ts` | `fitCamera(width, height)` → `{ z, y }`: desktop keeps z = 5, phones pull back (and lower the camera in portrait) until the head fits |
+| `src/choreography/daylight.ts` | `daylight(date, override?)` → sun, key/fill/rim/ambient lights, Lightformer colours + env rotation, page palette; `?hour`/`?daycycle` parsing, `paletteVars`, `VARIANT_GAIN` |
+| `src/hooks/useDaylight.ts` | `startDaylight()` (the page's daylight clock, writes `--day-*` on `:root`) and `useDaylight()` |
+| `src/components/Daylight/index.tsx` | `<DaylightRig variant rimFlash />`: all scene lights + the head's Environment, from `useDaylight()`; rendered by each head |
 | `src/choreography/tilt.ts` | `tiltLook` (beta/gamma → gravity in the screen's axes by `screen.orientation.angle` → the right edge's dip and the screen's raise → pointer-like look; continuous through upright, where the raw Euler angles flip) and `TiltCalibration` |
 | `src/hooks/useDeviceTilt.ts` | Tilt-follow on touch devices: `enableDeviceTilt()` on the enter tap (iOS permission, levels at the current attitude), `useDeviceTilt()` gives `Head` a look or null (no sensor/permission, desktop, reduced motion); re-levels on rotation |
 | `src/styles/global.ts` | Global reset and the host-independent palette |
-| `src/components/Background/index.tsx` | Canvas plus-grid: big plusses face the cursor, mini plusses pulse with the kick |
-| `src/components/Head/index.tsx` | 3D head model, beat-locked nodding; follows the mouse, or the phone's tilt on touch devices; camera from `fitCamera` |
+| `src/components/Background/index.tsx` | Canvas plus-grid: big plusses face the cursor, mini plusses pulse with the kick; ground and plus colours from the daylight palette |
+| `src/components/Head/index.tsx` | 3D head model, beat-locked nodding; follows the mouse, or the phone's tilt on touch devices; camera from `fitCamera`; lit by `<DaylightRig>` (its snare flash via `rimFlash`) |
 | `src/assets/head.glb` | The head mesh: stock head with the owner's face, generated by `yarn headmap` (UVs + `_FACEWEIGHT`) |
 | `src/assets/head-face.jpg` | The face's photo skin (face crop only, no room), generated beside `head.glb` |
 | `src/components/Head/faceSkin.ts` | Shader patch blending the chrome into the photo skin by `_faceweight` |

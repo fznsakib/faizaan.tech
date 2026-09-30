@@ -41,15 +41,6 @@ function App() {
             zIndex: 10,
           }}
         >
-          <ambientLight intensity={0.3} />
-          <pointLight
-            position={[10, 10, 10]}
-            intensity={20}
-            distance={20}
-            decay={2}
-          />
-          <pointLight position={[-5, -5, -5]} intensity={5} />
-
           <Suspense fallback={null}>
             <Head />
           </Suspense>
