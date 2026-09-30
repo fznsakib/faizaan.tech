@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { BLEND, layerOpacity, MATTERS, matterAt, RUN_LENGTH, STAGES } from "./matter";
+import { BLEND, layerOpacity, MATTERS, matterAt, MAX_SWEEP, RUN_LENGTH, runEnd, STAGES, sweepDelay } from "./matter";
+import { SHOCKWAVE_SPEED } from "./type";
 
 import type { Matter, MatterRun, MatterSample } from "./matter";
 
@@ -100,5 +101,25 @@ describe("matter layers", () => {
       for (const matter of MATTERS) expect(Math.abs(current[matter] - previous[matter])).toBeLessThan(0.02);
       previous = current;
     }
+  });
+});
+
+describe("matter sweep", () => {
+  it("starts at the origin and travels outward at the kick shockwave's speed", () => {
+    expect(sweepDelay(700, 700)).toBe(0);
+    expect(sweepDelay(700 + SHOCKWAVE_SPEED * 0.1, 700)).toBeCloseTo(0.1, 9);
+    expect(sweepDelay(700 - SHOCKWAVE_SPEED * 0.1, 700)).toBeCloseTo(0.1, 9);
+    expect(sweepDelay(900, 700)).toBeLessThan(sweepDelay(1100, 700));
+  });
+
+  it("reaches the far end of a desktop name, from a pointer at the other end, within MAX_SWEEP", () => {
+    expect(sweepDelay(1400, 0)).toBeLessThanOrEqual(MAX_SWEEP);
+    expect(sweepDelay(1e6, 0)).toBe(MAX_SWEEP);
+  });
+
+  it("keeps a whole run, sweep included, to at most 7 s", () => {
+    expect(runEnd(run) - run.start).toBeCloseTo(RUN_LENGTH + MAX_SWEEP, 9);
+    expect(RUN_LENGTH + MAX_SWEEP).toBeLessThanOrEqual(7);
+    expect(matterAt(run, runEnd(run) - MAX_SWEEP).state).toBe("plain"); // the farthest letter is done by then
   });
 });

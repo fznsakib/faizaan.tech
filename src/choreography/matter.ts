@@ -1,3 +1,5 @@
+import { SHOCKWAVE_SPEED } from "./type";
+
 /** What the name's letters are made of. Also their stacking order, bottom to top. */
 export type Matter = "plain" | "chrome" | "molten" | "shatter" | "frost";
 export const MATTERS: readonly Matter[] = ["plain", "chrome", "molten", "shatter", "frost"];
@@ -23,12 +25,23 @@ export const STAGES: readonly Stage[] = [
 /** Seconds from a letter's first change to its return to plain. */
 export const RUN_LENGTH = STAGES.reduce((sum, stage) => sum + stage.duration, 0);
 
+/** Longest a run takes to sweep across the name, s: a pointer at one end of a desktop name reaches the other in ≈ 0.62 s. */
+export const MAX_SWEEP = 0.7;
+
 export interface MatterRun {
   /** When the run left its origin, s. */
   start: number;
   /** Where it left from: the pointer's or the head's x, px. */
   origin: number;
 }
+
+/** Seconds a run takes to reach the letter centred at `x` from its origin: the kick shockwave's speed, capped. */
+export function sweepDelay(x: number, origin: number): number {
+  return Math.min(MAX_SWEEP, Math.abs(x - origin) / SHOCKWAVE_SPEED);
+}
+
+/** When the farthest letter is plain again, s. */
+export const runEnd = (run: MatterRun): number => run.start + RUN_LENGTH + MAX_SWEEP;
 
 export interface MatterSample {
   state: Matter;
