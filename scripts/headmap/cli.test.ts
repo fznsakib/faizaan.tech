@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { isInside, parseFlags } from "./cli.ts";
 
-const spec = { depth: "number", window: "pair", nose: "vec3", icp: "count", out: "path" } as const;
+const spec = { depth: "number", window: "pair", nose: "vec3", icp: "count", out: "path", copper: "switch" } as const;
 
 describe("parseFlags", () => {
   it("reads the capture and typed flag values", () => {
@@ -36,6 +36,14 @@ describe("parseFlags", () => {
   it("rejects lists of the wrong length", () => {
     expect(() => parseFlags(["cap.glb", "--nose", "0,0.25"], spec)).toThrow(/--nose/);
     expect(() => parseFlags(["cap.glb", "--window", "1,2,3"], spec)).toThrow(/--window/);
+  });
+
+  it("reads switches, which take no value, anywhere among the flags", () => {
+    const flags = parseFlags(["cap.glb", "--copper", "--depth", "0.9"], spec);
+    expect(flags.on("copper")).toBe(true);
+    expect(flags.number("depth")).toBe(0.9);
+    expect(parseFlags(["cap.glb", "--depth", "0.9", "--copper"], spec).on("copper")).toBe(true);
+    expect(parseFlags(["cap.glb", "--depth", "0.9"], spec).on("copper")).toBe(false);
   });
 
   it("rejects counts that aren't whole and non-negative", () => {
