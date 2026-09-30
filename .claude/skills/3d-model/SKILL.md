@@ -79,6 +79,11 @@ pitch = pitchSpring.step(curve * amplitude, dt)
 - Pitch/lift/roll are each driven through a `Spring` (second-order, sub-stepped at 240Hz): pitch/lift `(900, 45)`, roll `(120, 18)` stiffness/damping.
 - With no song playing but a recent DJ hit (`frame.jamming`): a small extra nod, `deg(6) * frame.kick`.
 
+## Glass Knocks and the Pose Channel
+
+- The flinch: `impact.sample(performance.now() / 1000, flinch)` each frame, added to pitch/yaw/roll and the squash (`src/choreography/impact.ts`; GlassPanel calls `impact.hit` when a thrown piece knocks the head).
+- `trackHead(head, camera)` at the end of `useFrame` publishes the rig's rotation and height and the camera to `headPose` (`src/choreography/headShape.ts`), which the glass collides with and the caustics follow. Any new head component makes the same two calls.
+
 ## Mouse and Tilt Interaction
 
 Pointer NDC coordinates (-1 to 1), damped with `maath/easing`'s `damp` (tau 0.35):

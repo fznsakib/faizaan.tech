@@ -50,6 +50,7 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 | Layer            | z-index | Component(s)                       |
 |-------------------|---------|------------------------------------|
 | Background        | 0       | `Background` (canvas plus-grid); 0, not below, so a body background (ours or a host page's) can't paint over it |
+| Caustics          | 0       | `Caustics` (light pooled under the head): same z as the grid, mounted after it, so it paints over the grid and under the name |
 | Header/Subtitle   | 1       | `NameHeader`, `SubtitleStack`      |
 | GlassPanel        | 9       | `GlassPanel` (refractive glass, always behind the head) |
 | Canvas (3D)       | 10      | Three.js `Canvas` with `Head`      |
@@ -62,7 +63,7 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 - **Engine state**: `MusicEngine` is a plain class outside React. `useMusicState()` for coarse, re-rendering state; `useMusicFrame()` for per-frame callbacks that never re-render.
 - **Animation state**: Always `useRef`/`useMemo` for per-frame values (never `useState` — avoids re-renders).
 - **Direct DOM manipulation**: Write through `setStyle(el, prop, value)` in `src/choreography/dom.ts`, which dedupes so a redundant write never hits the DOM.
-- **Choreography module** (`src/choreography/`): pure, unit-tested per-effect math, kept separate from components — `nod` (phase-locked head nod, spring physics), `type` (header weight pulse, EQ ballistics, coarse font-variation steps), `faces` (per-word/per-letter header faces and their shockwave), `grid` (cursor-facing plusses, music pulses), `glass` (glass outlines, refraction maps, drift/drag/throw/wall physics), `fit` (camera distance/height so the head suits the viewport), `tilt` (phone tilt → pointer-like look, calibration), `dom` (`setStyle`).
+- **Choreography module** (`src/choreography/`): pure, unit-tested per-effect math, kept separate from components — `nod` (phase-locked head nod, spring physics), `type` (header weight pulse, EQ ballistics, coarse font-variation steps), `faces` (per-word/per-letter header faces and their shockwave), `grid` (cursor-facing plusses, music pulses), `glass` (glass outlines, refraction maps, drift/drag/throw/wall/head physics), `headShape` (the head's screen silhouette, and the `headPose` Head publishes), `impact` (the head's flinch when glass knocks it), `caustics` (the light-pool pattern), `fit` (camera distance/height so the head suits the viewport), `tilt` (phone tilt → pointer-like look, calibration), `dom` (`setStyle`).
 - **No CSS transitions** on properties written per-frame.
 - **Player skins**: each skin is a set of CSS custom properties on the Player's `Shell` (`[data-skin]`) plus a few `[data-skin="…"] &` rules; the visualiser's canvas palettes live in `Player/paint.ts`. The layout is shared; skins change look only.
 - **Three.js**: Use `useFrame` for animation loops (never raw `requestAnimationFrame`). `Head` reads `engine.frame` directly inside `useFrame` rather than via a hook. Use `useRef`/`useMemo` for mutable state and one-time objects (materials, springs).
@@ -76,7 +77,7 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 - **Imports**: React/libraries first, then local (`../../App.styled`), then audio/choreography (`../../audio/react`, `../../choreography/dom`)
 - **Type imports**: Use `import type { ... }` for type-only imports
 - **Theme**: `src/styles/theme.ts` exports `theme` with `colors` and `spacing`
-- **Testing**: Vitest (`yarn test`, node environment, `*.test.ts` only); choreography math, audio internals, the Player's pure helpers (`format`, `analyser`, `skins`, `keys`) and the `scripts/headmap/` geometry helpers each have a `*.test.ts` sibling. Components are checked in the browser.
+- **Testing**: Vitest (`yarn test`, node environment, `*.test.ts` only); choreography math, audio internals, the Player's pure helpers (`format`, `analyser`, `skins`, `keys`) and the `scripts/headmap/` geometry helpers each have a `*.test.ts` sibling. `headShape.test.ts` loads `src/assets/head.glb` and checks the silhouette proxy against the real mesh. Components are checked in the browser.
 
 ## Key Files
 
@@ -95,13 +96,16 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 | `src/choreography/type.ts` | Header/EQ weight pulses, quantisation |
 | `src/choreography/faces.ts` | Header faces: per word when calm, per letter in drops, Doto/Golos anchors, shockwave |
 | `src/choreography/grid.ts` | Plus-grid maths: layout, cursor turn, music pulse |
-| `src/choreography/glass.ts` | Glass outlines (new per load), displacement maps, drift/drag/throw/wall-bounce physics |
+| `src/choreography/glass.ts` | Glass outlines (new per load), displacement maps, drift/drag/throw/wall-bounce physics; `collideHead` (throws bounce off the head at 0.7 and knock it; drift glides round it; held pieces pass behind) |
+| `src/choreography/headShape.ts` | `headOutline(view, pose)`: the head's silhouette in CSS px (`COPPER_HEAD` ellipsoids fitted to head.glb, projected exactly through the live camera), with `distance`/`normal`/`contains`/`nearest`; `headPose`, written by `Head` via `trackHead` |
+| `src/choreography/impact.ts` | `impact`: `hit` (from GlassPanel) kicks a damped spring per axis, `sample(t)` (read by Head) gives the recoil; ≤ 8° yaw/roll, ≤ 5° pitch, settled by 0.6 s |
+| `src/choreography/caustics.ts` | `causticPool` (where the light lands under the head) and `writeCaustics` (seven rippling bands, moved by the head's pose) |
 | `src/choreography/fit.ts` | `fitCamera(width, height)` → `{ z, y }`: desktop keeps z = 5, phones pull back (and lower the camera in portrait) until the head fits |
 | `src/choreography/tilt.ts` | `tiltLook` (beta/gamma → gravity in the screen's axes by `screen.orientation.angle` → the right edge's dip and the screen's raise → pointer-like look; continuous through upright, where the raw Euler angles flip) and `TiltCalibration` |
 | `src/hooks/useDeviceTilt.ts` | Tilt-follow on touch devices: `enableDeviceTilt()` on the enter tap (iOS permission, levels at the current attitude), `useDeviceTilt()` gives `Head` a look or null (no sensor/permission, desktop, reduced motion); re-levels on rotation |
 | `src/styles/global.ts` | Global reset and the host-independent palette |
 | `src/components/Background/index.tsx` | Canvas plus-grid: big plusses face the cursor, mini plusses pulse with the kick |
-| `src/components/Head/index.tsx` | 3D head model, beat-locked nodding; follows the mouse, or the phone's tilt on touch devices; camera from `fitCamera` |
+| `src/components/Head/index.tsx` | 3D head model, beat-locked nodding; follows the mouse, or the phone's tilt on touch devices; camera from `fitCamera`; adds `impact.sample` (the flinch) to its pose and publishes rig and camera with `trackHead` |
 | `src/assets/head.glb` | The head mesh: stock head with the owner's face, generated by `yarn headmap` (UVs + `_FACEWEIGHT`) |
 | `src/assets/head-face.jpg` | The face's photo skin (face crop only, no room), generated beside `head.glb` |
 | `src/components/Head/faceSkin.ts` | Shader patch blending the chrome into the photo skin by `_faceweight` |
@@ -114,7 +118,8 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 | `src/components/Player/skins.ts` | Skin ids/names, cycling, `localStorage` (`player.skin`) |
 | `src/components/Player/analyser.ts` | Visualiser bar falloff and Winamp-style peak caps (pure) |
 | `src/components/DjPad/index.tsx` | On-screen DJ-mode pad (opened by the Player's JAM button) |
-| `src/components/GlassPanel/index.tsx` | Refractive 3D glass (SVG displacement via `backdrop-filter`; frosted fallback / `?frosted`), draggable |
+| `src/components/GlassPanel/index.tsx` | Refractive 3D glass (SVG displacement via `backdrop-filter`; frosted fallback / `?frosted`), draggable; steps against the head's live outline and relays knocks to `impact`. `?debug`: `window.__glass` (states, costs, and `probe`: outline, knocks, per-piece head clearance, flinch sampler) |
+| `src/components/Caustics/index.tsx` | The light pool under the head, in a pool-sized canvas; `--day-accent` if set, else the key light's `#ffe2b8`; static with reduced motion. `?debug`: `window.__caustics.costs` |
 | `src/components/SocialLinks/index.tsx` | Dot-matrix link dock: resolves on hover/focus, beat shimmer on touch |
 | `src/components/Splash/index.tsx` | Click-to-enter veil: inside the tap, unlocks audio (iOS audio session `playback` when entering with sound) and calls `enableDeviceTilt()` |
 | `src/components/MusicDebug/index.tsx` | `?debug` overlay (lamps, meters, metronome) |
@@ -134,6 +139,8 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 1. Keep the capture outside the repo (it holds the owner's room and the full photo) and run `yarn headmap <capture.glb>`. It prints the landmarks it found (nose tip, chin, L), the alignment, how many head vertices moved and how much of the texture came from the photo; every run starts from the base head, so reruns never compound, and the same inputs (with the locked dependencies) give byte-identical files.
 2. Open `head-face.jpg` and check its rim holds nothing but face (the run prints how close the photo comes to the crop's edge), then check the head on the site from several angles. `--debug <dir>` (refused inside the repo) writes `crop.glb` (the cropped capture with its photo), `aligned.glb`, `erased.glb` (the stock head with its own features erased) and a `weights.glb` blend map for a viewer.
 3. Tune with flags (`yarn headmap` alone prints them). Crop and blend sizes are in units of L, the nose-tip-to-chin height of each mesh, so they carry across capture scales; `--nose`/`--chin` override landmark detection when a capture confuses it. Bake flags you keep into the defaults in `scripts/headmap.ts`, so the no-flag run reproduces the committed files.
+
+A new head mesh also needs a new silhouette proxy: refit `COPPER_HEAD` in `src/choreography/headShape.ts` until `headShape.test.ts`'s mesh-coverage tests pass (every silhouette vertex within 6 px, ≤ 12 px stand-off on average).
 
 The skin texture is re-baked from the photo only where the cropped face covers it (the rest is face colour dilated outward), so the room never ships; the raw capture and its original texture are never committed. The mesh keeps the stock file's conventions (one node, z up, face toward +y, stock units, meshopt + quantised positions/normals), which is what `prepareModel` in `Head` assumes, and adds front-projected `TEXCOORD_0` plus a per-vertex `_FACEWEIGHT` (1 on the face, 0 on the chrome); the material is set in code.
 
