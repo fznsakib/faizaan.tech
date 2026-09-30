@@ -13,14 +13,17 @@ const WARM = "#ffe2b8";
 const MAX_DPR = 1.5;
 /** How far the light can wander from the pool's centre, in pool radii: the canvas covers this much. */
 const REACH = 1.5;
-/** Each band is stroked twice, a wide soft glow and a thin bright core: width (px) and opacity at full brightness. */
-const GLOW = { width: 10, alpha: 0.06 };
-const CORE = { width: 1.4, alpha: 0.32 };
+/** Each band is stroked three times, a wide soft glow, a halo and a thin bright core: width (px) and opacity at full brightness. */
+const PASSES = [
+  { width: 24, alpha: 0.045 },
+  { width: 7, alpha: 0.09 },
+  { width: 1.6, alpha: 0.36 },
+];
 /** The pool's soft rim: opacity of the light from its centre out to its edge (share of its radius). */
 const RIM = [
   [0, 1],
-  [0.5, 0.8],
-  [0.8, 0.3],
+  [0.55, 0.9],
+  [0.85, 0.35],
   [1, 0],
 ] as const;
 /** Fade in over this long (ms) once the head is drawn, so the light never pops in. */
@@ -134,7 +137,7 @@ const Caustics: React.FC = () => {
     context.strokeStyle = colour.current;
     context.lineCap = "round";
     context.lineJoin = "round";
-    for (const pass of [GLOW, CORE]) {
+    for (const pass of PASSES) {
       context.lineWidth = pass.width;
       for (let b = 0; b < BANDS; b++) {
         const base = b * BAND_STRIDE;
