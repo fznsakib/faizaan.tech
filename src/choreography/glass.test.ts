@@ -744,6 +744,44 @@ describe("head collisions", () => {
     });
   });
 
+  it("knocks on a fast glancing throw whose deepest point faces away from its path (it was clear a step ago)", () => {
+    everyBody((body) => {
+      // 14 px in with only 1000 px/s along the head's normal there, but 4500 px/s overall: a real knock, not old overlap
+      const n = collideHead(body, poking(body, 14, 1500), head, W, H, 0, DT, false).hit!;
+      const [along, across] = [1000, Math.sqrt(4500 ** 2 - 1000 ** 2)];
+      const glancing = { ...poking(body, 14, 1500), vx: -n.nx * along - n.ny * across, vy: -n.ny * along + n.nx * across };
+      const next = collideHead(body, glancing, head, W, H, 0, DT, false);
+      expect(next.hit).not.toBeNull();
+      expect(headClearance(body, next, head, W, H, spinAt(body, next, 0))).toBeGreaterThan(-0.5);
+      expect(next.vx * next.hit!.nx + next.vy * next.hit!.ny).toBeGreaterThan(0); // bounced off, not sliding in
+    });
+  });
+
+  it("never knocks the head from inside: a piece flung from behind it glides out first, however fast", () => {
+    for (const [width, height] of [
+      [1440, 900],
+      [393, 852],
+    ]) {
+      const real = headOutline({ width, height }, restPose(width, height));
+      const { left, right, top, bottom } = real.bounds;
+      everyBody((body) => {
+        for (let k = 0; k < 8; k++) {
+          const angle = (k * Math.PI) / 4;
+          const behind = { ...initialState(body, 0, width, height, false), x: left + 0.35 * (right - left), y: top + 0.55 * (bottom - top) };
+          const flung = release(behind, { vx: 3000 * Math.cos(angle), vy: 3000 * Math.sin(angle) }, width, height, false);
+          let previous = flung;
+          // "clear" to within the collision's own sampling (a few px): the knocks that matter came from 9–66 px deep
+          let wasClear = headClearance(body, flung, real, width, height, spinAt(body, flung, 0, false, width, height)) >= -3;
+          simulate(body, flung, 0.8, { width, height, head: real }, (state, t) => {
+            if (state.hit && state.hit !== previous.hit) expect(wasClear).toBe(true);
+            wasClear = headClearance(body, state, real, width, height, spinAt(body, state, t, false, width, height)) >= -3;
+            previous = state;
+          });
+        }
+      });
+    }
+  }, 60_000);
+
   it("leaves a piece that doesn't touch the head alone", () => {
     everyBody((body) => {
       const clear = { ...initialState(body, 0, W, H, false), x: 150, y: 450, vx: 300 };

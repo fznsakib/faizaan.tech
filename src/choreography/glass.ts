@@ -143,6 +143,8 @@ const DEPENETRATE = 900;
 const HEAD_GAP = 14;
 /** Every Nth outline point meets the head (40 of 160), then the deepest one's neighbours are checked too. */
 const HEAD_STRIDE = 4;
+/** How far (px) the head itself can move into a piece in one substep (a flinch's roll at the crown). */
+const HEAD_SLACK = 8;
 /** Deeper than this (px at REF_WIDTH), the head's interior normals stop being trustworthy: leave by its spine instead. */
 const GRAZE = 24;
 
@@ -192,6 +194,11 @@ export interface GlassState {
   impactAxis: "x" | "y";
   /** The latest knock against the head (a new object per knock), or null. */
   hit: HeadHit | null;
+  /**
+   * Whether it overlapped the head at the end of its last step, or was just let go (possibly behind it): overlap
+   * found then is old, and glides out instead of knocking.
+   */
+  buried: boolean;
 }
 
 /** A knock against the head: where the glass met its outline (px), the outline's outward normal there, and the approach speed along it (px/s). */
@@ -552,15 +559,16 @@ export function initialState(
     const e = glassExtent(body, width, height);
     ({ x, y } = steer(body, { x, y }, { x, y }, head, glassScale(body, width, height), spin, e, width, height));
   }
-  return { x, y, vx: 0, vy: 0, ...home, mode: "drift", impact: 0, impactAt: -Infinity, impactAxis: "x", hit: null };
+  return { x, y, vx: 0, vy: 0, ...home, mode: "drift", impact: 0, impactAt: -Infinity, impactAxis: "x", hit: null, buried: false };
 }
 
 /**
  * The head's silhouette is solid to a free body's outline: find the outline point deepest inside it, push the body
  * out along the head's normal there, and turn back its approach (bouncing at HEAD_RESTITUTION when thrown; a
- * drifting piece just stops pressing). A knock fast enough to ping records a `hit` for the head's flinch. Overlap
- * this step's motion didn't cause (dropped behind the head, the head moving into it) glides out at DEPENETRATE px/s
- * instead, and never pings. Returns the same object when nothing touched.
+ * drifting piece just stops pressing). A knock fast enough to ping records a `hit` for the head's flinch. Only a
+ * piece that was clear a step ago can knock; overlap it already had (let go behind the head, or deeper than its
+ * speed could reach in a step, like a resize) glides out at DEPENETRATE px/s instead, and never pings. Returns the
+ * same object when nothing changed.
  */
 export function collideHead(
   body: GlassBody,
@@ -573,18 +581,19 @@ export function collideHead(
   reduced: boolean,
 ): GlassState {
   if (state.mode === "held") return state;
+  const clear = state.buried ? { ...state, buried: false } : state;
   const size = glassScale(body, width, height);
-  if (head.distance(state.x, state.y) >= body.radius * size) return state;
+  if (head.distance(state.x, state.y) >= body.radius * size) return clear;
   const clearance = probe(body, state.x, state.y, size, reduced ? 0 : spinAt(body, t), head, HEAD_STRIDE);
-  if (clearance >= 0) return state;
+  if (clearance >= 0) return clear;
   const at = { x: contact.x, y: contact.y };
   const depth = -clearance;
   const n = { x: 0, y: 0 };
   head.normal(at.x, at.y, n);
   const approach = Math.max(0, -(state.vx * n.x + state.vy * n.y));
-  // touching: this step's own motion made the overlap, so it's a contact at the outline, resolved at once; anything
-  // deeper was already there and glides out along the way out of the head, no longer heading further in
-  const touching = depth <= approach * h + 2;
+  // touching: clear a step ago and no deeper than this step could carry it, so a contact at the outline, resolved at
+  // once; any other overlap glides out along the way out of the head, no longer heading further in
+  const touching = !state.buried && depth <= Math.hypot(state.vx, state.vy) * h + HEAD_SLACK;
   if (!touching) leave(head, state.x, state.y, n);
   const push = touching ? depth : Math.min(depth, DEPENETRATE * h);
   const moved = shove(state, state.x, state.y, n.x * push, n.y * push, glassExtent(body, width, height), width, height, head);
@@ -607,6 +616,7 @@ export function collideHead(
     impactAt: knock ? t : state.impactAt,
     impactAxis: knock ? (Math.abs(n.x) >= Math.abs(n.y) ? "x" : "y") : state.impactAxis,
     hit: knock ? { x: at.x + n.x * depth, y: at.y + n.y * depth, nx: n.x, ny: n.y, speed: approach, at: t } : state.hit,
+    buried: !touching,
   };
 }
 
@@ -725,10 +735,11 @@ export function release(
   height: number,
   reduced: boolean,
 ): GlassState {
-  if (reduced) return { ...state, mode: "drift", vx: 0, vy: 0, hx: state.x / width, hy: state.y / height };
+  // let go wherever the pointer left it, maybe behind the head: any overlap then is old (see collideHead)
+  if (reduced) return { ...state, mode: "drift", vx: 0, vy: 0, hx: state.x / width, hy: state.y / height, buried: true };
   const speed = Math.hypot(velocity.vx, velocity.vy);
   const cap = speed > MAX_THROW ? MAX_THROW / speed : 1;
-  return { ...state, mode: "thrown", vx: velocity.vx * cap, vy: velocity.vy * cap };
+  return { ...state, mode: "thrown", vx: velocity.vx * cap, vy: velocity.vy * cap, buried: true };
 }
 
 /** Fling velocity (px/s): a least-squares fit to the pointer samples from the last RELEASE_WINDOW before `now` (s). */

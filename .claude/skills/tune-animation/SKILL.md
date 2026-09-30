@@ -52,7 +52,8 @@ Quantisation steps are deliberately coarse: each distinct `font-variation-settin
 - `createBodies()` makes new organic outlines (pebble, blob, pill, lens, shard) on every load; the displacement map, clip path, highlights, hit-testing and wall bounces all follow the real outline.
 - Physics: drift toward a moving orbit around each piece's home, drag with the pointer (window-level hit-test, since the head canvas takes events), throw with `releaseVelocity`, `applyFriction`, and `collideWalls` against the viewport edges (with a glint "ping").
 - Chromatic aberration is off (`CHROMATIC` in the component) for frame budget; `?frosted` forces the non-Chromium fallback.
-- The head (`collideHead`): `HEAD_RESTITUTION` 0.7 for throws (drift just stops pressing, and only throws knock: ping + flinch); overlap older than one step glides out at `DEPENETRATE` 900 px/s away from the head's spine; drift targets keep `HEAD_GAP` 14 px (× scale) off the head; `HEAD_STRIDE` 4 samples 40 of 160 outline points, then refines round the deepest; below `GRAZE` 24 px deep the outline normal gives way to the spine.
+- The head (`collideHead`): `HEAD_RESTITUTION` 0.7 for throws (drift just stops pressing, and only throws knock: ping + flinch). Only a piece that was clear a step ago (`buried` false; `release` sets it) and is no deeper than its speed × step + `HEAD_SLACK` 8 px can knock; other overlap glides out at `DEPENETRATE` 900 px/s away from the head's spine. `HEAD_STRIDE` 4 samples 40 of 160 outline points, then refines round the deepest.
+- Drift steering (`steer`): targets keep `HEAD_GAP` 14 px (× scale) off the head; below `GRAZE` 24 px deep the outline normal gives way to the spine.
 - `glassScale`: width / 1440 clamped to `MIN_SCALE` 0.38 .. 1.25 (and ≤ 60% of the width / 45% of the height): on phones a piece covers at most ~1.5× the share of the width it does on desktop (tested).
 
 ## Flinch (`src/choreography/impact.ts`)
