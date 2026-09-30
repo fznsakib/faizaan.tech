@@ -85,20 +85,20 @@ type Keyframe = { hour: number } & Record<LampName, [color: string, intensity: n
 const KEYFRAMES: Keyframe[] = [
   { // 02:00 deep night: the sun long gone, a dark indigo sky, the cold rim the brightest thing on the head
     hour: 2,
-    key: ["#718ecd", 0], fill: ["#4c67a3", 2], rim: ["#5da4e5", 3], ambient: ["#425b96", 0.35],
+    key: ["#718ecd", 0], fill: ["#4c67a3", 2], rim: ["#359bd9", 8], ambient: ["#425b96", 0.35],
     sky: ["#2c4188", 0.7], cool: ["#244d9e", 1.6], warm: ["#333a7c", 1],
     ground: "#00262a", gridBig: "#3b4253", gridMini: "#5171bb", glassTint: "#99b2de", accent: "#8cbaf7",
   },
   { // 05:00 pre-dawn: the sky greying to a cold blue before the sun
     hour: 5,
-    key: ["#b1d2f4", 0], fill: ["#7da1d0", 2.5], rim: ["#9cbff8", 2.4], ambient: ["#81a1ca", 0.3],
-    sky: ["#5c80bc", 1.1], cool: ["#5a84d4", 2.6], warm: ["#5682bb", 1.5],
+    key: ["#b1d2f4", 0], fill: ["#7da1d0", 2.5], rim: ["#9cbff8", 6], ambient: ["#81a1ca", 0.3],
+    sky: ["#5c80bc", 2], cool: ["#5a84d4", 3.4], warm: ["#5682bb", 1.5],
     ground: "#032e32", gridBig: "#414f5d", gridMini: "#73a1dc", glassTint: "#c2daf9", accent: "#acd2fb",
   },
   { // 06:30 dawn: the sun on the horizon at front-left, cold blue-white
     hour: SUNRISE,
-    key: ["#c3e2fe", 10], fill: ["#b7d2e6", 4], rim: ["#c7eaff", 1.8], ambient: ["#cde1f0", 0.3],
-    sky: ["#bddcf7", 2.2], cool: ["#abd7fd", 4.5], warm: ["#c1e3fc", 2.6],
+    key: ["#c3e2fe", 30], fill: ["#b7d2e6", 4], rim: ["#c7eaff", 5], ambient: ["#cde1f0", 0.3],
+    sky: ["#bddcf7", 5], cool: ["#abd7fd", 7], warm: ["#c1e3fc", 4.5],
     ground: "#093838", gridBig: "#4c5a65", gridMini: "#9ecaef", glassTint: "#ddf2ff", accent: "#d3ebff",
   },
   { // 09:00 morning: a warm-white sun climbing from the left under a pale blue sky
@@ -115,19 +115,19 @@ const KEYFRAMES: Keyframe[] = [
   },
   { // 18:30 golden hour: a low, hot orange sun at back-right, copper everywhere
     hour: 18.5,
-    key: ["#ff9845", 28], fill: ["#f2ab83", 5], rim: ["#ffcc8e", 2.2], ambient: ["#f5c299", 0.32],
+    key: ["#ff9845", 28], fill: ["#f2ab83", 5], rim: ["#ffcc8e", 3], ambient: ["#f5c299", 0.32],
     sky: ["#ffbb7b", 2.6], cool: ["#fa8c58", 3.5], warm: ["#f67f2f", 5],
     ground: "#214026", gridBig: "#6d594a", gridMini: "#f6ab6b", glassTint: "#ffdeb0", accent: "#ffb769",
   },
   { // 20:00 dusk: the sun just under, a pink-violet afterglow
     hour: 20,
-    key: ["#e8777a", 0], fill: ["#b873b2", 3.5], rim: ["#d398e0", 2.6], ambient: ["#c287bc", 0.32],
+    key: ["#e8777a", 0], fill: ["#b873b2", 3.5], rim: ["#d398e0", 6], ambient: ["#c287bc", 0.32],
     sky: ["#ba71cb", 1.6], cool: ["#c35aa4", 2.6], warm: ["#d14a5f", 3],
     ground: "#05332e", gridBig: "#5b4959", gridMini: "#d080b6", glassTint: "#f6bde2", accent: "#f594c3",
   },
   { // 22:30 night: deep violet, a cool blue-violet rim
     hour: 22.5,
-    key: ["#ae96da", 0], fill: ["#8d6cc2", 2.5], rim: ["#87b1fd", 3.2], ambient: ["#835fb3", 0.35],
+    key: ["#ae96da", 0], fill: ["#8d6cc2", 2.5], rim: ["#56acf0", 10], ambient: ["#835fb3", 0.35],
     sky: ["#794db6", 0.9], cool: ["#6e4fc1", 2], warm: ["#7f42a6", 1.4],
     ground: "#012c28", gridBig: "#52485f", gridMini: "#a377d3", glassTint: "#d1b6f3", accent: "#c3aeff",
   },
