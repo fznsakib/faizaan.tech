@@ -53,7 +53,7 @@ const NameHeader: React.FC = () => {
     []
   );
   const pieces = useMemo(() => PLANS.map((plan) => (plan ? emptyPieces() : null)), []);
-  const melt = useMemo<MeltFilter>(() => ({ warp: null, front: null, soften: null }), []);
+  const melt = useMemo<MeltFilter>(() => ({ warp: null, ramp: null }), []);
   const state = useMemo(() => ({ kicks: new KickHistory(), faces: createFaceWave(WORDS) }), []);
   /** Font size (em) per face that keeps the name at its Golos width. */
   const scales = useRef(new Map<string, number>());
@@ -106,9 +106,9 @@ const NameHeader: React.FC = () => {
           bottom: rects[0].bottom,
         };
         geometry.fontSize = parseFloat(getComputedStyle(letters.current[0]).fontSize) || 0;
-        // The melt ramps in from about the letters' middle, over their lower half (the filter region starts 10% up).
-        melt.front?.setAttribute("dy", (0.55 * height).toFixed(1));
-        melt.soften?.setAttribute("stdDeviation", `0 ${(0.12 * height).toFixed(1)}`);
+        // The melt's ramp spans the letter box and a little beyond (it runs 0.35–0.65 down its own height).
+        melt.ramp?.setAttribute("y", (-0.1 * height).toFixed(1));
+        melt.ramp?.setAttribute("height", (1.4 * height).toFixed(1));
       }
     };
     let cancelled = false;
