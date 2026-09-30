@@ -295,7 +295,7 @@ describe("matter effects", () => {
         expect([pose.x, pose.y]).toEqual([0, 0]);
       }
       const out = shardPose(shard, 0.45, 1);
-      expect(Math.hypot(out.x, out.y)).toBeGreaterThan(0.15); // em
+      expect(Math.hypot(out.x, out.y)).toBeGreaterThan(0.12); // em: a short hop, clear of the glyph
     }
     expect(shatterGlyph(0)).toBe(1);
     expect(shatterGlyph(0.3)).toBe(0);
@@ -317,7 +317,7 @@ describe("matter effects", () => {
         const meanX = (side: number) => shards.reduce((sum, shard) => sum + shardPose(shard, 0.45, side).x, 0) / count;
         expect(meanX(1)).toBeGreaterThan(0.05);
         expect(meanX(-1)).toBeLessThan(-0.05);
-        for (const shard of shards) expect(Math.hypot(shardPose(shard, 0.45, 1).x, shardPose(shard, 0.45, 1).y)).toBeGreaterThan(0.15);
+        for (const shard of shards) expect(Math.hypot(shardPose(shard, 0.45, 1).x, shardPose(shard, 0.45, 1).y)).toBeGreaterThan(0.12);
       }
     }
   });

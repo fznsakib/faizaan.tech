@@ -260,7 +260,7 @@ export interface ShardPose {
 }
 
 /** Extra flight away from the run's origin, em, so the burst reads as the sweep hitting the letter. */
-const SHARD_PUSH = 0.2;
+const SHARD_PUSH = 0.15;
 
 export function shardsFor(seed: number, count: number): Shard[] {
   const random = mulberry32(seed);
@@ -269,7 +269,7 @@ export function shardsFor(seed: number, count: number): Shard[] {
     // Evenly spread round the letter (jittered), so the burst is balanced and the push away from the origin shows.
     const angle = 2 * Math.PI * ((i + turn + (random() - 0.5) * 0.5) / count);
     const reach = 0.4 + 0.6 * random();
-    const distance = 0.4 + 0.3 * random();
+    const distance = 0.3 + 0.2 * random();
     return {
       x: 0.5 + 0.28 * reach * Math.cos(angle),
       y: 0.52 + 0.22 * reach * Math.sin(angle),
