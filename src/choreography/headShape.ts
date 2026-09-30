@@ -81,7 +81,7 @@ export interface HeadOutline {
   scale: number;
 }
 
-/** A projected part: an ellipse with centre (mx, my), semi-axes a ≥ b, a along (cos, sin). */
+/** A projected part: an ellipse with centre (mx, my), semi-axes a ≥ b, a along (cos, sin); c2 = a² − b². */
 interface Ellipse {
   mx: number;
   my: number;
@@ -89,6 +89,7 @@ interface Ellipse {
   b: number;
   cos: number;
   sin: number;
+  c2: number;
 }
 
 const EMPTY: HeadOutline = {
@@ -169,13 +170,15 @@ export function headOutline(view: HeadView, pose: HeadPose, parts: readonly Head
     const mean = (p + r) / 2;
     const spread = Math.hypot((p - r) / 2, q);
     const angle = 0.5 * Math.atan2(2 * q, p - r);
+    const [major, minor] = [Math.max(mean + spread, 1e-9), Math.max(mean - spread, 1e-9)];
     ellipses.push({
       mx,
       my,
-      a: Math.sqrt(Math.max(mean + spread, 1e-9)),
-      b: Math.sqrt(Math.max(mean - spread, 1e-9)),
+      a: Math.sqrt(major),
+      b: Math.sqrt(minor),
       cos: Math.cos(angle),
       sin: Math.sin(angle),
+      c2: major - minor,
     });
   }
   if (ellipses.length === 0) return EMPTY;
@@ -194,30 +197,32 @@ export function headOutline(view: HeadView, pose: HeadPose, parts: readonly Head
       const dx = x - el.mx;
       const dy = y - el.my;
       // no nearer than its circumscribed circle: too far to touch the union, skip it
-      if (dist !== Infinity && Math.hypot(dx, dy) - el.a >= dist + k) continue;
+      if (dist !== Infinity && Math.sqrt(dx * dx + dy * dy) - el.a >= dist + k) continue;
       const qx = dx * el.cos + dy * el.sin;
       const qy = dy * el.cos - dx * el.sin;
-      const [a, b] = [el.a, el.b];
+      const { a, b, c2 } = el;
       const px = Math.abs(qx);
       const py = Math.abs(qy);
       // the nearest outline point, by Chatfield's trig-free iteration on the quadrant's arc (3 steps suffice)
-      const c2 = a * a - b * b;
       let tx = Math.SQRT1_2;
       let ty = Math.SQRT1_2;
       for (let n = 0; n < 3; n++) {
         const ex = (c2 * tx * tx * tx) / a;
         const ey = (-c2 * ty * ty * ty) / b;
-        const r = Math.hypot(a * tx - ex, b * ty - ey);
-        const q = Math.hypot(px - ex, py - ey) || 1e-12;
-        tx = Math.min(1, Math.max(0, (((px - ex) * r) / q + ex) / a));
-        ty = Math.min(1, Math.max(0, (((py - ey) * r) / q + ey) / b));
-        const t = Math.hypot(tx, ty) || 1;
+        const rx = a * tx - ex;
+        const ry = b * ty - ey;
+        const ux = px - ex;
+        const uy = py - ey;
+        const ratio = Math.sqrt((rx * rx + ry * ry) / (ux * ux + uy * uy || 1e-24));
+        tx = Math.min(1, Math.max(0, (ux * ratio + ex) / a));
+        ty = Math.min(1, Math.max(0, (uy * ratio + ey) / b));
+        const t = Math.sqrt(tx * tx + ty * ty) || 1;
         tx /= t;
         ty /= t;
       }
       const ox = px - a * tx;
       const oy = py - b * ty;
-      const length = Math.hypot(ox, oy);
+      const length = Math.sqrt(ox * ox + oy * oy);
       const inside = (px * px) / (a * a) + (py * py) / (b * b) < 1;
       let lx: number;
       let ly: number;
@@ -225,7 +230,7 @@ export function headOutline(view: HeadView, pose: HeadPose, parts: readonly Head
         [lx, ly] = inside ? [-ox / length, -oy / length] : [ox / length, oy / length];
       } else {
         const [ux, uy] = [tx / a, ty / b]; // on the outline: the ellipse's own normal
-        const u = Math.hypot(ux, uy) || 1;
+        const u = Math.sqrt(ux * ux + uy * uy) || 1;
         [lx, ly] = [ux / u, uy / u];
       }
       if (qx < 0) lx = -lx;
