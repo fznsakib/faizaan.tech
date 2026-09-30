@@ -52,7 +52,7 @@ export interface SkinParams {
 export const SKIN_DEFAULTS: SkinParams = {
   hairline: [1.1, 0.35, -0.35],
   thickness: 0.1,
-  curl: 0.06,
+  curl: 0.08,
   atlasSize: 2048,
   quality: 82,
   seed: 20260930,

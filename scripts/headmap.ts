@@ -53,7 +53,7 @@ const USAGE = `usage: yarn headmap <capture.glb> [flags]
   --smooth n          Laplacian passes across the blend band (2)
   --hairline f,s,b    skin: synthesized hairline over the forehead, ears and nape, in L above the nose tip (1.1,0.35,-0.35)
   --thickness k       skin: hair volume over the scalp, in L (0.1)
-  --curl k            skin: lumps of curls on it, in L (0.06)
+  --curl k            skin: lumps of curls on it, in L (0.08)
   --quality n         skin: the atlas's JPEG quality (82)
   --debug dir         also write debug GLBs (copper: the crop with the capture's photo — keep dir outside the repo —
                       the aligned crop, the erased stock head and a weight map; skin: a hair map)
