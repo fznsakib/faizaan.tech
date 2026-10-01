@@ -53,6 +53,7 @@ You are a React/TypeScript/styled-components specialist working on faizaan.tech,
 
 - `src/styles/theme.ts` — exports `theme` with `colors` and `spacing`
 - `src/styles/colors.ts` — `site` (the host-independent palette: white text on `rgb(20, 61, 50)`), plus primary, secondary, neutral, status palettes
+- The ground and a few tints follow the visitor's time of day: read `--day-ground`, `--day-grid-big`, `--day-grid-mini`, `--day-glass-tint`, `--day-accent` (written on `:root` by `startDaylight`) with a fallback, e.g. `var(--day-ground, rgb(20, 61, 50))`; for alpha use `color-mix(in srgb, var(--day-ground, …) 82%, transparent)`. Anything painted in the page's green to blend into it (veils, pools) must use `--day-ground`, not the literal
 - Import `colors` directly (`import { colors } from "…/styles/colors"`): `styled.d.ts`'s `DefaultTheme` alias doesn't type `theme.colors`
 - Text components set their own `color`; never rely on inherited text colour (a host page or light mode would change it)
 - Phones: `(max-width: 767px)` portrait and `(max-height: 500px)` landscape rules; inset edge-fixed elements with `max(Npx, env(safe-area-inset-*))`; keep desktop (≥ 1280 px) untouched

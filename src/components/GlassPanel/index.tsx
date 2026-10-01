@@ -459,14 +459,14 @@ const GlassPanel: React.FC = () => {
               <RimArt width={slab.w} height={slab.h}>
                 <defs>
                   <linearGradient id={`rim-${id}`} x1="1" y1="0" x2="0" y2="1">
-                    <stop offset="0" stopColor="#fff" stopOpacity="0.95" />
-                    <stop offset="0.35" stopColor="#fff" stopOpacity="0.18" />
-                    <stop offset="0.7" stopColor="#fff" stopOpacity="0.08" />
-                    <stop offset="1" stopColor="#fff" stopOpacity="0.5" />
+                    <stop offset="0" stopColor="#fff" stopOpacity="0.95" data-tint="light" />
+                    <stop offset="0.35" stopColor="#fff" stopOpacity="0.18" data-tint="light" />
+                    <stop offset="0.7" stopColor="#fff" stopOpacity="0.08" data-tint="light" />
+                    <stop offset="1" stopColor="#fff" stopOpacity="0.5" data-tint="light" />
                   </linearGradient>
                   <linearGradient id={`depth-${id}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0" stopColor="#fff" stopOpacity="0.16" />
-                    <stop offset="0.55" stopColor="#fff" stopOpacity="0" />
+                    <stop offset="0" stopColor="#fff" stopOpacity="0.16" data-tint="glass" />
+                    <stop offset="0.55" stopColor="#fff" stopOpacity="0" data-tint="glass" />
                     <stop offset="1" stopColor="#031210" stopOpacity="0.28" />
                   </linearGradient>
                 </defs>

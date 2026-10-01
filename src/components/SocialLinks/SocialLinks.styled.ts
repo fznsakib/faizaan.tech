@@ -2,8 +2,8 @@ import styled, { css } from "styled-components";
 
 /** The site blue of the background grid's mini plusses: every glyph's dots at rest. */
 const DOT_BLUE = "#8AB1EE";
-/** The page background (Background), so a glyph's pool reads as clear floor, not a disc. */
-const POOL = "rgb(20, 61, 50)";
+/** The page background (Background, with the time of day), so a glyph's pool reads as clear floor, not a disc. */
+const POOL = "var(--day-ground, rgb(20, 61, 50))";
 const GLYPH = 28;
 const TARGET = 48;
 
@@ -46,7 +46,7 @@ export const Link = styled.a`
     inset: 0;
     z-index: -1;
     border-radius: 50%;
-    background: radial-gradient(closest-side, ${POOL} 64%, rgba(20, 61, 50, 0) 86%);
+    background: radial-gradient(closest-side, ${POOL} 64%, transparent 86%);
   }
 
   &:focus {

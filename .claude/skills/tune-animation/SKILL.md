@@ -67,9 +67,17 @@ Quantisation steps are deliberately coarse: each distinct `font-variation-settin
 - Pattern: seven bands in two tilt families (≈ +12°, −19°), ripple speeds < 0.6 rad/s; `SLIDE` 0.55 rx/rad against a turn, `BREATHE` 0.9 (height) and `FOCUS` 0.8 (brightness) per radian of nod.
 - Look (component): strokes 24 px @ 0.045, 7 px @ 0.09, 1.6 px @ 0.36 with `lighter`, faded to the pool's rim; DPR capped at 1.5; fades in over 1.5 s once the head is drawn.
 
+## Daylight (`src/choreography/daylight.ts`, `src/components/Daylight`)
+
+- `KEYFRAMES`: one row per keyframe (02:00, 05:00, 06:30 `SUNRISE`, 09:00, 13:00 `NOON`, 18:30, 20:00, 22:30) of lamp `[colour, intensity]`s (key, fill, rim, ambient, sky, cool, warm) and palette tokens; mixed in OKLab with a smoothstep per segment. The 13:00 row is the site's original scene and is pinned by `daylight.test.ts`: never edit it.
+- Sun: rises `SUNRISE` at front-left (azimuth −45°), peaks at `NOON` at today's key angle ([10, 10, 10]), sets `SUNSET` 19:30 back-right; the key never goes below the horizon; the environment turns with the sun's azimuth.
+- Guard-rail tests: no step > ΔE 0.015 or 2% of a lamp's peak between minutes; neighbouring keyframes ΔE > 0.06 apart, and > 0.08 from noon; the ground stays the site's green (OKLCH L 0.22–0.38, C 0.03–0.07, hue 140–215°, ΔE < 0.1 from `rgb(20, 61, 50)`).
+- Preview with `?hour=18.5`; sweep with `?daycycle` (24 h in `CYCLE_SECONDS` 60, 100 ms ticks; each tick is ~0.4 ms JS plus one `:root` custom-property style recalc).
+- The copper chrome swallows blue: cold and violet hours show on the head through brighter environments and strong rims, not through colour alone.
+
 ## Head Fit and Tilt (`src/choreography/fit.ts`, `src/choreography/tilt.ts`)
 
-- `fitCamera`: `MAX_WIDTH` 0.65 of the width; `PORTRAIT_HEIGHT` 0.45 of the height and `PORTRAIT_CENTRE` 0.4 down, easing off between aspect `EASE_FROM` 0.75 and `EASE_TO` 1.25; desktop exactly z = 5, y = 0.
+- `fitCamera(width, height, head)`: each head's measured `HeadFit` (`COPPER_FIT` 0.41 × 0.654 at 0.489; `SKIN_FIT` 0.439 × 0.701 at 0.484 — its hair makes it bigger); `MAX_WIDTH` 0.65 of the width; `PORTRAIT_HEIGHT` 0.45 of the height and `PORTRAIT_CENTRE` 0.4 down, easing off between aspect `EASE_FROM` 0.75 and `EASE_TO` 1.25; desktop exactly z = 5, y = 0.
 - `tiltLook`: `TILT_RANGE` 25° of phone tilt from the calibration = the full mouse-follow range (22° yaw / 10° pitch); smoothing is the head's own damp (tau 0.35).
 
 ## Value Ranges

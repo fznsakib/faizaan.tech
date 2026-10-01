@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { isInside, parseFlags } from "./cli.ts";
+import { chooseHead, isInside, parseFlags } from "./cli.ts";
 
-const spec = { depth: "number", window: "pair", nose: "vec3", icp: "count", out: "path" } as const;
+const spec = { depth: "number", window: "pair", nose: "vec3", icp: "count", out: "path", copper: "switch" } as const;
 
 describe("parseFlags", () => {
   it("reads the capture and typed flag values", () => {
@@ -38,6 +38,14 @@ describe("parseFlags", () => {
     expect(() => parseFlags(["cap.glb", "--window", "1,2,3"], spec)).toThrow(/--window/);
   });
 
+  it("reads switches, which take no value, anywhere among the flags", () => {
+    const flags = parseFlags(["cap.glb", "--copper", "--depth", "0.9"], spec);
+    expect(flags.on("copper")).toBe(true);
+    expect(flags.number("depth")).toBe(0.9);
+    expect(parseFlags(["cap.glb", "--depth", "0.9", "--copper"], spec).on("copper")).toBe(true);
+    expect(parseFlags(["cap.glb", "--depth", "0.9"], spec).on("copper")).toBe(false);
+  });
+
   it("rejects counts that aren't whole and non-negative", () => {
     expect(() => parseFlags(["cap.glb", "--icp", "2.5"], spec)).toThrow(/--icp/);
     expect(() => parseFlags(["cap.glb", "--icp", "-1"], spec)).toThrow(/--icp/);
@@ -54,5 +62,28 @@ describe("isInside", () => {
     expect(isInside("/repo-debug", "/repo")).toBe(false);
     expect(isInside("/", "/repo")).toBe(false);
     expect(isInside("/tmp/x", "/repo")).toBe(false);
+  });
+});
+
+describe("chooseHead", () => {
+  const never = () => {
+    throw new Error("measured the coverage");
+  };
+
+  it("builds the copper head on --copper without measuring the capture's coverage", () => {
+    expect(chooseHead({ copper: true, full: false }, never, 0.85)).toEqual({ head: "copper" });
+  });
+
+  it("takes --full at its word", () => {
+    expect(chooseHead({ copper: false, full: true }, never, 0.85)).toEqual({ head: "full" });
+  });
+
+  it("refuses --full with --copper: the full path builds the skin head", () => {
+    expect(() => chooseHead({ copper: true, full: true }, never, 0.85)).toThrow(/--full/);
+  });
+
+  it("otherwise builds from the capture as it is when it surrounds the head, and synthesizes the rest when it doesn't", () => {
+    expect(chooseHead({ copper: false, full: false }, () => 0.9, 0.85)).toEqual({ head: "full", coverage: 0.9 });
+    expect(chooseHead({ copper: false, full: false }, () => 0.62, 0.85)).toEqual({ head: "skin", coverage: 0.62 });
   });
 });
