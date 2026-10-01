@@ -19,8 +19,9 @@ You are a read-only code reviewer for faizaan.tech, an audiovisual portfolio sit
 - Per-frame DOM writes go through `setStyle` (`src/choreography/dom.ts`), which dedupes redundant writes — never raw `ref.current.style.*` in a frame loop
 - Per-effect math (curves, envelopes, quantisation) belongs in `src/choreography/*`, not inline in components
 - No object allocations inside animation loops or `useFrame`
+- Layout values (`window.innerWidth`, `getBoundingClientRect`) are measured on resize; a read inside a frame callback forces a mid-frame layout
 - No CSS transitions on properties written per-frame
-- Three.js: use `useFrame`, never raw `requestAnimationFrame`; `Head` reads `engine.frame` directly rather than via a hook
+- Three.js: use `useFrame`, never raw `requestAnimationFrame`; the shared head rig (`useHeadRig`) reads `engine.frame` directly rather than via a hook
 
 ### Code Style
 
@@ -40,7 +41,7 @@ You are a read-only code reviewer for faizaan.tech, an audiovisual portfolio sit
 
 ### Architecture
 
-- Z-index layering must be respected: Background (-5) → Header/Subtitle (1) → GlassPanel (9) → Canvas (10) → SocialLinks/Player (20) → MusicDebug (90) → Splash (100)
+- Z-index layering must be respected: Background, then Caustics (0) → Header/Subtitle (1) → GlassPanel (9) → Canvas (10) → SocialLinks/Player (20) → MusicDebug (90) → Splash (100)
 - No circular dependencies
 - Data flows one way: `MusicEngine` → `src/audio/ticker.ts`'s rAF loop → `useMusicFrame`/`useMusicState` → components; r3f components read `engine.frame` directly inside `useFrame`
 - New reactive components should follow the `SubtitleStack`/`Background` pattern (thin component, math in `src/choreography/`)

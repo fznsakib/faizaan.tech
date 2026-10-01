@@ -190,13 +190,6 @@ const bevel = (light: string, dark: string, width = 1, sunk = false) => css`
   border-color: ${sunk ? `${dark} ${light} ${light} ${dark}` : `${light} ${dark} ${dark} ${light}`};
 `;
 
-/** global.ts turns every hovered button's border blue: keep a bevel's own colours under the pointer. */
-const holdBevel = (light: string, dark: string, sunk = false) => css`
-  &:hover {
-    border-color: ${sunk ? `${dark} ${light} ${light} ${dark}` : `${light} ${dark} ${dark} ${light}`};
-  }
-`;
-
 const focusRing = css`
   &:focus {
     outline: none;
@@ -236,7 +229,7 @@ export const Shell = styled.section`
 
   &${DRAWER} {
     top: 50%;
-    right: 0;
+    right: env(safe-area-inset-right, 0px);
     display: flex;
     align-items: center;
     transform: translate(var(--drawer-shift, 0px), -50%);
@@ -261,13 +254,12 @@ export const Tab = styled.button`
   justify-content: center;
   gap: 8px;
   width: 44px;
-  height: 116px;
+  min-height: 116px;
   padding: 10px 0;
   cursor: pointer;
   touch-action: manipulation;
   background: var(--win-bg);
   ${bevel("var(--win-light)", "var(--win-dark)", 2)}
-  ${holdBevel("var(--win-light)", "var(--win-dark)")}
   border-right: 0;
   box-shadow: -4px 4px 14px rgba(0, 0, 0, 0.35);
   color: var(--title-fg);
@@ -280,10 +272,6 @@ export const Tab = styled.button`
     border-radius: 12px 0 0 12px;
   }
 
-  [data-skin="base"] & {
-    text-transform: uppercase;
-  }
-
   svg {
     width: 16px;
     height: auto;
@@ -293,8 +281,16 @@ export const Tab = styled.button`
   ${focusRing}
 `;
 
+/**
+ * Stacked upright, one letter per em-high cell: sideways, a monospaced face (Doto) or WebKit's vertical metrics left
+ * a gap after the narrow "l" ("pl ayer").
+ */
 export const TabLabel = styled.span`
   writing-mode: vertical-rl;
+  text-orientation: upright;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  line-height: 1;
 `;
 
 /** The windows, stacked like Winamp's: main above the playlist. */
@@ -312,6 +308,15 @@ export const Stack = styled.div`
     max-height: calc(100dvh - 144px);
     overflow-y: auto;
     overscroll-behavior: contain;
+  }
+
+  /* tucked away, the panel is hidden, not just pushed off: inset from a notch, it would still peek past the edge */
+  ${DRAWER}:not([data-open]) & {
+    visibility: hidden;
+
+    @media (prefers-reduced-motion: no-preference) {
+      transition: visibility 0s linear 320ms;
+    }
   }
 `;
 
@@ -448,7 +453,6 @@ export const TitleButton = styled.button`
   color: var(--btn-fg);
   background: var(--btn-bg);
   ${bevel("var(--btn-light)", "var(--btn-dark)")}
-  ${holdBevel("var(--btn-light)", "var(--btn-dark)")}
   border-radius: var(--btn-radius);
 
   svg {
@@ -806,7 +810,6 @@ export const Vis = styled.button`
   cursor: pointer;
   background: var(--lcd-bg);
   ${sunkPanel}
-  ${holdBevel("var(--lcd-light)", "var(--lcd-dark)", true)}
 
   [data-skin="chrome"] &,
   [data-skin="chrome"] &:hover {
@@ -965,7 +968,6 @@ export const Button = styled.button<{ $play?: boolean }>`
   color: ${({ $play }) => ($play ? "var(--play-fg)" : "var(--btn-fg)")};
   background: ${({ $play }) => ($play ? "var(--play-bg)" : "var(--btn-bg)")};
   ${bevel("var(--btn-light)", "var(--btn-dark)")}
-  ${holdBevel("var(--btn-light)", "var(--btn-dark)")}
   border-radius: var(--btn-radius);
   font-family: var(--btn-font);
   font-size: var(--btn-size);
@@ -1175,10 +1177,34 @@ export const VisuallyHidden = styled.p`
   white-space: nowrap;
 `;
 
-/** The jam pad keeps the top-right spot it had in the old transport row. */
+/**
+ * The jam pad keeps the top-right spot it had in the old transport row. On a portrait phone that's the name's
+ * line, so it centres just under the name instead (over the head's crown at most); on a landscape phone (drawer
+ * layout, which JAM tucks away) it's a 2×2 block right of the head, clear of the drawer tab.
+ */
 export const PadDock = styled.div`
   position: fixed;
-  top: 0.75rem;
-  right: 1rem;
+  top: max(0.75rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
   z-index: 20;
+
+  @media (max-width: 767px) {
+    top: calc(max(2rem, env(safe-area-inset-top)) + 12.5vw * 1.1 + 8px);
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: calc(100vw - 32px);
+  }
+
+  @media (max-height: 500px) {
+    &[data-layout="drawer"] {
+      top: 50%;
+      right: calc(max(16px, env(safe-area-inset-right)) + 60px);
+      left: auto;
+      transform: translateY(-50%);
+      width: auto;
+      max-width: 12rem;
+    }
+  }
 `;

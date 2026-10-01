@@ -1,5 +1,6 @@
 import styled from "styled-components";
 
+/** z 0, not below: a body background (ours, or a host page's) would otherwise paint over it. */
 export const Background = styled.div`
   position: fixed;
   top: 0;
@@ -8,7 +9,7 @@ export const Background = styled.div`
   bottom: 0;
   width: 100%;
   height: 100%;
-  z-index: -5;
+  z-index: 0;
   background-color: rgb(20, 61, 50);
 `;
 

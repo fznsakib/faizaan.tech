@@ -78,4 +78,12 @@ export const SilentButton = styled.button`
   &:hover {
     opacity: 1;
   }
+
+  /* a full-size touch target: the text alone is ~24 px tall */
+  @media (pointer: coarse) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 12px;
+  }
 `;

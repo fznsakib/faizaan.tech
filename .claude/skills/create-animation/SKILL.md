@@ -73,7 +73,7 @@ export const Container = styled.div`
 
 Import and place at the correct z-index layer:
 
-Background (-5) → Header/Subtitle (1) → GlassPanel (9) → Canvas (10) → SocialLinks/Player (20) → MusicDebug (90) → Splash (100)
+Background, then Caustics (0) → Header/Subtitle (1) → GlassPanel (9) → Canvas (10) → SocialLinks/Player (20) → MusicDebug (90) → Splash (100)
 
 ### 9. Test
 

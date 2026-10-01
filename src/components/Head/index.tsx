@@ -1,133 +1,57 @@
-import { Environment, Lightformer, useGLTF } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
-import { damp } from "maath/easing";
-import { useEffect, useMemo, useRef } from "react";
-import { Box3, Group, MathUtils, Mesh, MeshStandardMaterial, Vector3 } from "three";
+import { Environment, Lightformer, useGLTF, useTexture } from "@react-three/drei";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { MeshStandardMaterial, SRGBColorSpace } from "three";
 
+import { patchFaceSkin } from "./faceSkin";
+import { prepareModel, useHeadRig } from "./useHeadRig";
+import headFaceUrl from "../../assets/head-face.jpg?url";
 import headModelUrl from "../../assets/head.glb?url";
-import { engine } from "../../audio/engine";
-import { bob, nodDrive, Spring } from "../../choreography/nod";
-import { choreographyProbe } from "../../choreography/probe";
-import { prefersReducedMotion } from "../../hooks/reducedMotion";
+import { COPPER_FIT } from "../../choreography/fit";
 
-import type { DirectionalLight, Object3D } from "three";
+import type { HeadPulse } from "./useHeadRig";
+import type { DirectionalLight, Group } from "three";
 
-const D = MathUtils.degToRad;
-const CAMERA_Z = 5;
 const BASE_EMISSIVE = 0.04;
 const BASE_RIM = 1.5;
-const MOUSE_YAW = D(22);
-const MOUSE_PITCH = D(10);
-/** Stand-in for energy when DJ hits drive the head without the song. */
-const JAM_ENERGY = 0.6;
 
-/** Orient and scale the scan, and move its origin to the neck so pitch reads as a nod, not a spin. */
-function prepareModel(scene: Object3D, material: MeshStandardMaterial) {
-  const head = scene.clone(true);
-  head.traverse((child) => {
-    if (child instanceof Mesh) child.material = material;
-  });
-  head.rotation.set(Math.PI / 2, Math.PI, 0);
-  head.scale.setScalar(0.25);
-  const holder = new Group();
-  holder.add(head);
-  holder.updateMatrixWorld(true);
-  const box = new Box3().setFromObject(holder);
-  const size = box.getSize(new Vector3());
-  const centre = box.getCenter(new Vector3());
-  // ≈ the atlanto-occipital joint: low (22% up from the neck) and slightly behind centre
-  const pivot = new Vector3(centre.x, box.min.y + size.y * 0.22, centre.z - size.z * 0.1);
-  head.position.sub(pivot);
-  return { holder, baseY: pivot.y - centre.y - 0.1 };
-}
-
-/** The chrome head: nods on the beat (phase-locked, with anticipation), sways with the bar, follows the mouse. */
+/**
+ * The chrome head with the owner's photo face (blended by the mesh's `_faceweight`), on the shared rig: nods on the
+ * beat, sways with the bar, follows the mouse. Its chrome glows with the kick and its rim light flashes with the snare.
+ */
 function Head() {
   const { scene } = useGLTF(headModelUrl);
-  const material = useMemo(
-    () =>
-      new MeshStandardMaterial({
-        color: "#ff8a1c",
-        metalness: 1,
-        roughness: 0.22,
-        emissive: "#ff6a00",
-        emissiveIntensity: BASE_EMISSIVE,
-        envMapIntensity: 1.3,
-      }),
-    []
-  );
+  const skin = useTexture(headFaceUrl);
+  const material = useMemo(() => {
+    skin.flipY = false; // glTF-style UVs: v runs down from the top of the image
+    skin.colorSpace = SRGBColorSpace;
+    skin.anisotropy = 4;
+    skin.needsUpdate = true;
+    const chrome = new MeshStandardMaterial({
+      color: "#ff8a1c",
+      metalness: 1,
+      roughness: 0.22,
+      emissive: "#ff6a00",
+      emissiveIntensity: BASE_EMISSIVE,
+      envMapIntensity: 1.3,
+      map: skin,
+    });
+    chrome.onBeforeCompile = patchFaceSkin;
+    chrome.customProgramCacheKey = () => "face-skin";
+    return chrome;
+  }, [skin]);
   const model = useMemo(() => prepareModel(scene, material), [scene, material]);
   const rig = useRef<Group>(null);
   const rim = useRef<DirectionalLight>(null);
-  const springs = useMemo(
-    () => ({ pitch: new Spring(900, 45), lift: new Spring(900, 45), roll: new Spring(120, 18) }),
-    []
+  const pulse = useCallback(
+    ({ kick, snare, drive }: HeadPulse) => {
+      material.emissiveIntensity = BASE_EMISSIVE + 0.2 * kick * drive;
+      if (rim.current) rim.current.intensity = BASE_RIM + 10 * snare;
+    },
+    [material]
   );
-  const mouse = useRef({ yaw: 0, pitch: 0 });
+  useHeadRig(rig, { baseY: model.baseY, fit: COPPER_FIT, pulse });
 
   useEffect(() => () => material.dispose(), [material]);
-
-  useFrame(({ pointer, clock, camera }, delta) => {
-    const head = rig.current;
-    if (!head) return;
-    const frame = engine.frame;
-    const reduced = prefersReducedMotion();
-    const dt = Math.min(delta, 0.1);
-    const reach = reduced ? 0.5 : 1;
-    damp(mouse.current, "yaw", MathUtils.clamp(pointer.x, -1, 1) * MOUSE_YAW * reach, 0.35, dt);
-    damp(mouse.current, "pitch", MathUtils.clamp(-pointer.y, -1, 1) * MOUSE_PITCH * reach, 0.35, dt);
-
-    let curve = 0;
-    let pitch: number;
-    let lift: number;
-    let roll: number;
-    let yaw = 0;
-    let squash = 0;
-    let emissive = BASE_EMISSIVE;
-    let rimIntensity = BASE_RIM;
-    let cameraZ = CAMERA_Z;
-
-    if (frame.isPlaying && frame.bpm > 0 && !reduced) {
-      const drive = nodDrive(frame);
-      const confidence = frame.beatConfidence;
-      const amplitude = D(2.5 + 6.5 * frame.energy) * drive.accent * confidence;
-      curve = bob(drive.phase, drive.period);
-      pitch = springs.pitch.step(curve * amplitude, dt);
-      lift = springs.lift.step(-0.05 * curve * (0.5 + frame.energy) * confidence, dt);
-      roll = springs.roll.step(
-        D(2.5) * (0.4 + 0.6 * frame.energy) * Math.sin(2 * Math.PI * frame.barPhase) * confidence,
-        dt
-      );
-      yaw = D(1.5) * Math.sin(2 * Math.PI * frame.barPhase - 0.6) * confidence;
-      cameraZ = CAMERA_Z - 0.35 * frame.section;
-    } else {
-      const t = clock.elapsedTime;
-      const breathe = reduced ? 0 : 1;
-      const jamNod = (frame.jamming && !reduced ? D(6) : 0) * frame.kick; // DJ kicks nod the head without music
-      pitch = springs.pitch.step(D(0.8) * Math.sin((2 * Math.PI * t) / 4.5) * breathe + jamNod, dt);
-      lift = springs.lift.step(0, dt);
-      roll = springs.roll.step(0, dt);
-      yaw = D(2) * Math.sin(t * 0.37) * Math.sin(t * 0.23) * breathe;
-    }
-
-    if ((frame.isPlaying || frame.jamming) && !reduced) {
-      const drive = frame.isPlaying ? frame.energy : JAM_ENERGY;
-      squash = 0.012 * frame.kick;
-      emissive = BASE_EMISSIVE + 0.2 * frame.kick * drive;
-      rimIntensity = BASE_RIM + 10 * frame.snare;
-    }
-
-    head.rotation.set(mouse.current.pitch + pitch, mouse.current.yaw + yaw, roll);
-    head.position.y = model.baseY + lift;
-    head.scale.set(1 + squash / 2, 1 - squash, 1 + squash / 2);
-    material.emissiveIntensity = emissive;
-    if (rim.current) rim.current.intensity = rimIntensity;
-    camera.position.z = MathUtils.lerp(camera.position.z, cameraZ, 1 - Math.exp(-3 * dt));
-
-    choreographyProbe.headPitchDeg = MathUtils.radToDeg(pitch);
-    choreographyProbe.nodCurve = curve;
-    choreographyProbe.beatPhase = frame.beatPhase;
-  });
 
   return (
     <>
@@ -158,6 +82,9 @@ function Head() {
           rotation-x={-Math.PI / 2}
         />
       </Environment>
+      <ambientLight intensity={0.3} />
+      <pointLight position={[10, 10, 10]} intensity={20} distance={20} decay={2} />
+      <pointLight position={[-5, -5, -5]} intensity={5} />
       <directionalLight ref={rim} position={[0, 2, -6]} intensity={BASE_RIM} color="#bfe6ff" />
       <group ref={rig} position-y={model.baseY}>
         <primitive object={model.holder} />
@@ -167,5 +94,6 @@ function Head() {
 }
 
 useGLTF.preload(headModelUrl);
+useTexture.preload(headFaceUrl);
 
 export default Head;

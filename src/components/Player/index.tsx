@@ -19,8 +19,9 @@ import { keepFocus } from "../keepFocus";
 import type { VisMode } from "./Visualiser";
 import type { TrackInfo } from "../../audio/types";
 
-/** Narrow screens get the drawer: phones, and touch-first tablets in portrait. */
-export const DRAWER_QUERY = "(max-width: 600px), (pointer: coarse) and (max-width: 900px)";
+/** Narrow screens get the drawer: phones (landscape ones of any width too), and touch-first tablets in portrait. */
+export const DRAWER_QUERY =
+  "(max-width: 600px), (pointer: coarse) and (max-width: 900px), (pointer: coarse) and (max-height: 500px)";
 const DRAWER_ID = "player-drawer";
 const PLAYLIST_ID = "player-playlist";
 
@@ -67,7 +68,8 @@ const Player: React.FC = () => {
   const { status, track: currentId, tracks, bpm, isPlaying, muted, volume, duration, channels } = useMusicState();
   const drawer = useMediaQuery(DRAWER_QUERY);
   const [skin, setSkin] = useState(() => loadSkin(storage()));
-  const [shaded, setShaded] = useState(false);
+  // starts windowshaded (title bar, scrolling title and mini visualiser): the page leads, the player stays small
+  const [shaded, setShaded] = useState(true);
   const [playlistOpen, setPlaylistOpen] = useState(true);
   const [padOpen, setPadOpen] = useState(false);
   const [remaining, setRemaining] = useState(false);
@@ -155,11 +157,7 @@ const Player: React.FC = () => {
                   <Visualiser skin={skin} variant="mini" mode={visMode} />
                 </>
               ) : (
-                <>
-                  <Styled.Ridges aria-hidden="true" />
-                  <Styled.Title>faizaan.tech — {skinById(skin).name}</Styled.Title>
-                  <Styled.Ridges aria-hidden="true" />
-                </>
+                <Styled.Ridges aria-hidden="true" />
               )}
               <Styled.TitleButton
                 type="button"
@@ -304,7 +302,11 @@ const Player: React.FC = () => {
                       aria-label="Jam pad"
                       aria-pressed={padOpen}
                       onMouseDown={keepFocus}
-                      onClick={() => setPadOpen((open) => !open)}
+                      onClick={() => {
+                        // on a phone the pad sits where the open drawer is: opening it tucks the drawer away
+                        if (drawer && !padOpen) closeDrawer();
+                        setPadOpen(!padOpen);
+                      }}
                     >
                       <Styled.Lamp $on={padOpen} />
                       jam
@@ -346,7 +348,7 @@ const Player: React.FC = () => {
         </Styled.VisuallyHidden>
       </Styled.Shell>
       {padOpen && (
-        <Styled.PadDock>
+        <Styled.PadDock data-layout={drawer ? "drawer" : "dock"}>
           <DjPad />
         </Styled.PadDock>
       )}

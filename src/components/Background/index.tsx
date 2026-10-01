@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 
 import * as Styled from "./Background.styled";
+import { grainCosts, grainDpr, paper } from "./paper";
 import { useMusicFrame } from "../../audio/react";
 import {
   CELL,
@@ -17,7 +18,6 @@ import { prefersReducedMotion } from "../../hooks/reducedMotion";
 
 const BIG = { color: "#555555", width: 1, inner: 4, outer: 36 }; // arm span within the cell, px
 const MINI = { color: "rgba(138, 177, 238, 0.5)", width: 2, half: 5 }; // #8AB1EE @ 0.5, arms 15–25 px
-const BACKGROUND = "rgb(20, 61, 50)";
 const MAX_DPR = 2;
 /** Below this per-cell turn change, and with every mini-plus at rest scale, the frame is identical to last drawn. */
 const SETTLED_ANGLE = 1e-4;
@@ -31,12 +31,14 @@ interface View {
 }
 
 /**
- * The plus grid behind everything else. Big plusses turn to face the cursor within `TURN_RADIUS`; mini plusses
- * pulse in size with the music as a shockwave from the head, reusing the header's `KickHistory` so the grid and
+ * The plus grid behind everything else, over paper: the ground's own CSS background is a paper-grain texture (built
+ * once, in a worker; see `paper.ts`), showing through the grid canvas, which is cleared to transparent on every draw.
+ * Big plusses turn to face the cursor within `TURN_RADIUS`; mini plusses pulse in size with the music as a shockwave from the head, reusing the header's `KickHistory` so the grid and
  * the name ripple out together. Redrawn from the shared music ticker — never its own rAF loop.
  */
 const Background: React.FC = () => {
   const canvas = useRef<HTMLCanvasElement>(null);
+  const ground = useRef<HTMLDivElement>(null);
   const view = useRef<View>({ width: 0, height: 0, dpr: 1, layout: gridLayout(0, 0) });
   const angles = useRef(new Float32Array(0));
   const pointer = useRef<{ x: number; y: number } | null>(null);
@@ -64,6 +66,35 @@ const Background: React.FC = () => {
     resize();
     window.addEventListener("resize", resize);
     return () => window.removeEventListener("resize", resize);
+  }, []);
+
+  useEffect(() => {
+    let live = true;
+    const apply = (dpr: number) =>
+      paper(dpr).then((next) => {
+        const el = ground.current;
+        if (!live || !el || next.dpr !== grainDpr()) return;
+        const started = performance.now();
+        // once per pixel density, never per frame: the browser rasterises the two images off the main thread
+        el.style.backgroundImage = next.image;
+        el.style.backgroundSize = next.size;
+        el.style.backgroundBlendMode = next.blend;
+        grainCosts.applyMs = performance.now() - started;
+      });
+    let dpr = grainDpr();
+    apply(dpr);
+    // a window dragged to a screen of another pixel density gets its own tile
+    const resize = () => {
+      if (grainDpr() === dpr) return;
+      dpr = grainDpr();
+      apply(dpr);
+    };
+    window.addEventListener("resize", resize);
+    if (debug) (window as unknown as { __grain: typeof grainCosts }).__grain = grainCosts;
+    return () => {
+      live = false;
+      window.removeEventListener("resize", resize);
+    };
   }, []);
 
   useEffect(() => {
@@ -171,7 +202,7 @@ const Background: React.FC = () => {
   });
 
   return (
-    <Styled.Background>
+    <Styled.Background ref={ground}>
       <Styled.Canvas ref={canvas} aria-hidden="true" />
     </Styled.Background>
   );
@@ -185,9 +216,9 @@ function draw(
   angles: Float32Array,
   scales: Float32Array | null,
 ): void {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // the paper below is the ground
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.fillStyle = BACKGROUND;
-  ctx.fillRect(0, 0, layout.originX * 2 + layout.columns * CELL, layout.originY * 2 + layout.rows * CELL);
 
   // At DPR 1 a 1 px stroke straddles two device pixels and blurs; nudge it onto the pixel grid. Which way
   // depends on whether the origin itself is already a half pixel (odd viewport dimension) or not.

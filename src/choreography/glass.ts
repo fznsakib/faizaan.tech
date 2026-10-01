@@ -1,3 +1,5 @@
+import type { HeadOutline } from "./headShape";
+
 export interface GlassMap {
   data: Uint8ClampedArray;
   width: number;
@@ -132,6 +134,19 @@ const PING_HZ = 6;
 const PING_SQUASH = 0.14;
 /** How far back (s) the release velocity looks at pointer samples. */
 const RELEASE_WINDOW = 0.08;
+/**
+ * The head: restitution off it, how fast a piece caught overlapping it (dropped behind it, or the head moving into
+ * it) glides out (px/s), and the gap a drifting piece keeps from it (px at REF_WIDTH).
+ */
+const HEAD_RESTITUTION = 0.7;
+const DEPENETRATE = 900;
+const HEAD_GAP = 14;
+/** Every Nth outline point meets the head (40 of 160), then the deepest one's neighbours are checked too. */
+const HEAD_STRIDE = 4;
+/** How far (px) the head itself can move into a piece in one substep (a flinch's roll at the crown). */
+const HEAD_SLACK = 8;
+/** Deeper than this (px at REF_WIDTH), the head's interior normals stop being trustworthy: leave by its spine instead. */
+const GRAZE = 24;
 
 export interface Extent {
   left: number;
@@ -152,6 +167,8 @@ export interface GlassBody {
   outline: Point[];
   /** How far the outline reaches from the centre each way (px at 1440 wide), with room for its spin. */
   extent: Extent;
+  /** The furthest the outline reaches from the centre in any direction (px at 1440 wide). */
+  radius: number;
   /** 0..1: how thick the glass is; thicker bends more. */
   depth: number;
   /** Glint colour (hue, deg). */
@@ -171,10 +188,28 @@ export interface GlassState {
   hx: number;
   hy: number;
   mode: "drift" | "held" | "thrown";
-  /** The latest wall hit: strength 0..1, when (s), and the axis it bounced on. */
+  /** The latest wall or head hit: strength 0..1, when (s), and the axis it bounced on. */
   impact: number;
   impactAt: number;
   impactAxis: "x" | "y";
+  /** The latest knock against the head (a new object per knock), or null. */
+  hit: HeadHit | null;
+  /**
+   * Whether it overlapped the head at the end of its last step, or was just let go (possibly behind it): overlap
+   * found then is old, and glides out instead of knocking.
+   */
+  buried: boolean;
+}
+
+/** A knock against the head: where the glass met its outline (px), the outline's outward normal there, and the approach speed along it (px/s). */
+export interface HeadHit {
+  x: number;
+  y: number;
+  nx: number;
+  ny: number;
+  speed: number;
+  /** Seconds. */
+  at: number;
 }
 
 export interface StepInput {
@@ -185,6 +220,8 @@ export interface StepInput {
   width: number;
   height: number;
   reduced: boolean;
+  /** The head's silhouette this frame: free pieces bounce off it and drift around it. */
+  head?: HeadOutline | null;
 }
 
 export interface PointerSample {
@@ -309,6 +346,7 @@ export function createBodies(random: () => number = Math.random): GlassBody[] {
       h: Math.max(...ys) - Math.min(...ys),
       outline,
       extent: reach(outline),
+      radius: Math.max(...outline.map((point) => Math.hypot(point.x, point.y))),
       depth: template.depth,
       hue: random() * 360,
       orbit: {
@@ -347,9 +385,12 @@ export function outlinePath(outline: readonly Point[], scale: number, ox: number
 const BOB_PEAK = Math.sin(TAU * 0.179) * Math.exp(-3 * 0.179);
 const beatBob = (phase: number) => (Math.sin(TAU * phase) * Math.exp(-3 * phase)) / BOB_PEAK;
 
+/** Smallest scale, reached on phones: a piece there covers at most ~1.5× the share of the width it does on desktop. */
+const MIN_SCALE = 0.38;
+
 /** How big a body is drawn at this viewport, relative to its authored size. */
 export function glassScale(body: GlassBody, width: number, height: number): number {
-  return Math.min(clamp(width / REF_WIDTH, 0.5, 1.25), (0.6 * width) / body.w, (0.45 * height) / body.h);
+  return Math.min(clamp(width / REF_WIDTH, MIN_SCALE, 1.25), (0.6 * width) / body.w, (0.45 * height) / body.h);
 }
 
 /** How far the drawn outline reaches from the centre each way (px): how close the centre may come to each wall. */
@@ -387,11 +428,196 @@ function driftTarget(
   };
 }
 
-/** A body at rest on its drift path at time `t`, home at its anchor. */
-export function initialState(body: GlassBody, t: number, width: number, height: number, reduced: boolean): GlassState {
+/** The slow in-plane spin (deg) at time `t`. */
+const spinAt = (body: GlassBody, t: number) => SPIN * Math.sin((TAU * t) / (body.orbit.px * 1.618) + body.orbit.phase * 2.9);
+
+/** The deepest outline point `probe` found: where it is (px). */
+const contact = { x: 0, y: 0 };
+
+/**
+ * How far a body's outline (drawn at `size`, spun `spin` degrees, centred at x, y) stands off the head: the least
+ * signed distance of every `stride`th point and then of the deepest one's neighbours, negative when it overlaps.
+ * Leaves that point in `contact`.
+ */
+function probe(body: GlassBody, x: number, y: number, size: number, spin: number, head: HeadOutline, stride: number): number {
+  const angle = (spin * Math.PI) / 180;
+  const [cos, sin] = [Math.cos(angle), Math.sin(angle)];
+  const n = body.outline.length;
+  let least = Infinity;
+  let deepest = 0;
+  const test = (i: number) => {
+    const point = body.outline[((i % n) + n) % n];
+    const px = x + (point.x * cos - point.y * sin) * size;
+    const py = y + (point.x * sin + point.y * cos) * size;
+    const d = head.distance(px, py);
+    if (d < least) {
+      least = d;
+      deepest = i;
+      contact.x = px;
+      contact.y = py;
+    }
+  };
+  for (let i = 0; i < n; i += stride) test(i);
+  if (stride > 1 && least < Infinity) {
+    const around = deepest;
+    for (let i = around - stride + 1; i < around + stride; i++) if (i !== around) test(i);
+  }
+  return least;
+}
+
+/** Straight away from the head's spine (cranium centre to nod pivot) through (x, y): the way out from deep inside it. */
+function leave(head: HeadOutline, x: number, y: number, out: Point): void {
+  const [ax, ay] = [head.centre.x, head.centre.y];
+  const [ex, ey] = [head.pivot.x - ax, head.pivot.y - ay];
+  const t = clamp(((x - ax) * ex + (y - ay) * ey) / (ex * ex + ey * ey || 1), 0, 1);
+  const [dx, dy] = [x - (ax + t * ex), y - (ay + t * ey)];
+  const length = Math.hypot(dx, dy);
+  [out.x, out.y] = length > 1e-9 ? [dx / length, dy / length] : [0, -1];
+}
+
+/** How far a body's drawn outline stands off the head (px), spun `spin` degrees: negative when they overlap. */
+export function headClearance(
+  body: GlassBody,
+  state: GlassState,
+  head: HeadOutline,
+  width: number,
+  height: number,
+  spin: number,
+): number {
+  return probe(body, state.x, state.y, glassScale(body, width, height), spin, head, 1);
+}
+
+/**
+ * Move a centre by (dx, dy) inside the walls. What a wall blocks turns into a slide along it, away from the head's
+ * middle on the side `from` is on: a piece pinned between the head and a wall works its way round the head's
+ * narrower end instead of being pushed into the wall forever.
+ */
+function shove(
+  from: Point,
+  x: number,
+  y: number,
+  dx: number,
+  dy: number,
+  e: Extent,
+  width: number,
+  height: number,
+  head: HeadOutline,
+): Point {
+  let nx = clamp(x + dx, e.left, width - e.right);
+  let ny = clamp(y + dy, e.top, height - e.bottom);
+  const blockedX = Math.abs(x + dx - nx);
+  const blockedY = Math.abs(y + dy - ny);
+  const { left, right, top, bottom } = head.bounds;
+  if (blockedX > 1e-9) ny = clamp(ny + (from.y >= (top + bottom) / 2 ? blockedX : -blockedX), e.top, height - e.bottom);
+  if (blockedY > 1e-9) nx = clamp(nx + (from.x >= (left + right) / 2 ? blockedY : -blockedY), e.left, width - e.right);
+  return { x: nx, y: ny };
+}
+
+/**
+ * Where drift may pull a body with the head in the way: the target nudged out along the head's normal (and round
+ * along a wall that blocks that) until the outline clears the head by HEAD_GAP. Moves continuously with the target,
+ * so a piece glides round the head instead of bumping into it.
+ */
+function steer(
+  body: GlassBody,
+  target: Point,
+  from: Point,
+  head: HeadOutline,
+  size: number,
+  spin: number,
+  e: Extent,
+  width: number,
+  height: number,
+): Point {
+  const gap = HEAD_GAP * size;
+  if (head.distance(target.x, target.y) >= body.radius * size + gap) return target;
+  let place = target;
+  const n = { x: 0, y: 0 };
+  for (let round = 0; round < 12; round++) {
+    const clearance = probe(body, place.x, place.y, size, spin, head, HEAD_STRIDE);
+    if (clearance >= gap - 0.01) break;
+    if (clearance > -GRAZE * size) head.normal(contact.x, contact.y, n);
+    else leave(head, place.x, place.y, n);
+    place = shove(from, place.x, place.y, n.x * (gap - clearance), n.y * (gap - clearance), e, width, height, head);
+  }
+  return place;
+}
+
+/** A body at rest on its drift path at time `t`, home at its anchor (and clear of the head, given one). */
+export function initialState(
+  body: GlassBody,
+  t: number,
+  width: number,
+  height: number,
+  reduced: boolean,
+  head?: HeadOutline | null,
+): GlassState {
   const home = { hx: body.ax, hy: body.ay };
-  const { x, y } = driftTarget(body, home, t, width, height, reduced);
-  return { x, y, vx: 0, vy: 0, ...home, mode: "drift", impact: 0, impactAt: -Infinity, impactAxis: "x" };
+  let { x, y } = driftTarget(body, home, t, width, height, reduced);
+  if (head) {
+    const spin = reduced ? 0 : spinAt(body, t);
+    const e = glassExtent(body, width, height);
+    ({ x, y } = steer(body, { x, y }, { x, y }, head, glassScale(body, width, height), spin, e, width, height));
+  }
+  return { x, y, vx: 0, vy: 0, ...home, mode: "drift", impact: 0, impactAt: -Infinity, impactAxis: "x", hit: null, buried: false };
+}
+
+/**
+ * The head's silhouette is solid to a free body's outline: find the outline point deepest inside it, push the body
+ * out along the head's normal there, and turn back its approach (bouncing at HEAD_RESTITUTION when thrown; a
+ * drifting piece just stops pressing). A knock fast enough to ping records a `hit` for the head's flinch. Only a
+ * piece that was clear a step ago can knock; overlap it already had (let go behind the head, or deeper than its
+ * speed could reach in a step, like a resize) glides out at DEPENETRATE px/s instead, and never pings. Returns the
+ * same object when nothing changed.
+ */
+export function collideHead(
+  body: GlassBody,
+  state: GlassState,
+  head: HeadOutline,
+  width: number,
+  height: number,
+  t: number,
+  h: number,
+  reduced: boolean,
+): GlassState {
+  if (state.mode === "held") return state;
+  const clear = state.buried ? { ...state, buried: false } : state;
+  const size = glassScale(body, width, height);
+  if (head.distance(state.x, state.y) >= body.radius * size) return clear;
+  const clearance = probe(body, state.x, state.y, size, reduced ? 0 : spinAt(body, t), head, HEAD_STRIDE);
+  if (clearance >= 0) return clear;
+  const at = { x: contact.x, y: contact.y };
+  const depth = -clearance;
+  const n = { x: 0, y: 0 };
+  head.normal(at.x, at.y, n);
+  const approach = Math.max(0, -(state.vx * n.x + state.vy * n.y));
+  // touching: clear a step ago and no deeper than this step could carry it, so a contact at the outline, resolved at
+  // once; any other overlap glides out along the way out of the head, no longer heading further in
+  const touching = !state.buried && depth <= Math.hypot(state.vx, state.vy) * h + HEAD_SLACK;
+  if (!touching) leave(head, state.x, state.y, n);
+  const push = touching ? depth : Math.min(depth, DEPENETRATE * h);
+  const moved = shove(state, state.x, state.y, n.x * push, n.y * push, glassExtent(body, width, height), width, height, head);
+  let { vx, vy } = state;
+  const inward = Math.max(0, -(vx * n.x + vy * n.y));
+  if (inward > 0) {
+    const bounce = 1 + (touching && state.mode === "thrown" ? HEAD_RESTITUTION : 0);
+    vx += bounce * inward * n.x;
+    vy += bounce * inward * n.y;
+  }
+  // only a throw knocks: drift is ambient, and a head that flinched at nobody's throw would read as a glitch
+  const knock = touching && approach >= PING_MIN && state.mode === "thrown";
+  return {
+    ...state,
+    x: moved.x,
+    y: moved.y,
+    vx,
+    vy,
+    impact: knock ? clamp(approach / PING_FULL, 0, 1) : state.impact,
+    impactAt: knock ? t : state.impactAt,
+    impactAxis: knock ? (Math.abs(n.x) >= Math.abs(n.y) ? "x" : "y") : state.impactAxis,
+    hit: knock ? { x: at.x + n.x * depth, y: at.y + n.y * depth, nx: n.x, ny: n.y, speed: approach, at: t } : state.hit,
+    buried: !touching,
+  };
 }
 
 /** Exponential friction on one velocity component: frame-rate independent. */
@@ -440,7 +666,7 @@ export function collideWalls(state: GlassState, extent: Extent, width: number, h
  * stops, and that spot becomes its home; otherwise a spring draws it along its drift orbit. Walls always hold.
  */
 export function stepGlass(body: GlassBody, state: GlassState, input: StepInput): GlassState {
-  const { t, width, height, reduced } = input;
+  const { t, width, height, reduced, head } = input;
   const e = glassExtent(body, width, height);
   if (state.mode === "held") {
     // the pointer places it; only a resize can move it, back inside the walls
@@ -452,6 +678,9 @@ export function stepGlass(body: GlassBody, state: GlassState, input: StepInput):
   let remaining = clamp(input.dt, 0, MAX_DT);
   const stiffness = DRIFT_OMEGA * DRIFT_OMEGA;
   const damping = 2 * DRIFT_OMEGA;
+  // the drift target only changes within a step if a throw comes to rest (a new home), so steer it once per home
+  let target: Point | null = null;
+  let targetHome = { hx: NaN, hy: NaN };
   while (remaining > 1e-9) {
     const h = Math.min(SUBSTEP, remaining);
     remaining -= h;
@@ -460,11 +689,19 @@ export function stepGlass(body: GlassBody, state: GlassState, input: StepInput):
       vx = applyFriction(vx, h);
       vy = applyFriction(vy, h);
     } else {
-      const target = driftTarget(body, next, t, width, height, reduced);
+      if (!target || next.hx !== targetHome.hx || next.hy !== targetHome.hy) {
+        targetHome = { hx: next.hx, hy: next.hy };
+        target = driftTarget(body, next, t, width, height, reduced);
+        if (head) {
+          const spin = reduced ? 0 : spinAt(body, t);
+          target = steer(body, target, next, head, glassScale(body, width, height), spin, e, width, height);
+        }
+      }
       vx += (stiffness * (target.x - next.x) - damping * vx) * h;
       vy += (stiffness * (target.y - next.y) - damping * vy) * h;
     }
     next = collideWalls({ ...next, x: next.x + vx * h, y: next.y + vy * h, vx, vy }, e, width, height, t);
+    if (head) next = collideHead(body, next, head, width, height, t, h, reduced);
     if (next.mode === "thrown" && Math.hypot(next.vx, next.vy) < REST_SPEED) {
       const offset = reduced ? { x: 0, y: 0 } : orbitOffset(body, t, width, height);
       next = { ...next, mode: "drift", hx: (next.x - offset.x) / width, hy: (next.y - offset.y) / height };
@@ -498,10 +735,11 @@ export function release(
   height: number,
   reduced: boolean,
 ): GlassState {
-  if (reduced) return { ...state, mode: "drift", vx: 0, vy: 0, hx: state.x / width, hy: state.y / height };
+  // let go wherever the pointer left it, maybe behind the head: any overlap then is old (see collideHead)
+  if (reduced) return { ...state, mode: "drift", vx: 0, vy: 0, hx: state.x / width, hy: state.y / height, buried: true };
   const speed = Math.hypot(velocity.vx, velocity.vy);
   const cap = speed > MAX_THROW ? MAX_THROW / speed : 1;
-  return { ...state, mode: "thrown", vx: velocity.vx * cap, vy: velocity.vy * cap };
+  return { ...state, mode: "thrown", vx: velocity.vx * cap, vy: velocity.vy * cap, buried: true };
 }
 
 /** Fling velocity (px/s): a least-squares fit to the pointer samples from the last RELEASE_WINDOW before `now` (s). */
@@ -595,7 +833,7 @@ export function glassPose(body: GlassBody, input: GlassInput, state: GlassState)
   }
   rotateY += MOTION_TILT * clamp(state.vx / 1200, -1, 1);
   rotateX -= MOTION_TILT * clamp(state.vy / 1200, -1, 1) + BEAT_TILT * bob;
-  const rotateZ = SPIN * Math.sin((TAU * t) / (orbit.px * 1.618) + orbit.phase * 2.9);
+  const rotateZ = spinAt(body, t);
 
   // the ping: a flash and a wobbling squash along the axis it hit, scaled by how hard
   const since = t - state.impactAt;

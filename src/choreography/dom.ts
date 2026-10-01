@@ -1,4 +1,11 @@
-export type StyleProp = "fontVariationSettings" | "transform" | "fontFamily" | "fontSize" | "opacity";
+export type StyleProp =
+  | "fontVariationSettings"
+  | "transform"
+  | "fontFamily"
+  | "fontSize"
+  | "opacity"
+  | "visibility"
+  | "display";
 
 const written = new WeakMap<HTMLElement, Partial<Record<StyleProp, string>>>();
 

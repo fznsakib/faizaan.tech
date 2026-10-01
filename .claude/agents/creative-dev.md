@@ -37,8 +37,9 @@ Key files:
 - `src/audio/MusicEngine.ts` — Web Audio playback and player operations, DJ-mode hits, live band analysis, visualiser readers (`readSpectrum`/`readWaveform`)
 - `src/audio/frame.ts` — `MusicFrame` construction, beat-map-derived per-frame math
 - `src/audio/analysis/` — build-time onset/energy/section analysis (`analyzeTrack.ts`, `buildBeatMap.ts`)
-- `src/choreography/` — pure, tested per-effect math (`nod`, `type`, `faces`, `grid`, `glass`, `dom`)
-- `src/components/Head/index.tsx` — 3D head, beat-locked nodding
+- `src/choreography/` — pure, tested per-effect math (`nod`, `type`, `faces`, `shatter`, `grid`, `grain`, `glass`, `headShape`, `impact`, `caustics`, `fit`, `tilt`, `dom`)
+- `src/components/SkinHead/index.tsx` — the default 3D head (the owner's whole head: photo face, synthesized skin and curls); `src/components/Head/index.tsx` — the copper head (`?head=copper`); both on `src/components/Head/useHeadRig.ts` (beat-locked nodding, mouse/tilt follow, camera from `fitCamera` with the head's `HeadFit`)
+- `src/hooks/useDeviceTilt.ts` — phone tilt feed for the head (enabled on the Splash's enter tap)
 
 ## MusicFrame
 
@@ -49,15 +50,18 @@ Read via `useMusicFrame` (never re-renders) or, inside r3f, `engine.frame` direc
 - Head nod: `nodDrive()`/`bob()` in `src/choreography/nod.ts` — phase-locked to the beat (with anticipation lift and rebound), half-time above 135 BPM, driven through a second-order `Spring` (stiffness/damping, sub-stepped at 240Hz).
 - Header/EQ weight pulses: `src/choreography/type.ts` — VU-style attack/release ballistics, coarse `font-variation-settings` quantisation (fine steps drop frames re-rasterising large glyphs).
 - Header faces/shockwave: `src/choreography/faces.ts` (per word when calm, per letter in drops).
+- Name hover shatter (the letter under the pointer bursts into the grid's plusses and reassembles): `src/choreography/shatter.ts`, painted by `src/components/NameHeader/useShatter.ts`.
 - Plus-grid cursor turn and music pulse: `src/choreography/grid.ts`.
-- Glass outlines, refraction maps and drag/throw/wall physics: `src/choreography/glass.ts`.
+- The ground's paper grain (static, built once in a worker, shown as CSS backgrounds under the grid): `src/choreography/grain.ts`, `src/components/Background/paper.ts`. Never reads the music.
+- Glass outlines, refraction maps and drag/throw/wall/head physics: `src/choreography/glass.ts`, against the head's silhouette from `src/choreography/headShape.ts`.
+- The head's flinch when glass knocks it: `src/choreography/impact.ts`. The light pool under the head: `src/choreography/caustics.ts`.
 - All of the above are pure functions with Vitest coverage — put new math there, not inline in a component.
 
 ## Three.js Patterns
 
-- Use `useFrame` for animation (never raw `requestAnimationFrame`); `Head` reads `engine.frame` directly since it's already inside the r3f loop.
+- Use `useFrame` for animation (never raw `requestAnimationFrame`); `useHeadRig` reads `engine.frame` directly since it's already inside the r3f loop, and hands each head a `pulse` (kick, snare, drive) for its look.
 - Use `useRef`/`useMemo` for mutable state and one-time objects (materials, springs) between frames.
-- Current head: chrome/orange metallic material (`metalness: 1`, `roughness: 0.22`, emissive pulses with kick).
+- Current head: the skin head — non-metallic (roughness 0.55, hair 0.85 by `_hairweight`, a little atlas glow), its own soft lights, rim light flashes with the snare. The copper head (`?head=copper`): chrome/orange metallic (`metalness: 1`, `roughness: 0.22`, emissive pulses with kick).
 - Beat sync: phase-locked to the beat map's `beat`/`barPhase`, not a free-running sine wave.
 
 ## Testing

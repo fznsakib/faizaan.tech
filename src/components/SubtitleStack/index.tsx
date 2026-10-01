@@ -47,6 +47,7 @@ const SubtitleStack: React.FC = () => {
         <Styled.SubtitleText
           key={line.text}
           $bottom={line.bottom}
+          $index={LINES.length - 1 - i}
           $left={2}
           $width={line.width}
           ref={(el) => {

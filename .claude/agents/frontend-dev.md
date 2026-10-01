@@ -34,7 +34,7 @@ You are a React/TypeScript/styled-components specialist working on faizaan.tech,
 
 | z-index | Component(s) |
 |---------|-------------|
-| -5 | Background (canvas grid) |
+| 0 | Background (canvas grid over the paper grain, the ground's own CSS background; not negative, so a body background can't cover it), then Caustics (mounted after it) |
 | 1 | NameHeader, SubtitleStack |
 | 9 | GlassPanel (behind the head) |
 | 10 | Canvas (Three.js) |
@@ -52,8 +52,10 @@ You are a React/TypeScript/styled-components specialist working on faizaan.tech,
 ## Theme
 
 - `src/styles/theme.ts` — exports `theme` with `colors` and `spacing`
-- `src/styles/colors.ts` — primary, secondary, neutral, status color palettes
-- Access in styled-components via `${({ theme }) => theme.colors.*}`
+- `src/styles/colors.ts` — `site` (the host-independent palette: white text on `rgb(20, 61, 50)`), plus primary, secondary, neutral, status palettes
+- Import `colors` directly (`import { colors } from "…/styles/colors"`): `styled.d.ts`'s `DefaultTheme` alias doesn't type `theme.colors`
+- Text components set their own `color`; never rely on inherited text colour (a host page or light mode would change it)
+- Phones: `(max-width: 767px)` portrait and `(max-height: 500px)` landscape rules; inset edge-fixed elements with `max(Npx, env(safe-area-inset-*))`; keep desktop (≥ 1280 px) untouched
 
 ## Validation
 

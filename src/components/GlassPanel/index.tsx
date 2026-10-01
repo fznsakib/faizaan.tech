@@ -12,6 +12,7 @@ import {
   glassPose,
   glassScale,
   glassSheen,
+  headClearance,
   hitGlass,
   initialState,
   outlinePath,
@@ -20,15 +21,21 @@ import {
   stepGlass,
   supportsRefraction,
 } from "../../choreography/glass";
+import { headOutline, headPose, restPose } from "../../choreography/headShape";
+import { impact } from "../../choreography/impact";
 import { quantise } from "../../choreography/type";
 import { prefersReducedMotion } from "../../hooks/reducedMotion";
 
-import type { GlassBody, GlassMap, PointerSample } from "../../choreography/glass";
+import type { GlassBody, GlassMap, HeadHit, PointerSample } from "../../choreography/glass";
+import type { HeadOutline, HeadSilhouette } from "../../choreography/headShape";
 
 const params = new URLSearchParams(window.location.search);
 /** Chromium refracts through an SVG filter; everything else (and `?frosted`) gets frosted glass. */
 const REFRACT = supportsRefraction(navigator) && !params.has("frosted");
-/** `?debug` exposes `window.__glass`: live physics states and the frame callback's recent costs (ms). */
+/**
+ * `?debug` exposes `window.__glass`: live physics states, the head's outline this frame, recent knocks against it and
+ * the frame callback's recent costs (ms).
+ */
 const DEBUG = params.has("debug");
 const COST_SAMPLES = 600;
 /** Chromatic fringe at the rim: refract each channel separately (red bends least, blue most) and recombine. */
@@ -53,6 +60,8 @@ const RESIZE_DEBOUNCE_MS = 150;
 const MAP_SCALE = 0.5;
 /** Pointer history kept while dragging (s): enough for releaseVelocity's window. */
 const SAMPLE_HISTORY = 0.2;
+/** Knocks kept for `?debug`. */
+const HIT_SAMPLES = 50;
 /** Presses on these never grab glass. */
 const INTERACTIVE = 'a, button, input, select, textarea, [role="dialog"], [aria-modal="true"]';
 
@@ -124,16 +133,28 @@ interface Drag {
   samples: PointerSample[];
 }
 
+/** The head's silhouette this frame: as the head last drew it, or at rest until it has. */
+function currentHead(width: number, height: number, silhouette: HeadSilhouette): HeadOutline {
+  return headOutline({ width, height }, headPose.ready ? headPose : restPose(width, height, silhouette), silhouette.parts);
+}
+
 /**
- * Thick 3D glass floating behind the head: refracts the page behind it, drifts, faces the cursor, lights up with
- * the music, and can be grabbed, thrown and bounced off the window edges.
+ * Thick 3D glass floating behind the head: refracts the page behind it, drifts round the head, faces the cursor,
+ * lights up with the music, and can be grabbed, thrown and bounced off the window edges and the head (which flinches).
  */
-const GlassPanel: React.FC = () => {
+const GlassPanel: React.FC<{ silhouette: HeadSilhouette }> = ({ silhouette }) => {
   const bodies = useMemo(() => createBodies(), []);
   const [slabs, setSlabs] = useState(() => cutSlabs(bodies, window.innerWidth, window.innerHeight));
   const states = useRef(
     bodies.map((body) =>
-      initialState(body, performance.now() / 1000, window.innerWidth, window.innerHeight, prefersReducedMotion()),
+      initialState(
+        body,
+        performance.now() / 1000,
+        window.innerWidth,
+        window.innerHeight,
+        prefersReducedMotion(),
+        currentHead(window.innerWidth, window.innerHeight, silhouette),
+      ),
     ),
   );
   const pieces = useRef<(HTMLDivElement | null)[]>([]);
@@ -146,11 +167,19 @@ const GlassPanel: React.FC = () => {
   const drag = useRef<Drag | null>(null);
   const lastNow = useRef<number | null>(null);
   const costs = useRef<number[]>([]);
+  const probe = useRef({
+    head: null as HeadOutline | null,
+    hits: [] as (HeadHit & { flinched: boolean })[],
+    /** Each piece's drawn outline's stand-off from the head (px, negative = overlapping), after the frame. */
+    clearance: bodies.map(() => Infinity),
+    spins: bodies.map(() => 0),
+    flinch: (t: number) => impact.sample(t),
+  });
 
   useEffect(() => {
     if (!DEBUG) return;
-    const probe = { bodies, states: states.current, costs: costs.current };
-    (window as Window & { __glass?: typeof probe }).__glass = probe;
+    const debug = { bodies, states: states.current, costs: costs.current, probe: probe.current };
+    (window as Window & { __glass?: typeof debug }).__glass = debug;
   }, [bodies]);
 
   useEffect(() => {
@@ -290,20 +319,37 @@ const GlassPanel: React.FC = () => {
       reduced,
     };
     const held = drag.current;
+    const head = currentHead(width, height, silhouette);
+    if (DEBUG) probe.current.head = head;
     bodies.forEach((body, i) => {
       let state = states.current[i];
+      const knocked = state.hit;
       if (held?.index === i) {
         const extent = glassExtent(body, width, height);
         state = { ...dragTo(state, held.point, held.grab, extent, width, height), ...releaseVelocity(held.samples, t) };
       } else {
-        state = stepGlass(body, state, { t, dt, width, height, reduced });
+        state = stepGlass(body, state, { t, dt, width, height, reduced, head });
       }
       states.current[i] = state;
+      const hit = state.hit;
+      if (hit && hit !== knocked) {
+        // the knock, from the nod pivot in world units: the head recoils from it (not with reduced motion)
+        const flinched = !reduced && head.scale > 0;
+        if (flinched) {
+          const [x, y] = [(hit.x - head.pivot.x) / head.scale, (hit.y - head.pivot.y) / head.scale];
+          impact.hit({ x, y, nx: hit.nx, ny: hit.ny, speed: hit.speed }, hit.at);
+        }
+        if (DEBUG) {
+          probe.current.hits.push({ ...hit, flinched });
+          if (probe.current.hits.length > HIT_SAMPLES) probe.current.hits.shift();
+        }
+      }
 
       const piece = pieces.current[i];
       const slab = slabs[i];
       if (!piece || !slab) return;
       const pose = glassPose(body, input, state);
+      if (DEBUG) probe.current.spins[i] = pose.rotateZ;
       const turn = tilt.current[i];
       turn.x += (pose.rotateX - turn.x) * ease;
       turn.y += (pose.rotateY - turn.y) * ease;
@@ -337,6 +383,10 @@ const GlassPanel: React.FC = () => {
     if (DEBUG) {
       costs.current.push(performance.now() - started);
       if (costs.current.length > COST_SAMPLES) costs.current.shift();
+      // measured after the cost: a full-resolution check, for browser measurements only
+      bodies.forEach((body, i) => {
+        probe.current.clearance[i] = headClearance(body, states.current[i], head, width, height, probe.current.spins[i]);
+      });
     }
   });
 

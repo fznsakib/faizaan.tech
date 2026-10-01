@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useRef } from "react";
 
-import * as Styled from "../../App.styled";
+import * as Styled from "./NameHeader.styled";
+import { emptyPieces, shardsOf } from "./pieces";
+import ShatterLetter from "./ShatterLetter";
+import { useShatter } from "./useShatter";
+import * as AppStyled from "../../App.styled";
 import { useMusicFrame } from "../../audio/react";
 import { forgetStyles, setStyle } from "../../choreography/dom";
 import {
@@ -16,6 +20,8 @@ import {
 import { headerVariation, jamHeaderVariation, KickHistory, SHOCKWAVE_SPEED } from "../../choreography/type";
 import { prefersReducedMotion } from "../../hooks/reducedMotion";
 
+import type { NameGeometry } from "./useShatter";
+
 /** The name split into words, for per-word faces when calm; a space is its own entry. */
 const NAME_WORDS = ["(faiz)", "aan", " ", "sakib"];
 const NAME = NAME_WORDS.join("");
@@ -29,14 +35,21 @@ const WORDS = ((): number[] => {
     return Array.from(word, () => wordIndex);
   });
 })();
+/** Each letter's shards; none for the space (the parentheses are letters too). */
+const SHARDS = LETTERS.map((letter, i) => (letter === " " ? null : shardsOf(i)));
 /**
  * The name, one span per letter: weight pulses with the kick as a shockwave from the head, and the face changes in
  * the same wave: Doto when a drop hits, Golos when it ends, and the old header's fonts in between (a font a bar
- * when calm, a beat in a drop).
+ * when calm, a beat in a drop). The letter the pointer comes into (or a tap lands on) bursts into the grid's
+ * plusses and reassembles (`useShatter`), over whichever face is showing.
  */
 const NameHeader: React.FC = () => {
   const letters = useRef<HTMLSpanElement[]>([]);
-  const centres = useRef<number[]>([]);
+  const geometry = useMemo<NameGeometry>(
+    () => ({ centres: [], boxes: [], headX: window.innerWidth / 2 }),
+    []
+  );
+  const pieces = useMemo(() => SHARDS.map((shards) => (shards ? emptyPieces() : null)), []);
   const state = useMemo(() => ({ kicks: new KickHistory(), faces: createFaceWave(WORDS) }), []);
   /** Font size (em) per face that keeps the name at its Golos width. */
   const scales = useRef(new Map<string, number>());
@@ -77,10 +90,12 @@ const NameHeader: React.FC = () => {
       letters.current.forEach((span, i) => {
         span.style.width = `${widths[i]}px`;
       });
-      centres.current = letters.current.map((span) => {
-        const rect = span.getBoundingClientRect();
-        return rect.left + rect.width / 2;
-      });
+      geometry.headX = window.innerWidth / 2;
+      const rects = letters.current.map((span) => span.getBoundingClientRect());
+      geometry.centres = rects.map((rect) => rect.left + rect.width / 2);
+      geometry.boxes = rects.map(({ left, right, top, bottom }, i) =>
+        SHARDS[i] ? { left, right, top, bottom } : null
+      );
     };
     let cancelled = false;
     void document.fonts.ready.then(() => {
@@ -94,7 +109,9 @@ const NameHeader: React.FC = () => {
       window.removeEventListener("resize", measure);
       document.fonts.removeEventListener("loadingdone", measure);
     };
-  }, []);
+  }, [geometry]);
+
+  useShatter(SHARDS, pieces, geometry);
 
   useMusicFrame((frame, now) => {
     const reduced = prefersReducedMotion();
@@ -103,7 +120,7 @@ const NameHeader: React.FC = () => {
     const seconds = now / 1000;
     state.kicks.push(seconds, active ? frame.kick : 0);
     advanceFaces(state.faces, frame);
-    const headX = window.innerWidth / 2;
+    const { headX } = geometry;
     letters.current.forEach((span, i) => {
       if (!active) {
         setStyle(span, "fontFamily", "");
@@ -112,7 +129,7 @@ const NameHeader: React.FC = () => {
         setStyle(span, "transform", "none");
         return;
       }
-      const distance = Math.abs((centres.current[i] ?? headX) - headX);
+      const distance = Math.abs((geometry.centres[i] ?? headX) - headX);
       const kick = state.kicks.at(seconds - distance / SHOCKWAVE_SPEED);
       // Jamming without the song stays in Golos: faces follow the song's bars.
       const face = frame.isPlaying ? letterFace(state.faces, frame.time, distance, i) : GOLOS;
@@ -132,19 +149,30 @@ const NameHeader: React.FC = () => {
   });
 
   return (
-    <Styled.HeaderText aria-label={NAME}>
-      {LETTERS.map((letter, i) => (
-        <Styled.Letter
-          key={i}
-          aria-hidden="true"
-          ref={(el) => {
-            if (el) letters.current[i] = el;
-          }}
-        >
-          {letter}
-        </Styled.Letter>
-      ))}
-    </Styled.HeaderText>
+    <AppStyled.HeaderText aria-label={NAME}>
+      {LETTERS.map((letter, i) => {
+        const shards = SHARDS[i];
+        const letterPieces = pieces[i];
+        return (
+          <Styled.Letter
+            key={i}
+            aria-hidden="true"
+            ref={(el) => {
+              if (el) letters.current[i] = el;
+            }}
+          >
+            <Styled.Glyph
+              ref={(el) => {
+                if (letterPieces) letterPieces.glyph = el;
+              }}
+            >
+              {letter}
+            </Styled.Glyph>
+            {shards && letterPieces && <ShatterLetter letter={letter} shards={shards} pieces={letterPieces} />}
+          </Styled.Letter>
+        );
+      })}
+    </AppStyled.HeaderText>
   );
 };
 
