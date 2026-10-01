@@ -4,7 +4,9 @@
  * Each frame they're posed like the rig and projected exactly through r3f's perspective camera (an ellipsoid's
  * outline is an ellipse), then smooth-unioned into one signed distance field in CSS px.
  */
-import { CAMERA_Z, fitCamera, TAN_HALF_FOV } from "./fit";
+import { CAMERA_Z, COPPER_FIT, fitCamera, SKIN_FIT, TAN_HALF_FOV } from "./fit";
+
+import type { HeadFit } from "./fit";
 
 export interface Point {
   x: number;
@@ -37,8 +39,8 @@ export interface HeadPart {
 }
 
 /**
- * head.glb as `prepareModel` places it, pivot at the origin. Fitted so the outline covers every vertex of the
- * silhouette within a few px and stands off it by ~8 px on average, across looks, nods, rolls and phones
+ * head.glb (the copper head) as `prepareModel` places it, pivot at the origin. Fitted so the outline covers every
+ * vertex of the silhouette within a few px and stands off it by ~8 px on average, across looks, nods, rolls and phones
  * (headShape.test.ts measures both against the mesh): refit these if the head mesh changes.
  */
 export const COPPER_HEAD: readonly HeadPart[] = [
@@ -53,15 +55,39 @@ export const COPPER_HEAD: readonly HeadPart[] = [
   { centre: [0, -0.718, -0.379], radii: [0.985, 0.227, 0.931] }, // the neck's flared base
 ];
 
-/** The rig's rest height (the pivot's world y) for head.glb: `prepareModel`'s baseY. */
-export const HEAD_BASE_Y = -1.448;
+/** skin-head.glb (the skin head, with its hair) the same way: refit these if that mesh changes. */
+export const SKIN_HEAD: readonly HeadPart[] = [
+  { centre: [0, 1.968, 0.523], radii: [1.441, 1.908, 1.666] }, // cranium and hair
+  { centre: [0, 2, -1.429], radii: [0.932, 1.053, 0.382] }, // back of the hair
+  { centre: [1.033, 2.028, 0.218], radii: [0.575, 1.253, 0.255], mirror: true }, // hair over the ears
+  { centre: [0.747, 2.393, 0.149], radii: [0.503, 1.522, 0.269], mirror: true }, // hair at the temples
+  { centre: [0, 2.775, -0.078], radii: [0.916, 0.956, 0.307] }, // the crown's curls
+  { centre: [1.278, 1.484, 0.003], radii: [0.309, 0.493, 0.152], mirror: true }, // ears
+  { centre: [0, 1.057, 0.963], radii: [1.054, 1.265, 0.924] }, // face
+  { centre: [0, 1.753, 1.689], radii: [0.64, 0.086, 0.159] }, // brow
+  { centre: [0, 0.618, 0.611], radii: [1.078, 0.621, 0.05] }, // jaw
+  { centre: [0, 0.237, 1.281], radii: [0.75, 0.72, 0.496] }, // chin
+  { centre: [0, -0.537, -0.17], radii: [1.032, 0.763, 1.159] }, // neck
+  { centre: [0, -0.681, -0.649], radii: [0.788, 0.224, 0.084] }, // the neck's flared base
+];
+
+/** A head as the glass meets it: its ellipsoids, its rig's rest height (`prepareModel`'s baseY), and its camera fit. */
+export interface HeadSilhouette {
+  parts: readonly HeadPart[];
+  baseY: number;
+  fit: HeadFit;
+}
+
+/** One per head, chosen the way `App` chooses the camera fit: the copper head (`?head=copper`) and the skin head. */
+export const COPPER_SILHOUETTE: HeadSilhouette = { parts: COPPER_HEAD, baseY: -1.448, fit: COPPER_FIT };
+export const SKIN_SILHOUETTE: HeadSilhouette = { parts: SKIN_HEAD, baseY: -1.488, fit: SKIN_FIT };
 /** Smooth-union radius (world units): fills the creases where parts meet, so the outline and its normals stay smooth. */
 const BLEND = 0.1;
 
-/** The head at rest for a viewport: no nod, turn or roll, and the fitted camera. */
-export function restPose(width: number, height: number): HeadPose {
-  const { z, y } = fitCamera(width, height);
-  return { pitch: 0, yaw: 0, roll: 0, y: HEAD_BASE_Y, cameraZ: z, cameraY: y };
+/** A head at rest for a viewport: no nod, turn or roll, at its rest height, under the camera its fit places. */
+export function restPose(width: number, height: number, head: HeadSilhouette = COPPER_SILHOUETTE): HeadPose {
+  const { z, y } = fitCamera(width, height, head.fit);
+  return { pitch: 0, yaw: 0, roll: 0, y: head.baseY, cameraZ: z, cameraY: y };
 }
 
 export interface HeadOutline {

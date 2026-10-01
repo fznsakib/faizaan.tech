@@ -3,7 +3,8 @@ import { lazy, Suspense } from "react";
 import { ThemeProvider } from "styled-components";
 
 import * as Styled from "./App.styled";
-import { COPPER_FIT, fitCamera, SKIN_FIT } from "./choreography/fit";
+import { fitCamera } from "./choreography/fit";
+import { COPPER_SILHOUETTE, SKIN_SILHOUETTE } from "./choreography/headShape";
 import Background from "./components/Background";
 import Caustics from "./components/Caustics";
 import GlassPanel from "./components/GlassPanel";
@@ -20,15 +21,17 @@ const showMusicDebug = params.has("debug");
 /** The owner's whole head by default; `?head=copper` brings back the chrome head with his face. Each loads only its own assets. */
 const copper = params.get("head") === "copper";
 const HeadModel = copper ? lazy(() => import("./components/Head")) : lazy(() => import("./components/SkinHead"));
-const headFit = copper ? COPPER_FIT : SKIN_FIT;
+/** The head's silhouette for the glass and caustics, and its camera fit. */
+const silhouette = copper ? COPPER_SILHOUETTE : SKIN_SILHOUETTE;
+const headFit = silhouette.fit;
 
 function App() {
   return (
     <ThemeProvider theme={theme}>
       <Background />
       {/* z 0 like the grid, and after it: light on the grid, under the name */}
-      <Caustics />
-      <GlassPanel />
+      <Caustics silhouette={silhouette} />
+      <GlassPanel silhouette={silhouette} />
       <NameHeader />
       <SubtitleStack />
 

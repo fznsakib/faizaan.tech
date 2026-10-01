@@ -20,7 +20,7 @@ import {
   stepGlass,
   supportsRefraction,
 } from "./glass";
-import { headOutline, restPose } from "./headShape";
+import { COPPER_SILHOUETTE, headOutline, restPose, SKIN_SILHOUETTE } from "./headShape";
 
 import type { GlassBody, GlassInput, GlassState, Point } from "./glass";
 import type { HeadOutline } from "./headShape";
@@ -923,16 +923,18 @@ describe("head collisions", () => {
     expect([next.x, next.y]).toEqual([720, 450]);
   });
 
-  it("starts every piece clear of the head when it knows where the head is", () => {
-    for (const [width, height] of [
-      [1440, 900],
-      [393, 852],
-    ]) {
-      const real = headOutline({ width, height }, restPose(width, height));
-      everyBody((body) => {
-        const state = initialState(body, 0, width, height, false, real);
-        expect(headClearance(body, state, real, width, height, spinAt(body, state, 0, false, width, height))).toBeGreaterThan(-1);
-      });
+  it("starts every piece clear of the head when it knows where the head is, for either head", () => {
+    for (const silhouette of [COPPER_SILHOUETTE, SKIN_SILHOUETTE]) {
+      for (const [width, height] of [
+        [1440, 900],
+        [393, 852],
+      ]) {
+        const real = headOutline({ width, height }, restPose(width, height, silhouette), silhouette.parts);
+        everyBody((body) => {
+          const state = initialState(body, 0, width, height, false, real);
+          expect(headClearance(body, state, real, width, height, spinAt(body, state, 0, false, width, height))).toBeGreaterThan(-1);
+        });
+      }
     }
   });
 });

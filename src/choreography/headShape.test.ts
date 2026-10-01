@@ -6,18 +6,18 @@ import { MeshoptDecoder } from "meshoptimizer";
 import { Box3, Euler, Matrix4, Object3D, PerspectiveCamera, Vector3 } from "three";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { fitCamera, TAN_HALF_FOV } from "./fit";
-import { HEAD_BASE_Y, headOutline, restPose } from "./headShape";
+import { COPPER_FIT, fitCamera, SKIN_FIT, TAN_HALF_FOV } from "./fit";
+import { COPPER_SILHOUETTE, headOutline, restPose, SKIN_SILHOUETTE } from "./headShape";
 
-import type { HeadPose } from "./headShape";
+import type { HeadPose, HeadSilhouette } from "./headShape";
 
 const D = Math.PI / 180;
 
-/** head.glb's vertices as `Head`'s prepareModel places them: relative to the nod pivot, plus the rig's rest height. */
-async function loadHead(): Promise<{ points: Vector3[]; baseY: number }> {
+/** A head mesh's vertices as the rig's prepareModel places them: relative to the nod pivot, plus the rig's rest height. */
+async function loadHead(file: string): Promise<{ points: Vector3[]; baseY: number }> {
   await MeshoptDecoder.ready;
   const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ "meshopt.decoder": MeshoptDecoder });
-  const doc = await io.read(fileURLToPath(new URL("../assets/head.glb", import.meta.url)));
+  const doc = await io.read(fileURLToPath(new URL(`../assets/${file}`, import.meta.url)));
   const head = new Object3D();
   head.rotation.set(Math.PI / 2, Math.PI, 0);
   head.scale.setScalar(0.25);
@@ -82,10 +82,29 @@ function edgeAlong(outline: ReturnType<typeof headOutline>, y: number, from: num
 const DESKTOP = { width: 1440, height: 900 };
 const PHONE = { width: 393, height: 852 };
 
-describe("headOutline", () => {
+/** On-screen extent of a mesh's silhouette at rest (shares of the viewport height), from its projected vertices. */
+function extent(points: readonly Vector3[], silhouette: HeadSilhouette) {
+  const { width, height } = DESKTOP;
+  const screen = project(points, restPose(width, height, silhouette), width, height);
+  const xs = screen.map((p) => p.x);
+  const ys = screen.map((p) => p.y);
+  const [top, bottom] = [Math.min(...ys), Math.max(...ys)];
+  return { width: (Math.max(...xs) - Math.min(...xs)) / height, height: (bottom - top) / height, centre: (top + bottom) / 2 / height };
+}
+
+/**
+ * Each head, with the worst stand-off its proxy is allowed (px, along the normal). The skin head's hair fringe curves
+ * in over the forehead where its ellipsoids can't follow, so turned 22° its temple side stands off up to ~41 px.
+ */
+const HEADS: [string, string, HeadSilhouette, number][] = [
+  ["copper", "head.glb", COPPER_SILHOUETTE, 30],
+  ["skin", "skin-head.glb", SKIN_SILHOUETTE, 42],
+];
+
+describe.each(HEADS)("headOutline for the %s head", (_, file, silhouette, worstStandOff) => {
   let mesh: Awaited<ReturnType<typeof loadHead>>;
   beforeAll(async () => {
-    mesh = await loadHead();
+    mesh = await loadHead(file);
   });
 
   const poses: [string, { width: number; height: number }, Partial<HeadPose>][] = [
@@ -95,28 +114,29 @@ describe("headOutline", () => {
     ["mid-nod, chin down", DESKTOP, { pitch: 14 * D }],
     ["looking up", DESKTOP, { pitch: -10 * D }],
     ["rolled and flinching", DESKTOP, { roll: 10 * D, yaw: 8 * D }],
-    ["lifted in a drop, camera punched in", DESKTOP, { y: HEAD_BASE_Y - 0.08, cameraZ: 4.65 }],
+    ["lifted in a drop, camera punched in", DESKTOP, { y: silhouette.baseY - 0.08, cameraZ: 4.65 }],
     ["on an iPhone 15", PHONE, {}],
     ["on an iPhone 15, turned and nodding", PHONE, { yaw: 20 * D, pitch: 10 * D }],
   ];
 
-  it("rests where Head's prepareModel puts the rig", () => {
-    expect(HEAD_BASE_Y).toBeCloseTo(mesh.baseY, 2);
-    expect(restPose(1440, 900)).toEqual({ pitch: 0, yaw: 0, roll: 0, y: HEAD_BASE_Y, cameraZ: 5, cameraY: 0 });
-    expect(restPose(393, 852)).toMatchObject({ cameraZ: fitCamera(393, 852).z, cameraY: fitCamera(393, 852).y });
+  it("rests where the rig's prepareModel puts it, under the camera its fit places", () => {
+    expect(silhouette.baseY).toBeCloseTo(mesh.baseY, 2);
+    expect(restPose(1440, 900, silhouette)).toEqual({ pitch: 0, yaw: 0, roll: 0, y: silhouette.baseY, cameraZ: 5, cameraY: 0 });
+    const phone = fitCamera(393, 852, silhouette.fit);
+    expect(restPose(393, 852, silhouette)).toMatchObject({ cameraZ: phone.z, cameraY: phone.y });
   });
 
   it.each(poses)("covers every vertex of the head's silhouette %s (within 6 px)", (_, view, change) => {
-    const pose = { ...restPose(view.width, view.height), ...change };
-    const outline = headOutline(view, pose);
+    const pose = { ...restPose(view.width, view.height, silhouette), ...change };
+    const outline = headOutline(view, pose, silhouette.parts);
     let worst = -Infinity;
     for (const { x, y } of project(mesh.points, pose, view.width, view.height)) worst = Math.max(worst, outline.distance(x, y));
     expect(worst).toBeLessThanOrEqual(6);
   });
 
   it.each(poses)("hugs the head %s: the outline stands off the silhouette by ≤ 12 px on average", (_, view, change) => {
-    const pose = { ...restPose(view.width, view.height), ...change };
-    const outline = headOutline(view, pose);
+    const pose = { ...restPose(view.width, view.height, silhouette), ...change };
+    const outline = headOutline(view, pose, silhouette.parts);
     const edges = rows(project(mesh.points, pose, view.width, view.height));
     const gaps: number[] = [];
     let standOff = 0;
@@ -126,18 +146,54 @@ describe("headOutline", () => {
       const right = edgeAlong(outline, y, edge.right + 80, edge.left);
       if (left !== null) gaps.push(edge.left - left);
       if (right !== null) gaps.push(right - edge.right);
-      // the worst case along the normal: a row scan overstates it where the outline runs nearly flat (under the chin)
+      // the worst case along the normal: a row scan overstates it where the outline runs nearly flat
       standOff = Math.max(standOff, -outline.distance(edge.left, y), -outline.distance(edge.right, y));
     }
     const mean = gaps.reduce((sum, gap) => sum + gap, 0) / gaps.length;
     expect(mean).toBeLessThanOrEqual(12);
-    expect(standOff).toBeLessThanOrEqual(30);
+    expect(standOff).toBeLessThanOrEqual(worstStandOff);
     // and no taller than the head: crown and neck within a few rows
     const ys = [...edges.keys()].map((row) => row * 2);
     expect(outline.bounds.top).toBeGreaterThan(Math.min(...ys) - 16);
     expect(outline.bounds.bottom).toBeLessThan(Math.max(...ys) + 18);
   });
 
+  it("gives unit outward normals, and nearest points that sit on the outline", () => {
+    const outline = headOutline(DESKTOP, restPose(1440, 900, silhouette), silhouette.parts);
+    const { centre } = outline;
+    for (let i = 0; i < 24; i++) {
+      const angle = (2 * Math.PI * i) / 24;
+      for (const reach of [150, 260, 420]) {
+        const x = centre.x + reach * Math.cos(angle);
+        const y = centre.y + reach * Math.sin(angle);
+        const near = outline.nearest(x, y);
+        expect(Math.hypot(near.normal.x, near.normal.y)).toBeCloseTo(1, 6);
+        expect(Math.abs(outline.distance(near.point.x, near.point.y))).toBeLessThan(1.5);
+        expect(near.depth).toBeCloseTo(-outline.distance(x, y), 6);
+        expect(outline.contains(x, y)).toBe(near.depth > 0);
+      }
+    }
+    // the sides face out sideways, the crown faces up
+    const { bounds } = outline;
+    expect(outline.nearest(bounds.left - 20, centre.y).normal.x).toBeLessThan(-0.9);
+    expect(outline.nearest(bounds.right + 20, centre.y).normal.x).toBeGreaterThan(0.9);
+    expect(outline.nearest(centre.x, bounds.top - 20).normal.y).toBeLessThan(-0.9);
+  });
+});
+
+describe("the head silhouettes and the camera fits", () => {
+  it("agree on how the skin head compares with the copper head (fit.ts measures them in one shared unit)", async () => {
+    const copper = extent((await loadHead("head.glb")).points, COPPER_SILHOUETTE);
+    const skin = extent((await loadHead("skin-head.glb")).points, SKIN_SILHOUETTE);
+    // the fits are the meshes' silhouettes in one shared calibration (crown-to-neck reads ~7% short of the mesh)
+    expect(skin.height / copper.height).toBeCloseTo(SKIN_FIT.height / COPPER_FIT.height, 1);
+    expect(Math.abs(skin.height / copper.height / (SKIN_FIT.height / COPPER_FIT.height) - 1)).toBeLessThan(0.02);
+    expect(Math.abs(skin.width / copper.width / (SKIN_FIT.width / COPPER_FIT.width) - 1)).toBeLessThan(0.02);
+    expect(Math.abs(skin.centre - copper.centre - (SKIN_FIT.centre - COPPER_FIT.centre))).toBeLessThan(0.006);
+  });
+});
+
+describe("headOutline", () => {
   it("projects a sphere to its exact silhouette circle", () => {
     const { width, height } = DESKTOP;
     const pose: HeadPose = { pitch: 0, yaw: 0, roll: 0, y: 0, cameraZ: 5, cameraY: 0 };
@@ -158,28 +214,6 @@ describe("headOutline", () => {
     const [toward, half] = [Math.atan(1 / 5), Math.asin(1 / Math.sqrt(26))];
     expect(Math.abs(lifted.distance(width / 2, height / 2 - f * Math.tan(toward + half)))).toBeLessThan(0.5);
     expect(Math.abs(lifted.distance(width / 2, height / 2 - f * Math.tan(toward - half)))).toBeLessThan(0.5);
-  });
-
-  it("gives unit outward normals, and nearest points that sit on the outline", () => {
-    const outline = headOutline(DESKTOP, restPose(1440, 900));
-    const { centre } = outline;
-    for (let i = 0; i < 24; i++) {
-      const angle = (2 * Math.PI * i) / 24;
-      for (const reach of [150, 260, 420]) {
-        const x = centre.x + reach * Math.cos(angle);
-        const y = centre.y + reach * Math.sin(angle);
-        const near = outline.nearest(x, y);
-        expect(Math.hypot(near.normal.x, near.normal.y)).toBeCloseTo(1, 6);
-        expect(Math.abs(outline.distance(near.point.x, near.point.y))).toBeLessThan(1.5);
-        expect(near.depth).toBeCloseTo(-outline.distance(x, y), 6);
-        expect(outline.contains(x, y)).toBe(near.depth > 0);
-      }
-    }
-    // the sides face out sideways, the crown faces up, the neck's sides face out
-    const { bounds } = outline;
-    expect(outline.nearest(bounds.left - 20, centre.y).normal.x).toBeLessThan(-0.9);
-    expect(outline.nearest(bounds.right + 20, centre.y).normal.x).toBeGreaterThan(0.9);
-    expect(outline.nearest(centre.x, bounds.top - 20).normal.y).toBeLessThan(-0.9);
   });
 
   it("follows the pose: a turn swings the face, a roll tips the crown, a lift and the camera move and scale it", () => {

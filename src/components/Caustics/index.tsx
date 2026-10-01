@@ -7,6 +7,7 @@ import { headOutline, headPose, restPose } from "../../choreography/headShape";
 import { prefersReducedMotion } from "../../hooks/reducedMotion";
 
 import type { CausticPose, Pool } from "../../choreography/caustics";
+import type { HeadSilhouette } from "../../choreography/headShape";
 
 /** The key light's warm white (Head's right-hand Lightformer), unless the page sets `--day-accent`. */
 const WARM = "#ffe2b8";
@@ -56,7 +57,7 @@ function accent(): string {
  * when the head turns, breathe as it nods and tip as it rolls. Static with reduced motion. Drawn from the shared
  * music ticker, into a canvas the size of the pool.
  */
-const Caustics: React.FC = () => {
+const Caustics: React.FC<{ silhouette: HeadSilhouette }> = ({ silhouette }) => {
   const canvas = useRef<HTMLCanvasElement>(null);
   const layout = useRef<Layout | null>(null);
   const bands = useRef(new Float32Array(BANDS * BAND_STRIDE));
@@ -70,7 +71,7 @@ const Caustics: React.FC = () => {
       const el = canvas.current;
       if (!el) return;
       const [width, height] = [window.innerWidth, window.innerHeight];
-      const pool = causticPool(headOutline({ width, height }, restPose(width, height)));
+      const pool = causticPool(headOutline({ width, height }, restPose(width, height, silhouette), silhouette.parts));
       const left = Math.max(0, Math.floor(pool.x - REACH * pool.rx));
       const top = Math.max(0, Math.floor(pool.y - REACH * pool.ry));
       const box = {
@@ -107,7 +108,7 @@ const Caustics: React.FC = () => {
       window.removeEventListener("resize", resize);
       window.clearInterval(poll);
     };
-  }, []);
+  }, [silhouette]);
 
   useEffect(() => {
     if (!DEBUG) return;

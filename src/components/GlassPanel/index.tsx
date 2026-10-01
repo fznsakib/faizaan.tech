@@ -27,7 +27,7 @@ import { quantise } from "../../choreography/type";
 import { prefersReducedMotion } from "../../hooks/reducedMotion";
 
 import type { GlassBody, GlassMap, HeadHit, PointerSample } from "../../choreography/glass";
-import type { HeadOutline } from "../../choreography/headShape";
+import type { HeadOutline, HeadSilhouette } from "../../choreography/headShape";
 
 const params = new URLSearchParams(window.location.search);
 /** Chromium refracts through an SVG filter; everything else (and `?frosted`) gets frosted glass. */
@@ -133,16 +133,16 @@ interface Drag {
   samples: PointerSample[];
 }
 
-/** The head's silhouette this frame: as `Head` last drew it, or at rest until it has. */
-function currentHead(width: number, height: number): HeadOutline {
-  return headOutline({ width, height }, headPose.ready ? headPose : restPose(width, height));
+/** The head's silhouette this frame: as the head last drew it, or at rest until it has. */
+function currentHead(width: number, height: number, silhouette: HeadSilhouette): HeadOutline {
+  return headOutline({ width, height }, headPose.ready ? headPose : restPose(width, height, silhouette), silhouette.parts);
 }
 
 /**
  * Thick 3D glass floating behind the head: refracts the page behind it, drifts round the head, faces the cursor,
  * lights up with the music, and can be grabbed, thrown and bounced off the window edges and the head (which flinches).
  */
-const GlassPanel: React.FC = () => {
+const GlassPanel: React.FC<{ silhouette: HeadSilhouette }> = ({ silhouette }) => {
   const bodies = useMemo(() => createBodies(), []);
   const [slabs, setSlabs] = useState(() => cutSlabs(bodies, window.innerWidth, window.innerHeight));
   const states = useRef(
@@ -153,7 +153,7 @@ const GlassPanel: React.FC = () => {
         window.innerWidth,
         window.innerHeight,
         prefersReducedMotion(),
-        currentHead(window.innerWidth, window.innerHeight),
+        currentHead(window.innerWidth, window.innerHeight, silhouette),
       ),
     ),
   );
@@ -319,7 +319,7 @@ const GlassPanel: React.FC = () => {
       reduced,
     };
     const held = drag.current;
-    const head = currentHead(width, height);
+    const head = currentHead(width, height, silhouette);
     if (DEBUG) probe.current.head = head;
     bodies.forEach((body, i) => {
       let state = states.current[i];
