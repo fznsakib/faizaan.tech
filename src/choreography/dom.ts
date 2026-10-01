@@ -4,7 +4,6 @@ export type StyleProp =
   | "fontFamily"
   | "fontSize"
   | "opacity"
-  | "backgroundPosition"
   | "visibility"
   | "display";
 

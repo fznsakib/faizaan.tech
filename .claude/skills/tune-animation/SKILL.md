@@ -42,14 +42,15 @@ Quantisation steps are deliberately coarse: each distinct `font-variation-settin
 - `HISTORY` = 6 steps kept, so a letter the shockwave hasn't reached yet still shows the right (older) face.
 - Drops switch to Doto (`DOTO_VARIATION`); calm returns to the name's own Golos face (empty string).
 
-## Name Matter (`src/choreography/matter.ts`, `src/components/NameHeader/useMatter.ts`)
+## Name Shatter (`src/choreography/shatter.ts`, `src/components/NameHeader/useShatter.ts`)
 
-- `STAGES`: lead-in 0.35 s, chrome 1.4, molten 1.6, shatter 1.2, frost 1.5 (`RUN_LENGTH` 6.05 s). Each stage blends into the next over its last `BLEND` 0.35 s; in a blend the upper layer (`MATTERS` order) fades over the lower one, which stays opaque.
-- `MAX_SWEEP` 0.7 s: letters start late by their distance from the pointer (hover/tap) or the head (ambient) at `SHOCKWAVE_SPEED`.
-- `AMBIENT_GAP` 40–70 s, counted from entering and restarted by any run; `RETRIGGER_COOLDOWN` 0.5 s after a run ends; a frame gap over 1 s (hidden tab) restarts the wait.
-- Effect timings are in t within the state: `chromeSweep` crosses 0.08–0.8; `meltAmount` is in by 0.4 and set by 0.78; drips grow 0.18 and fall 0.3 (0.9 em); shards fly 0.3–0.5 em (+0.15 em away from the origin), out 0.1–0.4, home 0.48–0.62; sparkles twinkle 3 times, lit 0.2–0.55.
-- `SAG` 0.06 and `WARP` 0.06 × font size (`useMatter`). Phones (`LITE`): no SVG filters, 3 shards / 1 drip / 1 sparkle (`pieces.ts`).
-- Filter cost: blur primitives are what the GPU pays for (the molten glow's blur halved the frame rate and was cut), and a filter re-runs whenever its letter repaints. The kick moves every letter each frame, so during a desktop run each letter is its own compositor layer (`will-change: transform`), and hidden material layers are `display: none`, out of style and layout. The melt's ramp is an feImage of an in-document rect: a data-URI image is re-rasterised on the main thread every frame.
+- One letter at a time: the letter a mouse/pen comes into (or a touch/pen taps) bursts; a fast sweep fires every letter it crossed (`entered` in `NameHeader/pointer.ts`), so it ripples. The space has no box; the parentheses burst like letters.
+- Timeline, s from the burst: the plate (blue gradient perforated with the grid's plusses) cuts in at 0; shards fade in over 0.04 and fly out `FLIGHT_OUT` 0.03 → 0.4 (each at its own `pace`, 0.75–1 of that, ease-out cubic) while the plate breaks up 0.05–0.11; they drift a further `DRIFT` 6% through the hang to 0.56 (+ each shard's `lag`, ≤ 0.06), then snap home ease-in cubic, all landing at `HOME` 0.86 as the plate re-forms (0.80–0.84); the plate holds 0.1 and fades into the white glyph over 0.2 (`DURATION` 1.16). The glyph is hidden 0.03 → 0.91, both swaps under the opaque plate.
+- Shards (`shardsFor`): `SHARD_COUNT` 14 desktop / 8 phones and touch-first screens; homes spread over the glyph (0.5 ± 0.3 across, 0.55 ± 0.25 down the letter box), flight 0.15–0.65 em radially (a cloud, not a ring), spin ±90–270°, size 0.13–0.2 em (at least `MIN_SHARD` 10 px), three blue `#8AB1EE` to two grey `#555555`.
+- `PUSH` 0.35 em: every shard also flies along `pushFrom` (entry point → letter centre, length 1 at the letter's edge, 0 at its centre, so a tap in the middle bursts evenly).
+- Retrigger: a letter can start again once its shards have landed (`HOME`), from the re-formed plate, so it's seamless; earlier entries are ignored.
+- Reduced motion: `reducedPlate`, the plate fades in 0.15, holds 0.2, fades out 0.25 over the still-visible glyph; no shards. Forced colors: nothing.
+- Cost: burst layers are `display: none` until their letter bursts and shards are shown only while out (each `will-change: transform, opacity`, so a layer only then); the frame callback returns at once while no letter bursts.
 
 ## Plus Grid (`src/choreography/grid.ts`)
 
