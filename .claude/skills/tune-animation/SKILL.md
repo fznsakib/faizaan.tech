@@ -56,6 +56,12 @@ Quantisation steps are deliberately coarse: each distinct `font-variation-settin
 - `TURN_RADIUS` 180px: big plusses within it turn to face the cursor (smooth falloff), easing with `TURN_TAU` 0.12s.
 - `PULSE` 0.8: mini plusses grow up to 1 + 0.8 × kick × (0.5 + 0.5 × energy), delayed by distance from the head at `SHOCKWAVE_SPEED`; `KICK_HISTORY_SPAN` 2.5s covers ultrawide screens.
 
+## Paper Grain (`src/choreography/grain.ts`, `src/components/Background/paper.ts`)
+
+- Static, never music-driven. `GRAIN`: value-noise `octaves` (0.9 px × 0.11 grain, 3.2 px × 0.035 tooth, 11 px × 0.03 floc), `speckle` 0.04 per device pixel, fibres (`fibreDensity` 0.0032/px², 4–16 px long, 0.7 px wide, light +0.17 / dark −0.11, 35% dark), and the `mottle` (340/150/60 px gradient noise, 0.035/0.025/0.012). All relative luminance: the ground's RGB × (1 + delta), so its hue holds and its mean is the ground (pinned by `grain.test.ts`).
+- Look at it alone: hide everything but the Background and its grid canvas, screenshot at 1:1, and check luma sd ≈ 3 (of 255) on the green; above ~5 it starts to read as dirt.
+- Every noise lattice is turned by an integer vector (`TURNS`) so tiles stay seamless while no lattice line runs along the screen's axes (axis-aligned lattices stack into faint stripes when tiled).
+
 ## Glass (`src/choreography/glass.ts`, `src/components/GlassPanel`)
 
 - `createBodies()` makes new organic outlines (pebble, blob, pill, lens, shard) on every load; the displacement map, clip path, highlights, hit-testing and wall bounces all follow the real outline.

@@ -34,7 +34,7 @@ You are a React/TypeScript/styled-components specialist working on faizaan.tech,
 
 | z-index | Component(s) |
 |---------|-------------|
-| 0 | Background (canvas grid; not negative, so a body background can't cover it), then Caustics (mounted after it) |
+| 0 | Background (canvas grid over the paper grain, the ground's own CSS background; not negative, so a body background can't cover it), then Caustics (mounted after it) |
 | 1 | NameHeader, SubtitleStack |
 | 9 | GlassPanel (behind the head) |
 | 10 | Canvas (Three.js) |
