@@ -57,6 +57,12 @@ Quantisation steps are deliberately coarse: each distinct `font-variation-settin
 - `TURN_RADIUS` 180px: big plusses within it turn to face the cursor (smooth falloff), easing with `TURN_TAU` 0.12s.
 - `PULSE` 0.8: mini plusses grow up to 1 + 0.8 × kick × (0.5 + 0.5 × energy), delayed by distance from the head at `SHOCKWAVE_SPEED`; `KICK_HISTORY_SPAN` 2.5s covers ultrawide screens.
 
+## Paper Grain (`src/choreography/grain.ts`, `src/components/Background/paper.ts`)
+
+- Static, never music-driven. `GRAIN`: value-noise `octaves` (0.9 px × 0.11 grain, 3.2 px × 0.035 tooth, 11 px × 0.03 floc), `speckle` 0.04 per device pixel, fibres (`fibreDensity` 0.0032/px², 4–16 px long, 0.7 px wide, light +0.17 / dark −0.11, 35% dark), and the `mottle` (340/150/60 px gradient noise, 0.035/0.025/0.012). All relative luminance: the ground's RGB × (1 + delta), so its hue holds and its mean is the ground (pinned by `grain.test.ts`).
+- Look at it alone: hide everything but the Background and its grid canvas, screenshot at 1:1, and check luma sd ≈ 3 (of 255) on the green; above ~5 it starts to read as dirt.
+- Every noise lattice is turned by an integer vector (`TURNS`) so tiles stay seamless while no lattice line runs along the screen's axes (axis-aligned lattices stack into faint stripes when tiled).
+
 ## Glass (`src/choreography/glass.ts`, `src/components/GlassPanel`)
 
 - `createBodies()` makes new organic outlines (pebble, blob, pill, lens, shard) on every load; the displacement map, clip path, highlights, hit-testing and wall bounces all follow the real outline.
@@ -76,14 +82,6 @@ Quantisation steps are deliberately coarse: each distinct `font-variation-settin
 - Pool (`causticPool`): centred a little left of the head and 12% of its height above its bottom, rx 1.1 × head width, ry 0.3 × head height.
 - Pattern: seven bands in two tilt families (≈ +12°, −19°), ripple speeds < 0.6 rad/s; `SLIDE` 0.55 rx/rad against a turn, `BREATHE` 0.9 (height) and `FOCUS` 0.8 (brightness) per radian of nod.
 - Look (component): strokes 24 px @ 0.045, 7 px @ 0.09, 1.6 px @ 0.36 with `lighter`, faded to the pool's rim; DPR capped at 1.5; fades in over 1.5 s once the head is drawn.
-
-## Daylight (`src/choreography/daylight.ts`, `src/components/Daylight`)
-
-- `KEYFRAMES`: one row per keyframe (02:00, 05:00, 06:30 `SUNRISE`, 09:00, 13:00 `NOON`, 18:30, 20:00, 22:30) of lamp `[colour, intensity]`s (key, fill, rim, ambient, sky, cool, warm) and palette tokens; mixed in OKLab with a smoothstep per segment. The 13:00 row is the site's original scene and is pinned by `daylight.test.ts`: never edit it.
-- Sun: rises `SUNRISE` at front-left (azimuth −45°), peaks at `NOON` at today's key angle ([10, 10, 10]), sets `SUNSET` 19:30 back-right; the key never goes below the horizon; the environment turns with the sun's azimuth.
-- Guard-rail tests: no step > ΔE 0.015 or 2% of a lamp's peak between minutes; neighbouring keyframes ΔE > 0.06 apart, and > 0.08 from noon; the ground stays the site's green (OKLCH L 0.22–0.38, C 0.03–0.07, hue 140–215°, ΔE < 0.1 from `rgb(20, 61, 50)`).
-- Preview with `?hour=18.5`; sweep with `?daycycle` (24 h in `CYCLE_SECONDS` 60, 100 ms ticks; each tick is ~0.4 ms JS plus one `:root` custom-property style recalc).
-- The copper chrome swallows blue: cold and violet hours show on the head through brighter environments and strong rims, not through colour alone.
 
 ## Head Fit and Tilt (`src/choreography/fit.ts`, `src/choreography/tilt.ts`)
 

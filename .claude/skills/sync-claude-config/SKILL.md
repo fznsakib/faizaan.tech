@@ -24,11 +24,12 @@ Read these files and extract current values:
 | `src/choreography/shatter.ts` | `SHARD_COUNT`, `FLIGHT_OUT`, `HOME`, `DURATION`, `PUSH`, `DRIFT`, shard spread, `REDUCED_DURATION` |
 | `src/components/NameHeader/*` | `MIN_SHARD` (`ShatterLetter.tsx`), the lite media query (`useShatter.ts`), the plate's look (`NameHeader.styled.ts`) |
 | `src/choreography/grid.ts` | `TURN_RADIUS`, `TURN_TAU`, `PULSE`, `KICK_HISTORY_SPAN` |
+| `src/choreography/grain.ts` | `GRAIN` (octaves, speckle, fibres, mottle), `TILE_CSS`, `MOTTLE_STEP`/`MOTTLE_CELLS`, `MAX_GRAIN_DPR` |
 | `src/choreography/glass.ts` | Glass shape families, physics (friction, restitution), map bevel |
 | `src/audio/bands.ts` | `BAND_RANGE`, `SILENCE_DB` |
 | `src/components/SocialLinks/*` | Links, glyphs, dot/magnet constants |
-| `src/components/Head/index.tsx` | Material config, mouse influence, lighting, nod amplitude |
-| `src/App.tsx` | Component list, z-index values, lighting setup |
+| `src/components/Head/index.tsx` / `SkinHead/index.tsx` | Material config, each head's own lights |
+| `src/App.tsx` | Component list, z-index values, the `?head` switch |
 | `src/styles/theme.ts` / `src/styles/colors.ts` | Theme structure |
 
 ### 2. Compare against config files

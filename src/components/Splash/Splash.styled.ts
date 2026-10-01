@@ -33,7 +33,7 @@ export const Veil = styled.div<{ $leaving: boolean }>`
   align-items: center;
   justify-content: center;
   gap: 2rem;
-  background: color-mix(in srgb, var(--day-ground, rgb(20, 61, 50)) 82%, transparent);
+  background: rgba(20, 61, 50, 0.82);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   cursor: pointer;

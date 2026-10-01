@@ -10,7 +10,7 @@ export const Background = styled.div`
   width: 100%;
   height: 100%;
   z-index: 0;
-  background-color: var(--day-ground, rgb(20, 61, 50));
+  background-color: rgb(20, 61, 50);
 `;
 
 export const Canvas = styled.canvas`

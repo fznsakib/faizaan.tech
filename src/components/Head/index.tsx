@@ -1,4 +1,4 @@
-import { useGLTF, useTexture } from "@react-three/drei";
+import { Environment, Lightformer, useGLTF, useTexture } from "@react-three/drei";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { MeshStandardMaterial, SRGBColorSpace } from "three";
 
@@ -7,12 +7,12 @@ import { prepareModel, useHeadRig } from "./useHeadRig";
 import headFaceUrl from "../../assets/head-face.jpg?url";
 import headModelUrl from "../../assets/head.glb?url";
 import { COPPER_FIT } from "../../choreography/fit";
-import DaylightRig from "../Daylight";
 
 import type { HeadPulse } from "./useHeadRig";
-import type { Group } from "three";
+import type { DirectionalLight, Group } from "three";
 
 const BASE_EMISSIVE = 0.04;
+const BASE_RIM = 1.5;
 
 /**
  * The chrome head with the owner's photo face (blended by the mesh's `_faceweight`), on the shared rig: nods on the
@@ -41,12 +41,11 @@ function Head() {
   }, [skin]);
   const model = useMemo(() => prepareModel(scene, material), [scene, material]);
   const rig = useRef<Group>(null);
-  /** The snare's rim flash, added by the daylight rig to the rim light's time-of-day strength. */
-  const rimFlash = useRef(0);
+  const rim = useRef<DirectionalLight>(null);
   const pulse = useCallback(
     ({ kick, snare, drive }: HeadPulse) => {
       material.emissiveIntensity = BASE_EMISSIVE + 0.2 * kick * drive;
-      rimFlash.current = 10 * snare;
+      if (rim.current) rim.current.intensity = BASE_RIM + 10 * snare;
     },
     [material]
   );
@@ -56,7 +55,37 @@ function Head() {
 
   return (
     <>
-      <DaylightRig rimFlash={rimFlash} />
+      <Environment resolution={256}>
+        <Lightformer form="rect" intensity={2.5} position={[0, 5, 2]} scale={[10, 3, 1]} rotation-x={Math.PI / 2} />
+        <Lightformer
+          form="rect"
+          intensity={4}
+          color="#9fd3ff"
+          position={[-5, 1, -3]}
+          scale={[2, 8, 1]}
+          rotation-y={Math.PI / 3}
+        />
+        <Lightformer
+          form="rect"
+          intensity={3}
+          color="#ffe2b8"
+          position={[5, 0, 1]}
+          scale={[3, 6, 1]}
+          rotation-y={-Math.PI / 2}
+        />
+        <Lightformer
+          form="ring"
+          intensity={1.5}
+          color="#143d32"
+          position={[0, -4, 0]}
+          scale={8}
+          rotation-x={-Math.PI / 2}
+        />
+      </Environment>
+      <ambientLight intensity={0.3} />
+      <pointLight position={[10, 10, 10]} intensity={20} distance={20} decay={2} />
+      <pointLight position={[-5, -5, -5]} intensity={5} />
+      <directionalLight ref={rim} position={[0, 2, -6]} intensity={BASE_RIM} color="#bfe6ff" />
       <group ref={rig} position-y={model.baseY}>
         <primitive object={model.holder} />
       </group>
