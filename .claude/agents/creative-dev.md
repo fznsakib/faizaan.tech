@@ -37,7 +37,7 @@ Key files:
 - `src/audio/MusicEngine.ts` — Web Audio playback and player operations, DJ-mode hits, live band analysis, visualiser readers (`readSpectrum`/`readWaveform`)
 - `src/audio/frame.ts` — `MusicFrame` construction, beat-map-derived per-frame math
 - `src/audio/analysis/` — build-time onset/energy/section analysis (`analyzeTrack.ts`, `buildBeatMap.ts`)
-- `src/choreography/` — pure, tested per-effect math (`daylight`, `nod`, `type`, `faces`, `matter`, `grid`, `glass`, `headShape`, `impact`, `caustics`, `fit`, `tilt`, `dom`)
+- `src/choreography/` — pure, tested per-effect math (`daylight`, `nod`, `type`, `faces`, `shatter`, `grid`, `glass`, `headShape`, `impact`, `caustics`, `fit`, `tilt`, `dom`)
 - `src/components/SkinHead/index.tsx` — the default 3D head (the owner's whole head: photo face, synthesized skin and curls); `src/components/Head/index.tsx` — the copper head (`?head=copper`); both on `src/components/Head/useHeadRig.ts` (beat-locked nodding, mouse/tilt follow, camera from `fitCamera` with the head's `HeadFit`)
 - `src/hooks/useDeviceTilt.ts` — phone tilt feed for the head (enabled on the Splash's enter tap)
 - `src/hooks/useDaylight.ts` + `src/components/Daylight/index.tsx` — the visitor's time of day: `--day-*` palette vars on `:root`, and `<DaylightRig>` (every scene light and the head's Environment; `?hour=`, `?daycycle`)
@@ -51,7 +51,7 @@ Read via `useMusicFrame` (never re-renders) or, inside r3f, `engine.frame` direc
 - Head nod: `nodDrive()`/`bob()` in `src/choreography/nod.ts` — phase-locked to the beat (with anticipation lift and rebound), half-time above 135 BPM, driven through a second-order `Spring` (stiffness/damping, sub-stepped at 240Hz).
 - Header/EQ weight pulses: `src/choreography/type.ts` — VU-style attack/release ballistics, coarse `font-variation-settings` quantisation (fine steps drop frames re-rasterising large glyphs).
 - Header faces/shockwave: `src/choreography/faces.ts` (per word when calm, per letter in drops).
-- Name materials (chrome, molten, shatter, frost): `src/choreography/matter.ts`, painted by `src/components/NameHeader/useMatter.ts`.
+- Name hover shatter (the letter under the pointer bursts into the grid's plusses and reassembles): `src/choreography/shatter.ts`, painted by `src/components/NameHeader/useShatter.ts`.
 - Plus-grid cursor turn and music pulse: `src/choreography/grid.ts`.
 - Glass outlines, refraction maps and drag/throw/wall/head physics: `src/choreography/glass.ts`, against the head's silhouette from `src/choreography/headShape.ts`.
 - The head's flinch when glass knocks it: `src/choreography/impact.ts`. The light pool under the head: `src/choreography/caustics.ts`.

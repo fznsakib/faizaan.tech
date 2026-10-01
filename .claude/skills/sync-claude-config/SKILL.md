@@ -21,8 +21,8 @@ Read these files and extract current values:
 | `src/choreography/nod.ts` | Spring/rebound/lift/accent constants |
 | `src/choreography/type.ts` | Shockwave speed, EQ ballistics, quantisation steps |
 | `src/choreography/faces.ts` | `CYCLE_FONTS`, `HISTORY`, `SPREAD` |
-| `src/choreography/matter.ts` | `STAGES`, `BLEND`, `MAX_SWEEP`, `AMBIENT_GAP`, `RETRIGGER_COOLDOWN`, effect timings |
-| `src/components/NameHeader/*` | `SAG`, `WARP`, `LITE` and its piece counts, filter primitives |
+| `src/choreography/shatter.ts` | `SHARD_COUNT`, `FLIGHT_OUT`, `HOME`, `DURATION`, `PUSH`, `DRIFT`, shard spread, `REDUCED_DURATION` |
+| `src/components/NameHeader/*` | `MIN_SHARD` (`ShatterLetter.tsx`), the lite media query (`useShatter.ts`), the plate's look (`NameHeader.styled.ts`) |
 | `src/choreography/grid.ts` | `TURN_RADIUS`, `TURN_TAU`, `PULSE`, `KICK_HISTORY_SPAN` |
 | `src/choreography/glass.ts` | Glass shape families, physics (friction, restitution), map bevel |
 | `src/audio/bands.ts` | `BAND_RANGE`, `SILENCE_DB` |
