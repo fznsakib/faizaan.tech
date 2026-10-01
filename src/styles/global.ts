@@ -2,10 +2,7 @@ import { createGlobalStyle } from "styled-components";
 
 import { colors } from "./colors";
 
-/**
- * One palette whatever the visitor's colour scheme or a host page's styles (e.g. an embedding viewer's body colour).
- * The ground follows the visitor's time of day (`--day-ground`, written by `startDaylight`); text stays white.
- */
+/** One palette whatever the visitor's colour scheme or a host page's styles (e.g. an embedding viewer's body colour). */
 export const GlobalStyle = createGlobalStyle`
   * {
     box-sizing: border-box;
@@ -20,7 +17,7 @@ export const GlobalStyle = createGlobalStyle`
 
     color-scheme: dark;
     color: ${colors.site.text};
-    background-color: var(--day-ground, ${colors.site.background});
+    background-color: ${colors.site.background};
 
     font-synthesis: none;
     text-rendering: optimizeLegibility;
@@ -40,7 +37,7 @@ export const GlobalStyle = createGlobalStyle`
     min-height: 100vh;
     min-height: 100dvh; /* iOS: 100vh is the viewport without its toolbars, so the page would scroll */
     color: ${colors.site.text};
-    background-color: var(--day-ground, ${colors.site.background});
+    background-color: ${colors.site.background};
   }
 
   #root {

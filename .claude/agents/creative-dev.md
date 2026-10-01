@@ -37,10 +37,9 @@ Key files:
 - `src/audio/MusicEngine.ts` — Web Audio playback and player operations, DJ-mode hits, live band analysis, visualiser readers (`readSpectrum`/`readWaveform`)
 - `src/audio/frame.ts` — `MusicFrame` construction, beat-map-derived per-frame math
 - `src/audio/analysis/` — build-time onset/energy/section analysis (`analyzeTrack.ts`, `buildBeatMap.ts`)
-- `src/choreography/` — pure, tested per-effect math (`daylight`, `nod`, `type`, `faces`, `matter`, `grid`, `glass`, `headShape`, `impact`, `caustics`, `fit`, `tilt`, `dom`)
+- `src/choreography/` — pure, tested per-effect math (`nod`, `type`, `faces`, `matter`, `grid`, `glass`, `headShape`, `impact`, `caustics`, `fit`, `tilt`, `dom`)
 - `src/components/SkinHead/index.tsx` — the default 3D head (the owner's whole head: photo face, synthesized skin and curls); `src/components/Head/index.tsx` — the copper head (`?head=copper`); both on `src/components/Head/useHeadRig.ts` (beat-locked nodding, mouse/tilt follow, camera from `fitCamera` with the head's `HeadFit`)
 - `src/hooks/useDeviceTilt.ts` — phone tilt feed for the head (enabled on the Splash's enter tap)
-- `src/hooks/useDaylight.ts` + `src/components/Daylight/index.tsx` — the visitor's time of day: `--day-*` palette vars on `:root`, and `<DaylightRig>` (every scene light and the head's Environment; `?hour=`, `?daycycle`)
 
 ## MusicFrame
 
@@ -55,14 +54,13 @@ Read via `useMusicFrame` (never re-renders) or, inside r3f, `engine.frame` direc
 - Plus-grid cursor turn and music pulse: `src/choreography/grid.ts`.
 - Glass outlines, refraction maps and drag/throw/wall/head physics: `src/choreography/glass.ts`, against the head's silhouette from `src/choreography/headShape.ts`.
 - The head's flinch when glass knocks it: `src/choreography/impact.ts`. The light pool under the head: `src/choreography/caustics.ts`.
-- Time-of-day lighting and palette: `src/choreography/daylight.ts` (keyframes at 02:00, 05:00, 06:30, 09:00, 13:00, 18:30, 20:00, 22:30; 13:00 is the original scene, pinned by test). Purely visual — never reads the music.
 - All of the above are pure functions with Vitest coverage — put new math there, not inline in a component.
 
 ## Three.js Patterns
 
 - Use `useFrame` for animation (never raw `requestAnimationFrame`); `useHeadRig` reads `engine.frame` directly since it's already inside the r3f loop, and hands each head a `pulse` (kick, snare, drive) for its look.
 - Use `useRef`/`useMemo` for mutable state and one-time objects (materials, springs) between frames.
-- Current head: the skin head — non-metallic (roughness 0.55, hair 0.85 by `_hairweight`, a little atlas glow), lit by `<DaylightRig variant="skin">`, rim light flashes with the snare. The copper head (`?head=copper`): chrome/orange metallic (`metalness: 1`, `roughness: 0.22`, emissive pulses with kick).
+- Current head: the skin head — non-metallic (roughness 0.55, hair 0.85 by `_hairweight`, a little atlas glow), its own soft lights, rim light flashes with the snare. The copper head (`?head=copper`): chrome/orange metallic (`metalness: 1`, `roughness: 0.22`, emissive pulses with kick).
 - Beat sync: phase-locked to the beat map's `beat`/`barPhase`, not a free-running sine wave.
 
 ## Testing

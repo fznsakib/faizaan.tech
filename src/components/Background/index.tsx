@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef } from "react";
 
 import * as Styled from "./Background.styled";
 import { useMusicFrame } from "../../audio/react";
-import { withAlpha } from "../../choreography/daylight";
 import {
   CELL,
   crispOffset,
@@ -15,21 +14,14 @@ import {
 } from "../../choreography/grid";
 import { KickHistory, SHOCKWAVE_SPEED } from "../../choreography/type";
 import { prefersReducedMotion } from "../../hooks/reducedMotion";
-import { useDaylight } from "../../hooks/useDaylight";
 
-const BIG = { width: 1, inner: 4, outer: 36 }; // arm span within the cell, px
-const MINI = { alpha: 0.5, width: 2, half: 5 }; // arms 15–25 px
+const BIG = { color: "#555555", width: 1, inner: 4, outer: 36 }; // arm span within the cell, px
+const MINI = { color: "rgba(138, 177, 238, 0.5)", width: 2, half: 5 }; // #8AB1EE @ 0.5, arms 15–25 px
+const BACKGROUND = "rgb(20, 61, 50)";
 const MAX_DPR = 2;
 /** Below this per-cell turn change, and with every mini-plus at rest scale, the frame is identical to last drawn. */
 const SETTLED_ANGLE = 1e-4;
 const debug = new URLSearchParams(window.location.search).has("debug");
-
-/** The grid's colours, from the daylight palette: at midday rgb(20, 61, 50), #555555 and #8AB1EE @ 0.5. */
-interface Colours {
-  ground: string;
-  big: string;
-  mini: string;
-}
 
 interface View {
   width: number;
@@ -54,17 +46,6 @@ const Background: React.FC = () => {
   /** Whether the last *drawn* frame had any mini plus above rest scale — one more draw is owed to reset it. */
   const wasScaled = useRef(false);
   const perf = useRef<number[]>([]);
-  const { palette } = useDaylight();
-  const colours = useRef<Colours>({ ground: "", big: "", mini: "" });
-
-  useEffect(() => {
-    colours.current = {
-      ground: palette.ground,
-      big: palette.gridBig,
-      mini: withAlpha(palette.gridMini, MINI.alpha),
-    };
-    dirty.current = true;
-  }, [palette]);
 
   useEffect(() => {
     const resize = () => {
@@ -117,7 +98,7 @@ const Background: React.FC = () => {
     const reduced = prefersReducedMotion();
     if (reduced) {
       if (dirty.current) {
-        draw(ctx, layout, dpr, colours.current, angles.current, null);
+        draw(ctx, layout, dpr, angles.current, null);
         dirty.current = false;
       }
       return;
@@ -170,7 +151,7 @@ const Background: React.FC = () => {
     dirty.current = false;
     wasScaled.current = anyScaled;
 
-    draw(ctx, layout, dpr, colours.current, angles.current, scales);
+    draw(ctx, layout, dpr, angles.current, scales);
 
     if (debug) {
       perf.current.push(performance.now() - t0);
@@ -201,12 +182,11 @@ function draw(
   ctx: CanvasRenderingContext2D,
   layout: GridLayout,
   dpr: number,
-  colours: Colours,
   angles: Float32Array,
   scales: Float32Array | null,
 ): void {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.fillStyle = colours.ground;
+  ctx.fillStyle = BACKGROUND;
   ctx.fillRect(0, 0, layout.originX * 2 + layout.columns * CELL, layout.originY * 2 + layout.rows * CELL);
 
   // At DPR 1 a 1 px stroke straddles two device pixels and blurs; nudge it onto the pixel grid. Which way
@@ -231,7 +211,7 @@ function draw(
       ctx.lineTo(cx + dx2, cy + dy2);
     }
   }
-  ctx.strokeStyle = colours.big;
+  ctx.strokeStyle = BIG.color;
   ctx.lineWidth = BIG.width;
   ctx.lineCap = "round";
   ctx.stroke();
@@ -249,7 +229,7 @@ function draw(
       ctx.lineTo(cx + half, cy);
     }
   }
-  ctx.strokeStyle = colours.mini;
+  ctx.strokeStyle = MINI.color;
   ctx.lineWidth = MINI.width;
   ctx.lineCap = "round";
   ctx.stroke();

@@ -9,7 +9,7 @@ import { prefersReducedMotion } from "../../hooks/reducedMotion";
 import type { CausticPose, Pool } from "../../choreography/caustics";
 import type { HeadSilhouette } from "../../choreography/headShape";
 
-/** The key light's warm white (Head's right-hand Lightformer), unless the page sets `--day-accent`. */
+/** The key light's warm white (Head's right-hand Lightformer). */
 const WARM = "#ffe2b8";
 const MAX_DPR = 1.5;
 /** How far the light can wander from the pool's centre, in pool radii: the canvas covers this much. */
@@ -29,8 +29,6 @@ const RIM = [
 ] as const;
 /** Fade in over this long (ms) once the head is drawn, so the light never pops in. */
 const FADE_IN_MS = 1500;
-/** How often (ms) to re-read `--day-accent`: off the frame path, where reading styles could force a recalc. */
-const ACCENT_POLL_MS = 2000;
 const REST: CausticPose = { yaw: 0, pitch: 0, roll: 0 };
 /** `?debug` exposes `window.__caustics`: the frame callback's recent costs (ms). */
 const DEBUG = new URLSearchParams(window.location.search).has("debug");
@@ -47,11 +45,6 @@ interface Layout {
   rim: CanvasGradient | null;
 }
 
-function accent(): string {
-  const value = getComputedStyle(document.documentElement).getPropertyValue("--day-accent").trim();
-  return value || WARM;
-}
-
 /**
  * Light the head bends, pooling on the grid below and behind it: a few thin warm bands that ripple slowly, slide
  * when the head turns, breathe as it nods and tip as it rolls. Static with reduced motion. Drawn from the shared
@@ -61,7 +54,6 @@ const Caustics: React.FC<{ silhouette: HeadSilhouette }> = ({ silhouette }) => {
   const canvas = useRef<HTMLCanvasElement>(null);
   const layout = useRef<Layout | null>(null);
   const bands = useRef(new Float32Array(BANDS * BAND_STRIDE));
-  const colour = useRef(WARM);
   const readyAt = useRef<number | null>(null);
   const drawnStill = useRef(false);
   const costs = useRef<number[]>([]);
@@ -98,16 +90,7 @@ const Caustics: React.FC<{ silhouette: HeadSilhouette }> = ({ silhouette }) => {
     };
     resize();
     window.addEventListener("resize", resize);
-    const readAccent = () => {
-      colour.current = accent();
-      drawnStill.current = false;
-    };
-    readAccent();
-    const poll = window.setInterval(readAccent, ACCENT_POLL_MS);
-    return () => {
-      window.removeEventListener("resize", resize);
-      window.clearInterval(poll);
-    };
+    return () => window.removeEventListener("resize", resize);
   }, [silhouette]);
 
   useEffect(() => {
@@ -135,7 +118,7 @@ const Caustics: React.FC<{ silhouette: HeadSilhouette }> = ({ silhouette }) => {
     context.clearRect(0, 0, el.width, el.height);
     context.setTransform(dpr, 0, 0, dpr, -box.left * dpr, -box.top * dpr);
     context.globalCompositeOperation = "lighter";
-    context.strokeStyle = colour.current;
+    context.strokeStyle = WARM;
     context.lineCap = "round";
     context.lineJoin = "round";
     for (const pass of PASSES) {
