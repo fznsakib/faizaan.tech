@@ -93,8 +93,10 @@ pitch = pitchSpring.step(curve * amplitude, dt)
 
 ## Glass Knocks and the Pose Channel
 
+Both live in `useHeadRig`, so every head on the rig gets them:
 - The flinch: `impact.sample(performance.now() / 1000, flinch)` each frame, added to pitch/yaw/roll and the squash (`src/choreography/impact.ts`; GlassPanel calls `impact.hit` when a thrown piece knocks the head).
-- `trackHead(head, camera)` at the end of `useFrame` publishes the rig's rotation and height and the camera to `headPose` (`src/choreography/headShape.ts`), which the glass collides with and the caustics follow. Any new head component makes the same two calls.
+- `trackHead(head, camera)` at the end of the frame publishes the rig's rotation and height and the camera to `headPose` (`src/choreography/headShape.ts`), which the glass collides with and the caustics follow.
+- The shape they meet is the head's `HeadSilhouette` (`COPPER_SILHOUETTE` / `SKIN_SILHOUETTE`: ellipsoids fitted to its mesh, its rest height, its `HeadFit`), chosen in `App` with the `?head` switch and passed to `GlassPanel` and `Caustics`. A new head mesh needs its own fitted silhouette (see CLAUDE.md, "Regenerating the Head").
 
 ## Mouse and Tilt Interaction
 

@@ -84,7 +84,7 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 
 | File | Purpose |
 |------|---------|
-| `src/App.tsx` | Root layout, component composition, Canvas setup (no lights: each head renders `<DaylightRig>`), the `?head` switch (each head lazy-loaded) |
+| `src/App.tsx` | Root layout, component composition, Canvas setup (no lights: each head renders `<DaylightRig>`), the `?head` switch (each head lazy-loaded; picks the head's `HeadSilhouette` for `GlassPanel` and `Caustics`, and its camera fit) |
 | `src/audio/MusicEngine.ts` | Web Audio playback and player operations, volume, DJ-mode hits, live bands, visualiser readers |
 | `src/audio/engine.ts` | The single app-wide `MusicEngine` instance |
 | `src/audio/ticker.ts` | The one rAF loop that calls `engine.update` |
@@ -98,10 +98,10 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 | `src/choreography/faces.ts` | Header faces: per word when calm, per letter in drops, Doto/Golos anchors, shockwave |
 | `src/choreography/grid.ts` | Plus-grid maths: layout, cursor turn, music pulse |
 | `src/choreography/glass.ts` | Glass outlines (new per load), displacement maps, drift/drag/throw/wall-bounce physics; `collideHead` (throws bounce off the head at 0.7 and knock it; drift glides round it; held pieces pass behind) |
-| `src/choreography/headShape.ts` | `headOutline(view, pose)`: the head's silhouette in CSS px (`COPPER_HEAD` ellipsoids fitted to head.glb, projected exactly through the live camera), with `distance`/`normal`/`contains`/`nearest`; `headPose`, written by `Head` via `trackHead` |
+| `src/choreography/headShape.ts` | `headOutline(view, pose, parts)`: a head's silhouette in CSS px (ellipsoids fitted to its mesh, projected exactly through the live camera), with `distance`/`normal`/`contains`/`nearest`; `COPPER_SILHOUETTE` / `SKIN_SILHOUETTE` (parts, rest height, `HeadFit`) and `restPose(width, height, silhouette)`; `headPose`, written by `useHeadRig` via `trackHead` |
 | `src/choreography/impact.ts` | `impact`: `hit` (from GlassPanel) kicks a damped spring per axis, `sample(t)` (read by Head) gives the recoil; ≤ 8° yaw/roll, ≤ 5° pitch, settled by 0.6 s |
 | `src/choreography/caustics.ts` | `causticPool` (where the light lands under the head) and `writeCaustics` (seven rippling bands, moved by the head's pose) |
-| `src/choreography/fit.ts` | `fitCamera(width, height, head)` → `{ z, y }`: desktop keeps z = 5, phones pull back (and lower the camera in portrait) until the head fits; each head's measured silhouette (`COPPER_FIT`, `SKIN_FIT`) |
+| `src/choreography/fit.ts` | `fitCamera(width, height, head)` → `{ z, y }`: desktop keeps z = 5, phones pull back (and lower the camera in portrait) until the head fits; each head's size in the layout's calibration (`COPPER_FIT`, `SKIN_FIT`: the copper head's first screenshots, ~7% shorter than today's meshes; `headShape.test.ts` checks the two agree with the meshes' ratios) |
 | `src/choreography/daylight.ts` | `daylight(date, override?)` → sun, key/fill/rim/ambient lights, Lightformer colours + env rotation, page palette; `?hour`/`?daycycle` parsing, `paletteVars`, `VARIANT_GAIN` |
 | `src/hooks/useDaylight.ts` | `startDaylight()` (the page's daylight clock, writes `--day-*` on `:root`) and `useDaylight()` |
 | `src/components/Daylight/index.tsx` | `<DaylightRig variant rimFlash />`: all scene lights + the head's Environment, from `useDaylight()`; rendered by each head |
@@ -127,8 +127,8 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 | `src/components/Player/skins.ts` | Skin ids/names, cycling, `localStorage` (`player.skin`) |
 | `src/components/Player/analyser.ts` | Visualiser bar falloff and Winamp-style peak caps (pure) |
 | `src/components/DjPad/index.tsx` | On-screen DJ-mode pad (opened by the Player's JAM button) |
-| `src/components/GlassPanel/index.tsx` | Refractive 3D glass (SVG displacement via `backdrop-filter`; frosted fallback / `?frosted`), draggable; steps against the head's live outline and relays knocks to `impact`. `?debug`: `window.__glass` (states, costs, and `probe`: outline, knocks, per-piece head clearance, flinch sampler) |
-| `src/components/Caustics/index.tsx` | The light pool under the head, in a pool-sized canvas; `--day-accent` if set, else the key light's `#ffe2b8`; static with reduced motion. `?debug`: `window.__caustics.costs` |
+| `src/components/GlassPanel/index.tsx` | Refractive 3D glass (SVG displacement via `backdrop-filter`; frosted fallback / `?frosted`), draggable; steps against the shown head's live outline (its `silhouette` prop, from `App`) and relays knocks to `impact`. `?debug`: `window.__glass` (states, costs, and `probe`: outline, knocks, per-piece head clearance, flinch sampler) |
+| `src/components/Caustics/index.tsx` | The light pool under the shown head (its `silhouette` prop, from `App`), in a pool-sized canvas; `--day-accent` if set, else the key light's `#ffe2b8`; static with reduced motion. `?debug`: `window.__caustics.costs` |
 | `src/components/SocialLinks/index.tsx` | Dot-matrix link dock: resolves on hover/focus, beat shimmer on touch |
 | `src/components/Splash/index.tsx` | Click-to-enter veil: inside the tap, unlocks audio (iOS audio session `playback` when entering with sound) and calls `enableDeviceTilt()` |
 | `src/components/MusicDebug/index.tsx` | `?debug` overlay (lamps, meters, metronome) |
