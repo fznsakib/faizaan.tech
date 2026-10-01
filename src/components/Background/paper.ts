@@ -61,6 +61,15 @@ function toBlob(pixels: Uint8ClampedArray, size: number): Promise<Blob> {
 
 const asBlob = (image: Blob | Uint8ClampedArray, size: number) => (image instanceof Blob ? Promise.resolve(image) : toBlob(image, size));
 
+/** A data: URL rather than a blob: one: sandboxed hosts and strict CSPs often allow `img-src data:` but not `blob:`. */
+const asDataUrl = (blob: Blob) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+
 function build(request: PaperRequest): Promise<PaperResponse> {
   return new Promise((resolve) => {
     const onMain = () =>
@@ -116,13 +125,13 @@ export function paper(dpr: number): Promise<Paper> {
     grainCosts.build = response.ms;
     grainCosts.dpr = dpr;
     const [tile, mottle] = await Promise.all([
-      asBlob(response.tile, response.tileSize),
-      asBlob(response.mottle, response.mottleSize),
+      asBlob(response.tile, response.tileSize).then(asDataUrl),
+      asBlob(response.mottle, response.mottleSize).then(asDataUrl),
     ]);
     const mottleCss = MOTTLE_CELLS * MOTTLE_STEP;
     return {
       // the mottle multiplied over the grain tile, both repeating from the page's top left
-      image: `url(${URL.createObjectURL(mottle)}), url(${URL.createObjectURL(tile)})`,
+      image: `url("${mottle}"), url("${tile}")`,
       size: `${mottleCss}px ${mottleCss}px, ${TILE_CSS}px ${TILE_CSS}px`,
       blend: "multiply, normal",
       dpr,
