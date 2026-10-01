@@ -68,7 +68,8 @@ const Player: React.FC = () => {
   const { status, track: currentId, tracks, bpm, isPlaying, muted, volume, duration, channels } = useMusicState();
   const drawer = useMediaQuery(DRAWER_QUERY);
   const [skin, setSkin] = useState(() => loadSkin(storage()));
-  const [shaded, setShaded] = useState(false);
+  // starts windowshaded (title bar, scrolling title and mini visualiser): the page leads, the player stays small
+  const [shaded, setShaded] = useState(true);
   const [playlistOpen, setPlaylistOpen] = useState(true);
   const [padOpen, setPadOpen] = useState(false);
   const [remaining, setRemaining] = useState(false);
@@ -156,11 +157,7 @@ const Player: React.FC = () => {
                   <Visualiser skin={skin} variant="mini" mode={visMode} />
                 </>
               ) : (
-                <>
-                  <Styled.Ridges aria-hidden="true" />
-                  <Styled.Title>faizaan.tech — {skinById(skin).name}</Styled.Title>
-                  <Styled.Ridges aria-hidden="true" />
-                </>
+                <Styled.Ridges aria-hidden="true" />
               )}
               <Styled.TitleButton
                 type="button"
