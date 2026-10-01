@@ -1,51 +1,27 @@
-import { dripsFor, shardsFor, sparklesFor } from "../../choreography/matter";
+import { createBurst, SHARD_COUNT, shardsFor } from "../../choreography/shatter";
 
-import type { Drip, Shard, Sparkle } from "../../choreography/matter";
+import type { Burst, Shard } from "../../choreography/shatter";
 
-/** Pieces per letter on desktop, and the share phones (`LITE`) show. */
-export const FULL = { shards: 6, drips: 2, sparkles: 2 };
-export const LITE_COUNT = { shards: 3, drips: 1, sparkles: 1 };
-
-export interface LetterPlan {
-  shards: Shard[];
-  drips: Drip[];
-  sparkles: Sparkle[];
-}
-
-/** A letter's elements, filled in by ref, for the painter. */
+/** A letter's elements, filled in by ref, and its burst, for the painter. */
 export interface LetterPieces {
   glyph: HTMLElement | null;
-  chrome: HTMLElement | null;
-  molten: HTMLElement | null;
-  shatter: HTMLElement | null;
-  frost: HTMLElement | null;
+  /** Holds the plate and shards; out of the render tree unless the letter is bursting. */
+  burstLayer: HTMLElement | null;
+  plate: HTMLElement | null;
   shards: HTMLElement[];
-  drips: HTMLElement[];
-  sparkles: HTMLElement[];
-  /** Opacity last written to the glyph, chrome, molten, shatter and frost (thousandths; -1 before any). */
-  shown: Int16Array;
-  /** Whether its drips, shards and sparkles were out last frame (they're hidden once, as they stop). */
-  moving: { drips: boolean; shards: boolean; sparkles: boolean };
+  burst: Burst;
+  /** Whether the painter is drawing it (it tidies the letter up once, when its burst ends). */
+  live: boolean;
 }
 
-/** Letter `index`'s shards, drips and sparkles: the same every load. */
-export function planLetter(index: number): LetterPlan {
-  return {
-    shards: shardsFor(index * 3 + 1, FULL.shards),
-    drips: dripsFor(index * 3 + 2, FULL.drips),
-    sparkles: sparklesFor(index * 3 + 3, FULL.sparkles),
-  };
-}
+/** Letter `index`'s shards: the same every load (phones draw the first `SHARD_COUNT.lite`). */
+export const shardsOf = (index: number): Shard[] => shardsFor(index * 3 + 1, SHARD_COUNT.full);
 
 export const emptyPieces = (): LetterPieces => ({
   glyph: null,
-  chrome: null,
-  molten: null,
-  shatter: null,
-  frost: null,
+  burstLayer: null,
+  plate: null,
   shards: [],
-  drips: [],
-  sparkles: [],
-  shown: new Int16Array(5).fill(-1),
-  moving: { drips: false, shards: false, sparkles: false },
+  burst: createBurst(),
+  live: false,
 });

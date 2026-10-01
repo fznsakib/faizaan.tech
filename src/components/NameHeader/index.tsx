@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useRef } from "react";
 
-import MatterFilters from "./MatterFilters";
-import MatterLetter from "./MatterLetter";
 import * as Styled from "./NameHeader.styled";
-import { emptyPieces, planLetter } from "./pieces";
-import { useMatter } from "./useMatter";
+import { emptyPieces, shardsOf } from "./pieces";
+import ShatterLetter from "./ShatterLetter";
+import { useShatter } from "./useShatter";
 import * as AppStyled from "../../App.styled";
 import { useMusicFrame } from "../../audio/react";
 import { forgetStyles, setStyle } from "../../choreography/dom";
@@ -21,8 +20,7 @@ import {
 import { headerVariation, jamHeaderVariation, KickHistory, SHOCKWAVE_SPEED } from "../../choreography/type";
 import { prefersReducedMotion } from "../../hooks/reducedMotion";
 
-import type { MeltFilter } from "./MatterFilters";
-import type { NameGeometry } from "./useMatter";
+import type { NameGeometry } from "./useShatter";
 
 /** The name split into words, for per-word faces when calm; a space is its own entry. */
 const NAME_WORDS = ["(faiz)", "aan", " ", "sakib"];
@@ -37,23 +35,21 @@ const WORDS = ((): number[] => {
     return Array.from(word, () => wordIndex);
   });
 })();
-/** Each letter's shards, drips and sparkles; none for the space. */
-const PLANS = LETTERS.map((letter, i) => (letter === " " ? null : planLetter(i)));
+/** Each letter's shards; none for the space (the parentheses are letters too). */
+const SHARDS = LETTERS.map((letter, i) => (letter === " " ? null : shardsOf(i)));
 /**
  * The name, one span per letter: weight pulses with the kick as a shockwave from the head, and the face changes in
  * the same wave: Doto when a drop hits, Golos when it ends, and the old header's fonts in between (a font a bar
- * when calm, a beat in a drop). Every so often, and on hover or tap, the letters also pass through materials
- * (`useMatter`), overlaid on whichever face is showing.
+ * when calm, a beat in a drop). The letter the pointer comes into (or a tap lands on) bursts into the grid's
+ * plusses and reassembles (`useShatter`), over whichever face is showing.
  */
 const NameHeader: React.FC = () => {
-  const header = useRef<HTMLHeadingElement>(null);
   const letters = useRef<HTMLSpanElement[]>([]);
   const geometry = useMemo<NameGeometry>(
-    () => ({ centres: [], bounds: null, fontSize: 0, headX: window.innerWidth / 2 }),
+    () => ({ centres: [], boxes: [], headX: window.innerWidth / 2 }),
     []
   );
-  const pieces = useMemo(() => PLANS.map((plan) => (plan ? emptyPieces() : null)), []);
-  const melt = useMemo<MeltFilter>(() => ({ warp: null, ramp: null }), []);
+  const pieces = useMemo(() => SHARDS.map((shards) => (shards ? emptyPieces() : null)), []);
   const state = useMemo(() => ({ kicks: new KickHistory(), faces: createFaceWave(WORDS) }), []);
   /** Font size (em) per face that keeps the name at its Golos width. */
   const scales = useRef(new Map<string, number>());
@@ -97,19 +93,9 @@ const NameHeader: React.FC = () => {
       geometry.headX = window.innerWidth / 2;
       const rects = letters.current.map((span) => span.getBoundingClientRect());
       geometry.centres = rects.map((rect) => rect.left + rect.width / 2);
-      if (rects.length > 0) {
-        const height = rects[0].height;
-        geometry.bounds = {
-          left: rects[0].left,
-          right: rects[rects.length - 1].right,
-          top: rects[0].top,
-          bottom: rects[0].bottom,
-        };
-        geometry.fontSize = parseFloat(getComputedStyle(letters.current[0]).fontSize) || 0;
-        // The melt's ramp spans the letter box and a little beyond (it runs 0.35–0.65 down its own height).
-        melt.ramp?.setAttribute("y", (-0.1 * height).toFixed(1));
-        melt.ramp?.setAttribute("height", (1.4 * height).toFixed(1));
-      }
+      geometry.boxes = rects.map(({ left, right, top, bottom }, i) =>
+        SHARDS[i] ? { left, right, top, bottom } : null
+      );
     };
     let cancelled = false;
     void document.fonts.ready.then(() => {
@@ -123,9 +109,9 @@ const NameHeader: React.FC = () => {
       window.removeEventListener("resize", measure);
       document.fonts.removeEventListener("loadingdone", measure);
     };
-  }, [geometry, melt]);
+  }, [geometry]);
 
-  useMatter(header, PLANS, pieces, geometry, melt);
+  useShatter(SHARDS, pieces, geometry);
 
   useMusicFrame((frame, now) => {
     const reduced = prefersReducedMotion();
@@ -163,33 +149,30 @@ const NameHeader: React.FC = () => {
   });
 
   return (
-    <>
-      <AppStyled.HeaderText ref={header} aria-label={NAME}>
-        {LETTERS.map((letter, i) => {
-          const plan = PLANS[i];
-          const letterPieces = pieces[i];
-          return (
-            <Styled.Letter
-              key={i}
-              aria-hidden="true"
+    <AppStyled.HeaderText aria-label={NAME}>
+      {LETTERS.map((letter, i) => {
+        const shards = SHARDS[i];
+        const letterPieces = pieces[i];
+        return (
+          <Styled.Letter
+            key={i}
+            aria-hidden="true"
+            ref={(el) => {
+              if (el) letters.current[i] = el;
+            }}
+          >
+            <Styled.Glyph
               ref={(el) => {
-                if (el) letters.current[i] = el;
+                if (letterPieces) letterPieces.glyph = el;
               }}
             >
-              <Styled.Glyph
-                ref={(el) => {
-                  if (letterPieces) letterPieces.glyph = el;
-                }}
-              >
-                {letter}
-              </Styled.Glyph>
-              {plan && letterPieces && <MatterLetter letter={letter} plan={plan} pieces={letterPieces} />}
-            </Styled.Letter>
-          );
-        })}
-      </AppStyled.HeaderText>
-      <MatterFilters melt={melt} />
-    </>
+              {letter}
+            </Styled.Glyph>
+            {shards && letterPieces && <ShatterLetter letter={letter} shards={shards} pieces={letterPieces} />}
+          </Styled.Letter>
+        );
+      })}
+    </AppStyled.HeaderText>
   );
 };
 
