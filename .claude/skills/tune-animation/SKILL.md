@@ -49,7 +49,7 @@ Quantisation steps are deliberately coarse: each distinct `font-variation-settin
 - `AMBIENT_GAP` 40–70 s, counted from entering and restarted by any run; `RETRIGGER_COOLDOWN` 0.5 s after a run ends; a frame gap over 1 s (hidden tab) restarts the wait.
 - Effect timings are in t within the state: `chromeSweep` crosses 0.08–0.8; `meltAmount` is in by 0.4 and set by 0.78; drips grow 0.18 and fall 0.3 (0.9 em); shards fly 0.3–0.5 em (+0.15 em away from the origin), out 0.1–0.4, home 0.48–0.62; sparkles twinkle 3 times, lit 0.2–0.55.
 - `SAG` 0.06 and `WARP` 0.06 × font size (`useMatter`). Phones (`LITE`): no SVG filters, 3 shards / 1 drip / 1 sparkle (`pieces.ts`).
-- Filter cost: blur primitives are what the GPU pays for (the molten glow's blur halved the frame rate and was cut), and a filter re-runs whenever its letter repaints, which the kick does every frame. The melt's ramp is an feImage of an in-document rect: a data-URI image is re-rasterised on the main thread every frame.
+- Filter cost: blur primitives are what the GPU pays for (the molten glow's blur halved the frame rate and was cut), and a filter re-runs whenever its letter repaints. The kick moves every letter each frame, so during a desktop run each letter is its own compositor layer (`will-change: transform`), and hidden material layers are `display: none`, out of style and layout. The melt's ramp is an feImage of an in-document rect: a data-URI image is re-rasterised on the main thread every frame.
 
 ## Plus Grid (`src/choreography/grid.ts`)
 
