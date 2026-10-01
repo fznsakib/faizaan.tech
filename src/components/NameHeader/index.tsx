@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef } from "react";
 
-import * as Styled from "../../App.styled";
+import MatterFilters from "./MatterFilters";
+import MatterLetter from "./MatterLetter";
+import * as Styled from "./NameHeader.styled";
+import { emptyPieces, planLetter } from "./pieces";
+import { useMatter } from "./useMatter";
+import * as AppStyled from "../../App.styled";
 import { useMusicFrame } from "../../audio/react";
 import { forgetStyles, setStyle } from "../../choreography/dom";
 import {
@@ -16,6 +21,9 @@ import {
 import { headerVariation, jamHeaderVariation, KickHistory, SHOCKWAVE_SPEED } from "../../choreography/type";
 import { prefersReducedMotion } from "../../hooks/reducedMotion";
 
+import type { MeltFilter } from "./MatterFilters";
+import type { NameGeometry } from "./useMatter";
+
 /** The name split into words, for per-word faces when calm; a space is its own entry. */
 const NAME_WORDS = ["(faiz)", "aan", " ", "sakib"];
 const NAME = NAME_WORDS.join("");
@@ -29,14 +37,23 @@ const WORDS = ((): number[] => {
     return Array.from(word, () => wordIndex);
   });
 })();
+/** Each letter's shards, drips and sparkles; none for the space. */
+const PLANS = LETTERS.map((letter, i) => (letter === " " ? null : planLetter(i)));
 /**
  * The name, one span per letter: weight pulses with the kick as a shockwave from the head, and the face changes in
  * the same wave: Doto when a drop hits, Golos when it ends, and the old header's fonts in between (a font a bar
- * when calm, a beat in a drop).
+ * when calm, a beat in a drop). Every so often, and on hover or tap, the letters also pass through materials
+ * (`useMatter`), overlaid on whichever face is showing.
  */
 const NameHeader: React.FC = () => {
+  const header = useRef<HTMLHeadingElement>(null);
   const letters = useRef<HTMLSpanElement[]>([]);
-  const centres = useRef<number[]>([]);
+  const geometry = useMemo<NameGeometry>(
+    () => ({ centres: [], bounds: null, fontSize: 0, headX: window.innerWidth / 2 }),
+    []
+  );
+  const pieces = useMemo(() => PLANS.map((plan) => (plan ? emptyPieces() : null)), []);
+  const melt = useMemo<MeltFilter>(() => ({ warp: null, ramp: null }), []);
   const state = useMemo(() => ({ kicks: new KickHistory(), faces: createFaceWave(WORDS) }), []);
   /** Font size (em) per face that keeps the name at its Golos width. */
   const scales = useRef(new Map<string, number>());
@@ -77,10 +94,22 @@ const NameHeader: React.FC = () => {
       letters.current.forEach((span, i) => {
         span.style.width = `${widths[i]}px`;
       });
-      centres.current = letters.current.map((span) => {
-        const rect = span.getBoundingClientRect();
-        return rect.left + rect.width / 2;
-      });
+      geometry.headX = window.innerWidth / 2;
+      const rects = letters.current.map((span) => span.getBoundingClientRect());
+      geometry.centres = rects.map((rect) => rect.left + rect.width / 2);
+      if (rects.length > 0) {
+        const height = rects[0].height;
+        geometry.bounds = {
+          left: rects[0].left,
+          right: rects[rects.length - 1].right,
+          top: rects[0].top,
+          bottom: rects[0].bottom,
+        };
+        geometry.fontSize = parseFloat(getComputedStyle(letters.current[0]).fontSize) || 0;
+        // The melt's ramp spans the letter box and a little beyond (it runs 0.35–0.65 down its own height).
+        melt.ramp?.setAttribute("y", (-0.1 * height).toFixed(1));
+        melt.ramp?.setAttribute("height", (1.4 * height).toFixed(1));
+      }
     };
     let cancelled = false;
     void document.fonts.ready.then(() => {
@@ -94,7 +123,9 @@ const NameHeader: React.FC = () => {
       window.removeEventListener("resize", measure);
       document.fonts.removeEventListener("loadingdone", measure);
     };
-  }, []);
+  }, [geometry, melt]);
+
+  useMatter(header, PLANS, pieces, geometry, melt);
 
   useMusicFrame((frame, now) => {
     const reduced = prefersReducedMotion();
@@ -103,7 +134,7 @@ const NameHeader: React.FC = () => {
     const seconds = now / 1000;
     state.kicks.push(seconds, active ? frame.kick : 0);
     advanceFaces(state.faces, frame);
-    const headX = window.innerWidth / 2;
+    const { headX } = geometry;
     letters.current.forEach((span, i) => {
       if (!active) {
         setStyle(span, "fontFamily", "");
@@ -112,7 +143,7 @@ const NameHeader: React.FC = () => {
         setStyle(span, "transform", "none");
         return;
       }
-      const distance = Math.abs((centres.current[i] ?? headX) - headX);
+      const distance = Math.abs((geometry.centres[i] ?? headX) - headX);
       const kick = state.kicks.at(seconds - distance / SHOCKWAVE_SPEED);
       // Jamming without the song stays in Golos: faces follow the song's bars.
       const face = frame.isPlaying ? letterFace(state.faces, frame.time, distance, i) : GOLOS;
@@ -132,19 +163,33 @@ const NameHeader: React.FC = () => {
   });
 
   return (
-    <Styled.HeaderText aria-label={NAME}>
-      {LETTERS.map((letter, i) => (
-        <Styled.Letter
-          key={i}
-          aria-hidden="true"
-          ref={(el) => {
-            if (el) letters.current[i] = el;
-          }}
-        >
-          {letter}
-        </Styled.Letter>
-      ))}
-    </Styled.HeaderText>
+    <>
+      <AppStyled.HeaderText ref={header} aria-label={NAME}>
+        {LETTERS.map((letter, i) => {
+          const plan = PLANS[i];
+          const letterPieces = pieces[i];
+          return (
+            <Styled.Letter
+              key={i}
+              aria-hidden="true"
+              ref={(el) => {
+                if (el) letters.current[i] = el;
+              }}
+            >
+              <Styled.Glyph
+                ref={(el) => {
+                  if (letterPieces) letterPieces.glyph = el;
+                }}
+              >
+                {letter}
+              </Styled.Glyph>
+              {plan && letterPieces && <MatterLetter letter={letter} plan={plan} pieces={letterPieces} />}
+            </Styled.Letter>
+          );
+        })}
+      </AppStyled.HeaderText>
+      <MatterFilters melt={melt} />
+    </>
   );
 };
 

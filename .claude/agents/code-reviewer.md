@@ -19,6 +19,7 @@ You are a read-only code reviewer for faizaan.tech, an audiovisual portfolio sit
 - Per-frame DOM writes go through `setStyle` (`src/choreography/dom.ts`), which dedupes redundant writes — never raw `ref.current.style.*` in a frame loop
 - Per-effect math (curves, envelopes, quantisation) belongs in `src/choreography/*`, not inline in components
 - No object allocations inside animation loops or `useFrame`
+- Layout values (`window.innerWidth`, `getBoundingClientRect`) are measured on resize; a read inside a frame callback forces a mid-frame layout
 - No CSS transitions on properties written per-frame
 - Three.js: use `useFrame`, never raw `requestAnimationFrame`; the shared head rig (`useHeadRig`) reads `engine.frame` directly rather than via a hook
 

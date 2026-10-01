@@ -42,6 +42,15 @@ Quantisation steps are deliberately coarse: each distinct `font-variation-settin
 - `HISTORY` = 6 steps kept, so a letter the shockwave hasn't reached yet still shows the right (older) face.
 - Drops switch to Doto (`DOTO_VARIATION`); calm returns to the name's own Golos face (empty string).
 
+## Name Matter (`src/choreography/matter.ts`, `src/components/NameHeader/useMatter.ts`)
+
+- `STAGES`: lead-in 0.35 s, chrome 1.4, molten 1.6, shatter 1.2, frost 1.5 (`RUN_LENGTH` 6.05 s). Each stage blends into the next over its last `BLEND` 0.35 s; in a blend the upper layer (`MATTERS` order) fades over the lower one, which stays opaque.
+- `MAX_SWEEP` 0.7 s: letters start late by their distance from the pointer (hover/tap) or the head (ambient) at `SHOCKWAVE_SPEED`.
+- `AMBIENT_GAP` 40–70 s, counted from entering and restarted by any run; `RETRIGGER_COOLDOWN` 0.5 s after a run ends; a frame gap over 1 s (hidden tab) restarts the wait.
+- Effect timings are in t within the state: `chromeSweep` crosses 0.08–0.8; `meltAmount` is in by 0.4 and set by 0.78; drips grow 0.18 and fall 0.3 (0.9 em); shards fly 0.3–0.5 em (+0.15 em away from the origin), out 0.1–0.4, home 0.48–0.62; sparkles twinkle 3 times, lit 0.2–0.55.
+- `SAG` 0.06 and `WARP` 0.06 × font size (`useMatter`). Phones (`LITE`): no SVG filters, 3 shards / 1 drip / 1 sparkle (`pieces.ts`).
+- Filter cost: blur primitives are what the GPU pays for (the molten glow's blur halved the frame rate and was cut), and a filter re-runs whenever its letter repaints. The kick moves every letter each frame, so during a desktop run each letter is its own compositor layer (`will-change: transform`), and hidden material layers are `display: none`, out of style and layout. The melt's ramp is an feImage of an in-document rect: a data-URI image is re-rasterised on the main thread every frame.
+
 ## Plus Grid (`src/choreography/grid.ts`)
 
 - `TURN_RADIUS` 180px: big plusses within it turn to face the cursor (smooth falloff), easing with `TURN_TAU` 0.12s.
@@ -84,3 +93,4 @@ Quantisation steps are deliberately coarse: each distinct `font-variation-settin
 - [ ] No CSS transitions on animated properties
 - [ ] No object allocations inside animation loops or `useFrame`
 - [ ] Springs/histories/cursors created once via `useMemo`, not recreated per frame
+- [ ] Layout values (`innerWidth`, rects) measured on resize, never read in a frame callback: a read there forces a layout of everything written earlier in the frame (≈ 1.8 ms at 4× throttle)
