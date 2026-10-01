@@ -48,6 +48,8 @@ const COST_SAMPLES = 600;
 
 const debug = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("debug");
 const liteQuery = typeof window !== "undefined" ? window.matchMedia(LITE) : null;
+/** High-contrast modes drop the materials' gradients and box every layer, so the name keeps its own face there. */
+const forcedQuery = typeof window !== "undefined" ? window.matchMedia("(forced-colors: active)") : null;
 
 /** `?debug`: the matter painter's per-frame cost (ms), its schedule, and a way to hold a run at one moment. */
 export interface MatterProbe {
@@ -104,8 +106,8 @@ const tOf = (sample: MatterSample, matter: Matter) =>
 
 /**
  * Runs the name through its materials: on hover or tap (after entering) and ambiently every 40–70 s, never while
- * the tab is hidden; reduced motion gets hover/tap only, as a plain cross-fade. Between runs the overlays aren't
- * rendered and the frame callback does nothing but check the schedule.
+ * the tab is hidden; reduced motion gets hover/tap only, as a plain cross-fade, and forced colors get none. Between
+ * runs the overlays aren't rendered and the frame callback does nothing but check the schedule.
  */
 export function useMatter(
   header: React.RefObject<HTMLElement | null>,
@@ -155,7 +157,9 @@ export function useMatter(
       onPage: onPage(event.target),
     });
     const trigger = (event: PointerEvent) => {
-      if (engine.getSnapshot().unlocked) requestRun(schedule, event.timeStamp / 1000, event.clientX);
+      if (engine.getSnapshot().unlocked && !forcedQuery?.matches) {
+        requestRun(schedule, event.timeStamp / 1000, event.clientX);
+      }
     };
     // Hover: entering the name starts a run.
     const move = (event: PointerEvent) => {
@@ -279,10 +283,12 @@ export function useMatter(
     const started = debug ? performance.now() : 0;
     const reduced = prefersReducedMotion();
     let seconds = now / 1000;
-    const ambient = engine.getSnapshot().unlocked && document.visibilityState === "visible" && !reduced;
+    const forced = forcedQuery?.matches ?? false;
+    const ambient = engine.getSnapshot().unlocked && document.visibilityState === "visible" && !reduced && !forced;
     tickSchedule(schedule, seconds, ambient, geometry.headX);
     if (debug && hold.current !== null && schedule.run) seconds = schedule.run.start + hold.current;
-    const running = isRunning(schedule, seconds) || (debug && hold.current !== null && schedule.run !== null);
+    const running =
+      !forced && (isRunning(schedule, seconds) || (debug && hold.current !== null && schedule.run !== null));
     if (running || shown.current) {
       if (running !== shown.current) {
         shown.current = running;
