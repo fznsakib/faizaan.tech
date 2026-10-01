@@ -34,9 +34,23 @@ const FROST_TILE = (() => {
   return svg(lines.join(""), 60);
 })();
 
-/** A letter of the name: the app's letter box, as the positioning context for its material layers. */
+/**
+ * A letter of the name: the app's letter box, as the positioning context for its material layers. During a run on
+ * desktop each letter is its own compositor layer, so the kick's per-frame transform moves it without repainting its
+ * materials and re-running their filters (1440×900: 55–57 → 60 fps). Phones have no filters to spare, only layers.
+ */
 export const Letter = styled(AppStyled.Letter)`
   position: relative;
+
+  [data-running] > & {
+    will-change: transform;
+  }
+
+  @media ${LITE} {
+    [data-running] > & {
+      will-change: auto;
+    }
+  }
 `;
 
 /** The letter's own white glyph. */
