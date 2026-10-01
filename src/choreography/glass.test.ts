@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   applyFriction,
+  collideHead,
   collideWalls,
   createBodies,
   dragTo,
@@ -10,6 +11,7 @@ import {
   glassPose,
   glassScale,
   glassSheen,
+  headClearance,
   hitGlass,
   initialState,
   outlinePath,
@@ -18,8 +20,10 @@ import {
   stepGlass,
   supportsRefraction,
 } from "./glass";
+import { COPPER_SILHOUETTE, headOutline, restPose, SKIN_SILHOUETTE } from "./headShape";
 
 import type { GlassBody, GlassInput, GlassState, Point } from "./glass";
+import type { HeadOutline } from "./headShape";
 
 /** mulberry32: a small seeded PRNG so body layouts are reproducible. */
 const seeded = (seed: number) => () => {
@@ -198,15 +202,15 @@ const simulate = (
   body: GlassBody,
   state: GlassState,
   seconds: number,
-  over: { t0?: number; width?: number; height?: number; reduced?: boolean } = {},
+  over: { t0?: number; width?: number; height?: number; reduced?: boolean; head?: HeadOutline } = {},
   each?: (state: GlassState, t: number) => void,
 ): GlassState => {
-  const { t0 = 0, width = W, height = H, reduced = false } = over;
+  const { t0 = 0, width = W, height = H, reduced = false, head } = over;
   let current = state;
   const frames = Math.round(seconds / STEP);
   for (let i = 1; i <= frames; i++) {
     const t = t0 + i * STEP;
-    current = stepGlass(body, current, { t, dt: STEP, width, height, reduced });
+    current = stepGlass(body, current, { t, dt: STEP, width, height, reduced, head });
     each?.(current, t);
   }
   return current;
@@ -671,6 +675,266 @@ describe("glassSheen", () => {
     for (const sheen of [right, left, up, down, glassSheen(18, 18), glassSheen(-18, -18)]) {
       expect(sheen.intensity).toBeGreaterThanOrEqual(0);
       expect(sheen.intensity).toBeLessThanOrEqual(1);
+    }
+  });
+});
+
+/** A round head of radius `r` at (cx, cy): the simplest silhouette to check the physics against. */
+const roundHead = (cx: number, cy: number, r: number): HeadOutline => {
+  const normal = (x: number, y: number, out: Point) => {
+    const d = Math.hypot(x - cx, y - cy) || 1;
+    out.x = (x - cx) / d;
+    out.y = (y - cy) / d;
+    return d - r;
+  };
+  const distance = (x: number, y: number) => Math.hypot(x - cx, y - cy) - r;
+  return {
+    contains: (x, y) => distance(x, y) < 0,
+    distance,
+    normal,
+    nearest(x, y) {
+      const n = { x: 0, y: 0 };
+      const d = normal(x, y, n);
+      return { point: { x: x - n.x * d, y: y - n.y * d }, normal: n, depth: -d };
+    },
+    bounds: { left: cx - r, right: cx + r, top: cy - r, bottom: cy + r },
+    centre: { x: cx, y: cy },
+    pivot: { x: cx, y: cy + r / 2 },
+    scale: r / 3,
+  };
+};
+
+/** The glass's spin as drawn at time t (reduced motion draws none). */
+const spinAt = (body: GlassBody, state: GlassState, t: number, reduced = false, width = W, height = H) =>
+  glassPose(body, input({ t, width, height, reduced }), state).rotateZ;
+
+describe("head collisions", () => {
+  const head = roundHead(720, 450, 200);
+  const DT = 1 / 120;
+
+  /** A thrown piece placed so its outline just pokes `depth` px into the round head's left side, flying right. */
+  const poking = (body: GlassBody, depth: number, vx: number, vy = 0): GlassState => {
+    const start = { ...initialState(body, 0, W, H, false), mode: "thrown" as const, vx, vy, y: 450 };
+    let x = 300;
+    while (headClearance(body, { ...start, x }, head, W, H, spinAt(body, start, 0)) > -depth) x += 0.25;
+    return { ...start, x };
+  };
+
+  it("pushes a piece out along the head's normal and bounces its approach back at 0.7, recording the hit", () => {
+    everyBody((body) => {
+      const state = poking(body, 4, 1500, 200);
+      const next = collideHead(body, state, head, W, H, 0, DT, false);
+      expect(headClearance(body, next, head, W, H, spinAt(body, next, 0))).toBeGreaterThan(-0.5);
+      const hit = next.hit!;
+      expect(hit.at).toBe(0);
+      expect(Math.hypot(hit.nx, hit.ny)).toBeCloseTo(1, 6);
+      expect(hit.nx).toBeLessThan(-0.5); // it struck the head's left side
+      const before = state.vx * hit.nx + state.vy * hit.ny;
+      const after = next.vx * hit.nx + next.vy * hit.ny;
+      expect(before).toBeLessThan(0);
+      expect(after).toBeCloseTo(-0.7 * before, 6);
+      // the tangential speed carries on: it glances off
+      expect(next.vx * -hit.ny + next.vy * hit.nx).toBeCloseTo(state.vx * -hit.ny + state.vy * hit.nx, 6);
+      expect(hit.speed).toBeCloseTo(-before, 6);
+      expect(Math.hypot(hit.x - 720, hit.y - 450)).toBeCloseTo(200, 0); // on the head's outline
+      // and it pings like a wall hit, squashing on the hit's main axis
+      expect(next.impact).toBeGreaterThan(0);
+      expect(next.impactAt).toBe(0);
+      expect(next.impactAxis).toBe("x");
+    });
+  });
+
+  it("knocks on a fast glancing throw whose deepest point faces away from its path (it was clear a step ago)", () => {
+    everyBody((body) => {
+      // 14 px in with only 1000 px/s along the head's normal there, but 4500 px/s overall: a real knock, not old overlap
+      const n = collideHead(body, poking(body, 14, 1500), head, W, H, 0, DT, false).hit!;
+      const [along, across] = [1000, Math.sqrt(4500 ** 2 - 1000 ** 2)];
+      const glancing = { ...poking(body, 14, 1500), vx: -n.nx * along - n.ny * across, vy: -n.ny * along + n.nx * across };
+      const next = collideHead(body, glancing, head, W, H, 0, DT, false);
+      expect(next.hit).not.toBeNull();
+      expect(headClearance(body, next, head, W, H, spinAt(body, next, 0))).toBeGreaterThan(-0.5);
+      expect(next.vx * next.hit!.nx + next.vy * next.hit!.ny).toBeGreaterThan(0); // bounced off, not sliding in
+    });
+  });
+
+  it("never knocks the head from inside: a piece flung from behind it glides out first, however fast", () => {
+    for (const [width, height] of [
+      [1440, 900],
+      [393, 852],
+    ]) {
+      const real = headOutline({ width, height }, restPose(width, height));
+      const { left, right, top, bottom } = real.bounds;
+      everyBody((body) => {
+        for (let k = 0; k < 8; k++) {
+          const angle = (k * Math.PI) / 4;
+          const behind = { ...initialState(body, 0, width, height, false), x: left + 0.35 * (right - left), y: top + 0.55 * (bottom - top) };
+          const flung = release(behind, { vx: 3000 * Math.cos(angle), vy: 3000 * Math.sin(angle) }, width, height, false);
+          let previous = flung;
+          // "clear" to within the collision's own sampling (a few px): the knocks that matter came from 9–66 px deep
+          let wasClear = headClearance(body, flung, real, width, height, spinAt(body, flung, 0, false, width, height)) >= -3;
+          simulate(body, flung, 0.8, { width, height, head: real }, (state, t) => {
+            if (state.hit && state.hit !== previous.hit) expect(wasClear).toBe(true);
+            wasClear = headClearance(body, state, real, width, height, spinAt(body, state, t, false, width, height)) >= -3;
+            previous = state;
+          });
+        }
+      });
+    }
+  }, 60_000);
+
+  it("leaves a piece that doesn't touch the head alone", () => {
+    everyBody((body) => {
+      const clear = { ...initialState(body, 0, W, H, false), x: 150, y: 450, vx: 300 };
+      expect(collideHead(body, clear, head, W, H, 1, DT, false)).toBe(clear);
+    });
+  });
+
+  it("lets drift glide along the head without a knock: only a throw pings and flinches", () => {
+    everyBody((body) => {
+      const drifting = { ...poking(body, 4, 1500, 200), mode: "drift" as const };
+      const next = collideHead(body, drifting, head, W, H, 0, DT, false);
+      expect(headClearance(body, next, head, W, H, spinAt(body, next, 0))).toBeGreaterThan(-0.5);
+      expect(next.hit).toBeNull();
+      expect(next.impact).toBe(0);
+      // it stops pressing in, but keeps sliding along
+      const n = collideHead(body, poking(body, 4, 1500, 200), head, W, H, 0, DT, false).hit!;
+      expect(next.vx * n.nx + next.vy * n.ny).toBeCloseTo(0, 6);
+    });
+  });
+
+  it("lets a slow touch slide without a ping or a hit", () => {
+    everyBody((body) => {
+      const next = collideHead(body, poking(body, 0.3, 40), head, W, H, 0, DT, false);
+      expect(next.hit).toBeNull();
+      expect(next.impact).toBe(0);
+    });
+  });
+
+  it("glides a piece that was already behind the head out, never jumping, and never pings", () => {
+    everyBody((body) => {
+      const buried = { ...initialState(body, 0, W, H, false), x: 700, y: 430 };
+      const nudged = collideHead(body, buried, head, W, H, 1, DT, false);
+      expect(Math.hypot(nudged.x - buried.x, nudged.y - buried.y)).toBeLessThanOrEqual(900 * DT + 1e-6);
+      let previous = buried;
+      let clearAt = Infinity;
+      simulate(body, buried, 2, { head }, (state, t) => {
+        expect(Math.hypot(state.x - previous.x, state.y - previous.y)).toBeLessThan(10);
+        if (clearAt === Infinity && headClearance(body, state, head, W, H, spinAt(body, state, t)) >= -1) clearAt = t;
+        previous = state;
+      });
+      expect(clearAt).toBeLessThan(1);
+      expect(previous.hit).toBeNull(); // (it may still ping a wall on its way home: that's the walls' business)
+    });
+  });
+
+  it("stops a piece flung from behind the head ploughing on through it: it comes straight out", () => {
+    everyBody((body) => {
+      const flung = release({ ...initialState(body, 0, W, H, false), x: 600, y: 470 }, { vx: 1300, vy: 0 }, W, H, false);
+      // (by its centre: a piece straddling the head's middle can get "deeper" by its outline while backing out)
+      const start = head.distance(flung.x, flung.y);
+      let deepest = start;
+      let clearAt = Infinity;
+      simulate(body, flung, 1, { head }, (state, t) => {
+        deepest = Math.min(deepest, head.distance(state.x, state.y));
+        if (clearAt === Infinity && headClearance(body, state, head, W, H, spinAt(body, state, t)) >= -1) clearAt = t;
+      });
+      expect(deepest).toBeGreaterThan(start - 12); // at most a frame's worth deeper before it turns
+      expect(clearAt).toBeLessThan(0.5);
+    });
+  });
+
+  it("bounces a hard throw off the head, then keeps it out", () => {
+    everyBody((body) => {
+      const thrown = release({ ...initialState(body, 0, W, H, false), x: 200, y: 450 }, { vx: 2600, vy: 0 }, W, H, false);
+      let hits = 0;
+      let firstHit: GlassState["hit"] = null;
+      let worst = 0;
+      simulate(body, thrown, 3, { head }, (state, t) => {
+        if (state.hit && state.hit !== firstHit) {
+          hits++;
+          firstHit ??= state.hit;
+        }
+        worst = Math.min(worst, headClearance(body, state, head, W, H, spinAt(body, state, t)));
+      });
+      expect(hits).toBeGreaterThanOrEqual(1);
+      expect(firstHit!.speed).toBeGreaterThan(1500);
+      expect(worst).toBeGreaterThan(-2); // the spin can turn a lobe in by a hair between substeps
+    });
+  });
+
+  it("drifts around the real head without ever overlapping it, and never pings it (desktop and iPhone 15)", () => {
+    for (const [width, height] of [
+      [1440, 900],
+      [393, 852],
+    ]) {
+      const real = headOutline({ width, height }, restPose(width, height));
+      // two page loads' worth of pieces for 12 s, checked every 60 Hz frame (the slowest test here)
+      [1, 2].flatMap((seed) => createBodies(seeded(seed))).forEach((body) => {
+        let state = initialState(body, 0, width, height, false, real);
+        let worst = headClearance(body, state, real, width, height, spinAt(body, state, 0, false, width, height));
+        let jump = 0;
+        let frame = 0;
+        simulate(body, state, 12, { width, height, head: real }, (next, t) => {
+          jump = Math.max(jump, Math.hypot(next.x - state.x, next.y - state.y));
+          if (frame++ % 2 === 0) worst = Math.min(worst, headClearance(body, next, real, width, height, spinAt(body, next, t, false, width, height)));
+          state = next;
+        });
+        expect(worst).toBeGreaterThan(-1);
+        expect(jump).toBeLessThan(3);
+        expect(state.hit).toBeNull();
+      });
+    }
+  }, 60_000);
+
+  it("slides a piece pinned between the head and a wall along the wall, without jitter", () => {
+    const [width, height] = [393, 852];
+    const real = headOutline({ width, height }, restPose(width, height));
+    [1, 2, 3].flatMap((seed) => createBodies(seeded(seed))).forEach((body) => {
+      const e = glassExtent(body, width, height);
+      // against the right wall, level with the head's widest part: no room beside it
+      const pinned = { ...initialState(body, 0, width, height, false), x: width - e.right, y: real.centre.y + 60, hx: 0.9, hy: real.centre.y / height };
+      let previous = pinned;
+      let flips = 0;
+      let lastDy = 0;
+      simulate(body, pinned, 6, { width, height, head: real }, (state) => {
+        const dy = state.y - previous.y;
+        if (Math.abs(dy) > 0.05 && Math.abs(lastDy) > 0.05 && Math.sign(dy) !== Math.sign(lastDy)) flips++;
+        if (Math.abs(dy) > 0.05) lastDy = dy;
+        previous = state;
+      });
+      expect(flips).toBeLessThanOrEqual(2);
+      expect(headClearance(body, previous, real, width, height, spinAt(body, previous, 6, false, width, height))).toBeGreaterThan(-1);
+    });
+  }, 60_000);
+
+  it("still keeps pieces out of the head with reduced motion", () => {
+    everyBody((body) => {
+      const dropped = release({ ...initialState(body, 0, W, H, true), x: 700, y: 430 }, { vx: 0, vy: 0 }, W, H, true);
+      const later = simulate(body, dropped, 3, { reduced: true, head });
+      expect(headClearance(body, later, head, W, H, 0)).toBeGreaterThan(-1);
+    });
+  });
+
+  it("lets a held piece pass behind the head: the pointer places it", () => {
+    const body = createBodies(seeded(5))[0];
+    const e = glassExtent(body, W, H);
+    const held = dragTo(initialState(body, 0, W, H, false), { x: 720, y: 450 }, { x: 0, y: 0 }, e, W, H);
+    const next = stepGlass(body, held, { t: 1, dt: DT, width: W, height: H, reduced: false, head });
+    expect([next.x, next.y]).toEqual([720, 450]);
+  });
+
+  it("starts every piece clear of the head when it knows where the head is, for either head", () => {
+    for (const silhouette of [COPPER_SILHOUETTE, SKIN_SILHOUETTE]) {
+      for (const [width, height] of [
+        [1440, 900],
+        [393, 852],
+      ]) {
+        const real = headOutline({ width, height }, restPose(width, height, silhouette), silhouette.parts);
+        everyBody((body) => {
+          const state = initialState(body, 0, width, height, false, real);
+          expect(headClearance(body, state, real, width, height, spinAt(body, state, 0, false, width, height))).toBeGreaterThan(-1);
+        });
+      }
     }
   });
 });

@@ -50,6 +50,7 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 | Layer            | z-index | Component(s)                       |
 |-------------------|---------|------------------------------------|
 | Background        | 0       | `Background` (canvas plus-grid); 0, not below, so a body background (ours or a host page's) can't paint over it |
+| Caustics          | 0       | `Caustics` (light pooled under the head): same z as the grid, mounted after it, so it paints over the grid and under the name |
 | Header/Subtitle   | 1       | `NameHeader`, `SubtitleStack`      |
 | GlassPanel        | 9       | `GlassPanel` (refractive glass, always behind the head) |
 | Canvas (3D)       | 10      | Three.js `Canvas` with `SkinHead` (`Head` at `?head=copper`) |
@@ -62,7 +63,7 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 - **Engine state**: `MusicEngine` is a plain class outside React. `useMusicState()` for coarse, re-rendering state; `useMusicFrame()` for per-frame callbacks that never re-render.
 - **Animation state**: Always `useRef`/`useMemo` for per-frame values (never `useState` — avoids re-renders).
 - **Direct DOM manipulation**: Write through `setStyle(el, prop, value)` in `src/choreography/dom.ts`, which dedupes so a redundant write never hits the DOM.
-- **Choreography module** (`src/choreography/`): pure, unit-tested per-effect math, kept separate from components — `daylight` (time of day → lights, environment, palette), `nod` (phase-locked head nod, spring physics), `type` (header weight pulse, EQ ballistics, coarse font-variation steps), `faces` (per-word/per-letter header faces and their shockwave), `matter` (the name's material runs: timeline and layer blends, sweep, ambient/hover schedule, drip/shard/sparkle poses), `grid` (cursor-facing plusses, music pulses), `glass` (glass outlines, refraction maps, drift/drag/throw/wall physics), `fit` (camera distance/height so the head suits the viewport), `tilt` (phone tilt → pointer-like look, calibration), `dom` (`setStyle`).
+- **Choreography module** (`src/choreography/`): pure, unit-tested per-effect math, kept separate from components — `daylight` (time of day → lights, environment, palette), `nod` (phase-locked head nod, spring physics), `type` (header weight pulse, EQ ballistics, coarse font-variation steps), `faces` (per-word/per-letter header faces and their shockwave), `matter` (the name's material runs: timeline and layer blends, sweep, ambient/hover schedule, drip/shard/sparkle poses), `grid` (cursor-facing plusses, music pulses), `glass` (glass outlines, refraction maps, drift/drag/throw/wall/head physics), `headShape` (each head's screen silhouette, and the `headPose` the rig publishes), `impact` (the head's flinch when glass knocks it), `caustics` (the light-pool pattern), `fit` (camera distance/height so the head suits the viewport), `tilt` (phone tilt → pointer-like look, calibration), `dom` (`setStyle`).
 - **No CSS transitions** on properties written per-frame.
 - **Player skins**: each skin is a set of CSS custom properties on the Player's `Shell` (`[data-skin]`) plus a few `[data-skin="…"] &` rules; the visualiser's canvas palettes live in `Player/paint.ts`. The layout is shared; skins change look only.
 - **Three.js**: Use `useFrame` for animation loops (never raw `requestAnimationFrame`). Both heads move through the shared `useHeadRig` (`src/components/Head/useHeadRig.ts`), which reads `engine.frame` directly inside `useFrame` rather than via a hook and hands each head a `pulse` (kick, snare, drive) for its own look. Use `useRef`/`useMemo` for mutable state and one-time objects (materials, springs).
@@ -77,13 +78,13 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 - **Imports**: React/libraries first, then local (`../../App.styled`), then audio/choreography (`../../audio/react`, `../../choreography/dom`)
 - **Type imports**: Use `import type { ... }` for type-only imports
 - **Theme**: `src/styles/theme.ts` exports `theme` with `colors` and `spacing`
-- **Testing**: Vitest (`yarn test`, node environment, `*.test.ts` only); choreography math, audio internals, the Player's pure helpers (`format`, `analyser`, `skins`, `keys`), the heads' shader patches (`faceSkin`, `skinMaterial`) and the `scripts/headmap/` helpers (geometry, atlas, colour, synthesis, the full-capture path) each have a `*.test.ts` sibling. Components are checked in the browser.
+- **Testing**: Vitest (`yarn test`, node environment, `*.test.ts` only); choreography math, audio internals, the Player's pure helpers (`format`, `analyser`, `skins`, `keys`), the heads' shader patches (`faceSkin`, `skinMaterial`) and the `scripts/headmap/` helpers (geometry, atlas, colour, synthesis, the full-capture path) each have a `*.test.ts` sibling. `headShape.test.ts` loads both head meshes and checks each silhouette proxy against its real mesh. Components are checked in the browser.
 
 ## Key Files
 
 | File | Purpose |
 |------|---------|
-| `src/App.tsx` | Root layout, component composition, Canvas setup (no lights: each head renders `<DaylightRig>`), the `?head` switch (each head lazy-loaded) |
+| `src/App.tsx` | Root layout, component composition, Canvas setup (no lights: each head renders `<DaylightRig>`), the `?head` switch (each head lazy-loaded; picks the head's `HeadSilhouette` for `GlassPanel` and `Caustics`, and its camera fit) |
 | `src/audio/MusicEngine.ts` | Web Audio playback and player operations, volume, DJ-mode hits, live bands, visualiser readers |
 | `src/audio/engine.ts` | The single app-wide `MusicEngine` instance |
 | `src/audio/ticker.ts` | The one rAF loop that calls `engine.update` |
@@ -97,8 +98,11 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 | `src/choreography/faces.ts` | Header faces: per word when calm, per letter in drops, Doto/Golos anchors, shockwave |
 | `src/choreography/matter.ts` | Name materials: plain → chrome → molten → shatter → frost, each layer fading over the one below; per-letter sweep from the pointer or head; ambient schedule and hover/tap debounce; drip, shard and sparkle poses |
 | `src/choreography/grid.ts` | Plus-grid maths: layout, cursor turn, music pulse |
-| `src/choreography/glass.ts` | Glass outlines (new per load), displacement maps, drift/drag/throw/wall-bounce physics |
-| `src/choreography/fit.ts` | `fitCamera(width, height, head)` → `{ z, y }`: desktop keeps z = 5, phones pull back (and lower the camera in portrait) until the head fits; each head's measured silhouette (`COPPER_FIT`, `SKIN_FIT`) |
+| `src/choreography/glass.ts` | Glass outlines (new per load), displacement maps, drift/drag/throw/wall-bounce physics; `collideHead` (throws bounce off the head at 0.7 and knock it; drift glides round it; held pieces pass behind) |
+| `src/choreography/headShape.ts` | `headOutline(view, pose, parts)`: a head's silhouette in CSS px (ellipsoids fitted to its mesh, projected exactly through the live camera), with `distance`/`normal`/`contains`/`nearest`; `COPPER_SILHOUETTE` / `SKIN_SILHOUETTE` (parts, rest height, `HeadFit`) and `restPose(width, height, silhouette)`; `headPose`, written by `useHeadRig` via `trackHead` |
+| `src/choreography/impact.ts` | `impact`: `hit` (from GlassPanel) kicks a damped spring per axis, `sample(t)` (read by Head) gives the recoil; ≤ 8° yaw/roll, ≤ 5° pitch, settled by 0.6 s |
+| `src/choreography/caustics.ts` | `causticPool` (where the light lands under the head) and `writeCaustics` (seven rippling bands, moved by the head's pose) |
+| `src/choreography/fit.ts` | `fitCamera(width, height, head)` → `{ z, y }`: desktop keeps z = 5, phones pull back (and lower the camera in portrait) until the head fits; each head's size in the layout's calibration (`COPPER_FIT`, `SKIN_FIT`: the copper head's first screenshots, ~7% shorter than today's meshes; `headShape.test.ts` checks the two agree with the meshes' ratios) |
 | `src/choreography/daylight.ts` | `daylight(date, override?)` → sun, key/fill/rim/ambient lights, Lightformer colours + env rotation, page palette; `?hour`/`?daycycle` parsing, `paletteVars`, `VARIANT_GAIN` |
 | `src/hooks/useDaylight.ts` | `startDaylight()` (the page's daylight clock, writes `--day-*` on `:root`) and `useDaylight()` |
 | `src/components/Daylight/index.tsx` | `<DaylightRig variant rimFlash />`: all scene lights + the head's Environment, from `useDaylight()`; rendered by each head |
@@ -111,7 +115,7 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 | `src/assets/skin-head.glb` | The skin head mesh, generated by `yarn headmap` (atlas UVs + `_HAIRWEIGHT`) |
 | `src/assets/skin-head.jpg` | Its 2048² atlas: face chart (photo), crown, band around the head, under the neck; no room, window or shirt pixels |
 | `src/components/Head/index.tsx` | The copper head (`?head=copper`): chrome with the owner's photo face; chrome glows with the kick; lit by `<DaylightRig>` (its snare flash via `rimFlash`) |
-| `src/components/Head/useHeadRig.ts` | The rig both heads share: beat-locked nod, sway, squash, mouse/tilt look, idle breath, camera from `fitCamera`, `prepareModel`; `?debug` `window.__head.yaw/pitch/dolly` turn the head for inspection |
+| `src/components/Head/useHeadRig.ts` | The rig both heads share: beat-locked nod, sway, squash, mouse/tilt look, idle breath, camera from `fitCamera`, `prepareModel`; adds `impact.sample` (the glass's flinch) to the pose and publishes rig and camera with `trackHead`; `?debug` `window.__head.yaw/pitch/dolly` turn the head for inspection |
 | `src/assets/head.glb` | The copper head mesh: stock head with the owner's face, generated by `yarn headmap --copper` (UVs + `_FACEWEIGHT`) |
 | `src/assets/head-face.jpg` | The copper head's photo skin (face crop only, no room), generated beside `head.glb` |
 | `src/components/Head/faceSkin.ts` | Shader patch blending the chrome into the photo skin by `_faceweight` |
@@ -125,7 +129,8 @@ Defined in `src/audio/types.ts`, written each frame by `src/audio/frame.ts` (`wr
 | `src/components/Player/skins.ts` | Skin ids/names, cycling, `localStorage` (`player.skin`) |
 | `src/components/Player/analyser.ts` | Visualiser bar falloff and Winamp-style peak caps (pure) |
 | `src/components/DjPad/index.tsx` | On-screen DJ-mode pad (opened by the Player's JAM button) |
-| `src/components/GlassPanel/index.tsx` | Refractive 3D glass (SVG displacement via `backdrop-filter`; frosted fallback / `?frosted`), draggable |
+| `src/components/GlassPanel/index.tsx` | Refractive 3D glass (SVG displacement via `backdrop-filter`; frosted fallback / `?frosted`), draggable; steps against the shown head's live outline (its `silhouette` prop, from `App`) and relays knocks to `impact`. `?debug`: `window.__glass` (states, costs, and `probe`: outline, knocks, per-piece head clearance, flinch sampler) |
+| `src/components/Caustics/index.tsx` | The light pool under the shown head (its `silhouette` prop, from `App`), in a pool-sized canvas; `--day-accent` if set, else the key light's `#ffe2b8`; static with reduced motion. `?debug`: `window.__caustics.costs` |
 | `src/components/SocialLinks/index.tsx` | Dot-matrix link dock: resolves on hover/focus, beat shimmer on touch |
 | `src/components/Splash/index.tsx` | Click-to-enter veil: inside the tap, unlocks audio (iOS audio session `playback` when entering with sound) and calls `enableDeviceTilt()` |
 | `src/components/MusicDebug/index.tsx` | `?debug` overlay (lamps, meters, metronome) |
@@ -151,6 +156,9 @@ Both heads are generated output from a phone capture of the owner, and every run
 Then check the result: open the atlas (or `head-face.jpg`) and make sure it holds nothing but face, hair and skin; check the head on the site from every angle (`?debug` and `window.__head.yaw` / `.pitch` / `.dolly`). `--debug <dir>` (refused inside the repo) writes debug GLBs: for the copper head `crop.glb` (the cropped capture with its photo), `aligned.glb`, `erased.glb` and a `weights.glb` blend map; for the skin head `hair.glb` (the hair weight) and `hair-tile.jpg`. Tune with flags (`yarn headmap` alone prints them); sizes are in units of L, the nose-tip-to-chin height of each mesh, so they carry across capture scales; `--nose`/`--chin` override landmark detection. Bake flags you keep into the defaults (`SKIN_DEFAULTS`/`SKIN_TRANSFER` in `scripts/headmap/skin.ts`, `COPPER_TRANSFER` in `scripts/headmap/transfer.ts`, `FULL_DEFAULTS` in `scripts/headmap/full.ts`), so the no-flag run reproduces the committed files.
 
 Both meshes keep the stock file's conventions (one node, z up, face toward +y, stock units, meshopt + quantised positions/normals), which is what `prepareModel` assumes. The copper head adds front-projected `TEXCOORD_0` and a per-vertex `_FACEWEIGHT` (1 on the face, 0 on the chrome); the skin head adds atlas `TEXCOORD_0` and `_HAIRWEIGHT` (1 on hair). Materials are set in code.
+
+A new head mesh also needs a new silhouette proxy: refit its ellipsoids in `src/choreography/headShape.ts` (`COPPER_HEAD` / `SKIN_HEAD`, and its rest height) until `headShape.test.ts`'s mesh-coverage tests pass (every silhouette vertex within 6 px, ≤ 12 px stand-off on average).
+
 
 ## Deployment
 

@@ -61,7 +61,20 @@ Quantisation steps are deliberately coarse: each distinct `font-variation-settin
 - `createBodies()` makes new organic outlines (pebble, blob, pill, lens, shard) on every load; the displacement map, clip path, highlights, hit-testing and wall bounces all follow the real outline.
 - Physics: drift toward a moving orbit around each piece's home, drag with the pointer (window-level hit-test, since the head canvas takes events), throw with `releaseVelocity`, `applyFriction`, and `collideWalls` against the viewport edges (with a glint "ping").
 - Chromatic aberration is off (`CHROMATIC` in the component) for frame budget; `?frosted` forces the non-Chromium fallback.
+- The head (`collideHead`): `HEAD_RESTITUTION` 0.7 for throws (drift just stops pressing, and only throws knock: ping + flinch). Only a piece that was clear a step ago (`buried` false; `release` sets it) and is no deeper than its speed × step + `HEAD_SLACK` 8 px can knock; other overlap glides out at `DEPENETRATE` 900 px/s away from the head's spine. `HEAD_STRIDE` 4 samples 40 of 160 outline points, then refines round the deepest.
+- Drift steering (`steer`): targets keep `HEAD_GAP` 14 px (× scale) off the head; below `GRAZE` 24 px deep the outline normal gives way to the spine.
 - `glassScale`: width / 1440 clamped to `MIN_SCALE` 0.38 .. 1.25 (and ≤ 60% of the width / 45% of the height): on phones a piece covers at most ~1.5× the share of the width it does on desktop (tested).
+
+## Flinch (`src/choreography/impact.ts`)
+
+- Knocks from `SPEED_MIN` 90 px/s (the ping speed) to full at `SPEED_FULL` 2400 px/s; caps `YAW_MAX`/`ROLL_MAX` 8°, `PITCH_MAX` 5°, `SQUASH_MAX` 0.03 hold however often the head is hit (the cap trims the kick's velocity, never the position); `LEVER` 3 world units from the pivot gets the full roll.
+- Spring `OMEGA` 14 rad/s, `ZETA` 0.7: peaks ~80 ms after a knock with ~5% spring-back, under 0.1° by 0.6 s.
+
+## Caustics (`src/choreography/caustics.ts`, `src/components/Caustics`)
+
+- Pool (`causticPool`): centred a little left of the head and 12% of its height above its bottom, rx 1.1 × head width, ry 0.3 × head height.
+- Pattern: seven bands in two tilt families (≈ +12°, −19°), ripple speeds < 0.6 rad/s; `SLIDE` 0.55 rx/rad against a turn, `BREATHE` 0.9 (height) and `FOCUS` 0.8 (brightness) per radian of nod.
+- Look (component): strokes 24 px @ 0.045, 7 px @ 0.09, 1.6 px @ 0.36 with `lighter`, faded to the pool's rim; DPR capped at 1.5; fades in over 1.5 s once the head is drawn.
 
 ## Daylight (`src/choreography/daylight.ts`, `src/components/Daylight`)
 

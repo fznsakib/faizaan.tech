@@ -5,6 +5,8 @@ import { Box3, Group, MathUtils, Mesh, Vector3 } from "three";
 
 import { engine } from "../../audio/engine";
 import { CAMERA_Z, fitCamera } from "../../choreography/fit";
+import { trackHead } from "../../choreography/headShape";
+import { impact } from "../../choreography/impact";
 import { bob, nodDrive, Spring } from "../../choreography/nod";
 import { choreographyProbe } from "../../choreography/probe";
 import { prefersReducedMotion } from "../../hooks/reducedMotion";
@@ -60,8 +62,9 @@ export interface HeadPulse {
 
 /**
  * The head's movement, shared by every head: nods on the beat (phase-locked, with anticipation), sways with the bar,
- * squashes on the kick, follows the mouse (or the phone's tilt), breathes when idle, and places the camera for the
- * head's measured `fit`. Each frame it hands `pulse` the beat accents for the head's own look (its material, its lights).
+ * squashes on the kick, follows the mouse (or the phone's tilt), breathes when idle, flinches when glass knocks it
+ * (`impact`), and places the camera for the head's measured `fit`. Each frame it hands `pulse` the beat accents for the
+ * head's own look (its material, its lights), and publishes the pose for the glass and caustics (`trackHead`).
  */
 export function useHeadRig(rig: RefObject<Group | null>, { baseY, fit, pulse }: { baseY: number; fit: HeadFit; pulse: (p: HeadPulse) => void }) {
   const springs = useMemo(
@@ -70,6 +73,7 @@ export function useHeadRig(rig: RefObject<Group | null>, { baseY, fit, pulse }: 
   );
   const mouse = useRef({ yaw: 0, pitch: 0 });
   const accents = useMemo<HeadPulse>(() => ({ kick: 0, snare: 0, drive: 0 }), []);
+  const flinch = useMemo(() => ({ yaw: 0, pitch: 0, roll: 0, squash: 0 }), []); // glass knocking into the head
   const tilt = useDeviceTilt(); // on phones, the tilt stands in for the mouse
 
   useFrame(({ pointer, clock, camera, size }, delta) => {
@@ -123,12 +127,19 @@ export function useHeadRig(rig: RefObject<Group | null>, { baseY, fit, pulse }: 
       accents.drive = frame.isPlaying ? frame.energy : JAM_ENERGY;
     }
 
-    head.rotation.set(mouse.current.pitch + pitch + (inspect?.pitch ?? 0), mouse.current.yaw + yaw + (inspect?.yaw ?? 0), roll);
+    impact.sample(performance.now() / 1000, flinch);
+    head.rotation.set(
+      mouse.current.pitch + pitch + flinch.pitch + (inspect?.pitch ?? 0),
+      mouse.current.yaw + yaw + flinch.yaw + (inspect?.yaw ?? 0),
+      roll + flinch.roll
+    );
     head.position.y = baseY + lift;
+    squash += flinch.squash;
     head.scale.set(1 + squash / 2, 1 - squash, 1 + squash / 2);
     pulse(accents);
     camera.position.z = MathUtils.lerp(camera.position.z, cameraZ + (inspect?.dolly ?? 0), 1 - Math.exp(-3 * dt));
     camera.position.y = camera0.y;
+    trackHead(head, camera); // for the glass and caustics
 
     choreographyProbe.headPitchDeg = MathUtils.radToDeg(pitch);
     choreographyProbe.nodCurve = curve;

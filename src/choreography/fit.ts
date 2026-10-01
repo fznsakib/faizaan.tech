@@ -6,11 +6,15 @@
 
 /** Today's camera distance, and the nearest the fit ever puts it. */
 export const CAMERA_Z = 5;
-/** The copper head's on-screen width at CAMERA_Z, as a share of the viewport height (measured, ears included). */
+/**
+ * The copper head's on-screen width, height and centre at CAMERA_Z, as shares of the viewport height: the layout's
+ * calibration, measured from screenshots of the first copper head. Today's head.glb silhouette, crown to the base of
+ * the neck, is 0.414 wide and 0.705 tall, centred 0.511 down (headShape.test.ts); SKIN_FIT is scaled onto these same
+ * numbers, so both heads frame alike, and the phone framing was reviewed with them. `headShape` doesn't read them: it
+ * projects each mesh's own silhouette through whatever camera these place.
+ */
 export const HEAD_WIDTH = 0.41;
-/** The copper head's on-screen height at CAMERA_Z, as a share of the viewport height (measured, crown to neck). */
 export const HEAD_HEIGHT = 0.654;
-/** Where the copper head's centre sits at CAMERA_Z, as a share of the viewport height from the top (measured). */
 export const HEAD_CENTRE = 0.489;
 
 /** A head's on-screen size and centre at CAMERA_Z, as shares of the viewport height (see HEAD_WIDTH and co). */

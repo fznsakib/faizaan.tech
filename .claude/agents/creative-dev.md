@@ -37,7 +37,7 @@ Key files:
 - `src/audio/MusicEngine.ts` — Web Audio playback and player operations, DJ-mode hits, live band analysis, visualiser readers (`readSpectrum`/`readWaveform`)
 - `src/audio/frame.ts` — `MusicFrame` construction, beat-map-derived per-frame math
 - `src/audio/analysis/` — build-time onset/energy/section analysis (`analyzeTrack.ts`, `buildBeatMap.ts`)
-- `src/choreography/` — pure, tested per-effect math (`daylight`, `nod`, `type`, `faces`, `matter`, `grid`, `glass`, `fit`, `tilt`, `dom`)
+- `src/choreography/` — pure, tested per-effect math (`daylight`, `nod`, `type`, `faces`, `matter`, `grid`, `glass`, `headShape`, `impact`, `caustics`, `fit`, `tilt`, `dom`)
 - `src/components/SkinHead/index.tsx` — the default 3D head (the owner's whole head: photo face, synthesized skin and curls); `src/components/Head/index.tsx` — the copper head (`?head=copper`); both on `src/components/Head/useHeadRig.ts` (beat-locked nodding, mouse/tilt follow, camera from `fitCamera` with the head's `HeadFit`)
 - `src/hooks/useDeviceTilt.ts` — phone tilt feed for the head (enabled on the Splash's enter tap)
 - `src/hooks/useDaylight.ts` + `src/components/Daylight/index.tsx` — the visitor's time of day: `--day-*` palette vars on `:root`, and `<DaylightRig>` (every scene light and the head's Environment; `?hour=`, `?daycycle`)
@@ -53,7 +53,8 @@ Read via `useMusicFrame` (never re-renders) or, inside r3f, `engine.frame` direc
 - Header faces/shockwave: `src/choreography/faces.ts` (per word when calm, per letter in drops).
 - Name materials (chrome, molten, shatter, frost): `src/choreography/matter.ts`, painted by `src/components/NameHeader/useMatter.ts`.
 - Plus-grid cursor turn and music pulse: `src/choreography/grid.ts`.
-- Glass outlines, refraction maps and drag/throw/wall physics: `src/choreography/glass.ts`.
+- Glass outlines, refraction maps and drag/throw/wall/head physics: `src/choreography/glass.ts`, against the head's silhouette from `src/choreography/headShape.ts`.
+- The head's flinch when glass knocks it: `src/choreography/impact.ts`. The light pool under the head: `src/choreography/caustics.ts`.
 - Time-of-day lighting and palette: `src/choreography/daylight.ts` (keyframes at 02:00, 05:00, 06:30, 09:00, 13:00, 18:30, 20:00, 22:30; 13:00 is the original scene, pinned by test). Purely visual — never reads the music.
 - All of the above are pure functions with Vitest coverage — put new math there, not inline in a component.
 
